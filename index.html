@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReLoved</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-top">
+        <h1 class="logo">ReLoved</h1>
+
+        <form class="search-form">
+          <label class="sr-only" for="search"> Sök på ReLoved</label>
+          <input
+            class="search-input"
+            type="search"
+            id="search"
+            name="search"
+            placeholder="Sök efter plagg, märken eller kategorier"
+          />
+          <button class="search-button" type="submit">Sök</button>
+        </form>
+
+        <nav class="user-nav" aria-label="Användarmeny">
+          <ul class="nav-list">
+            <li><a href="#"> Registrera dig </a></li>
+            <li><a href="#"> Logga in </a></li>
+            <li><a class="sell-link" href="#"> Sälj nu </a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <nav class="category-nav" aria-label="Kategorier">
+        <ul class="category-list">
+          <li><a href="#">Dam</a></li>
+          <li><a href="#">Herr</a></li>
+          <li><a href="#">Designer</a></li>
+          <li><a href="#">Barn</a></li>
+          <li><a href="#">Hem</a></li>
+          <li><a href="#">Elektronik</a></li>
+          <li><a href="#">Sport</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-content">
+          <p class="eyebrow">Älskat tidigare. Älskat igen.</p>
+          <h2>Ge älskade plagg<br>
+              ett nytt kapitel  
+          </h2>
+          <p>
+            Köp och sälj second hand på ett enkelt, tryggt och hållbart sätt
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#"> Sälj nu </a>
+            <a class="button button-secondary" href="#"> Så fungerar det </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+            <p class="eyebrow">Utvalt just nu</p>
+            <h2>Populärt just nu</h2>
+        </div>
+
+        <div class="product-grid">
+            <article class="product-card">
+                <img src="imgs/jacka.webp" alt="Svart skinnjacka" />
+                <div class="product-card-content">
+                    <h3>Svart skinnjacka</h3>
+                    <p>Storlek: M</p>
+                    <p>Skick: Mycket bra</p>
+                    <p class="price">Pris: 350 kr</p>
+                    <a href="#">Visa produkt</a>
+                </div>
+              </article>
+      
+              <article class="product-card">
+                <img src="imgs/dress.jpeg" alt="Blommig klänning " />
+                <div class="product-card-content">
+                    <h3>Blommig sommarklänning</h3>
+                    <p>Storlek: S</p>
+                    <p>Skick: Bra</p>
+                    <p class="price">Pris: 180 kr</p>
+                    <a href="#">Visa produkt</a>
+                </div>
+              </article>
+      
+              <article class="product-card">
+                <img src="imgs/bag.gif" alt="Brun handväska" />
+                <div class="product-card-content">
+                    <h3>Brun handväska</h3>
+                    <p>Märke: Vintage</p>
+                    <p>Skick: Mycket bra</p>
+                    <p class="price">Pris: 250 kr</p>
+                    <a href="#">Visa produkt</a>
+                </div>
+              </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Så fungerar ReLoved</h2>
+
+        <article>
+          <h3>1. Lägg upp din annons</h3>
+          <p>Ta bilder, skriv en kort beskrivning och sätt ditt pris</p>
+        </article>
+
+        <article>
+          <h3>2. Hitta en köpare</h3>
+          <p>Köpare kan söka, filtrera och kontakta dig direkt</p>
+        </article>
+
+        <article>
+          <h3>3. Ge plagget ett nytt hem</h3>
+          <p>Sälj vidare istället för att låta kläder ligga oanvända.</p>
+        </article>
+      </section>
+
+      <section>
+        <h2>Varför sälja hos oss?</h2>
+        <ul>
+          <li>Det är enkelt att komma igång</li>
+          <li>Du tjänar pengar på saker du inte använder</li>
+          <li>Du bidrar till en mer hållbar konsumtion</li>
+          <li>Du hjälper plagg att bli älskade igen</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <h2>ReLoved</h2>
+      <p>
+        Second hand för dig som vill sälja smartare och handla mer hållbart.
+      </p>
+
+      <nav aria-label="Sidfotsmeny">
+        <ul>
+          <li><a href="#"> Om ReLoved </a></li>
+          <li><a href="#"> Kontakta oss </a></li>
+          <li><a href="#"> Hjälpcenter </a></li>
+          <li><a href="#"> Vilkor </a></li>
+        </ul>
+      </nav>
+
+      <p>&copy; 2026 ReLoved. Alla rättigheter förbehållna.</p>
+    </footer>
+  </body>
+</html>
