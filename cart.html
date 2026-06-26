@@ -1,0 +1,169 @@
+<!doctype html>
+
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Damkläder | ReLoved</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-top">
+        <a href="home.html" class="logo">ReLoved</a>
+
+        <form class="search-form" action="search.html">
+          <label class="sr-only" for="search">Sök på ReLoved</label>
+          <input
+            class="search-input"
+            type="search"
+            id="search"
+            name="search"
+            placeholder="Sök efter plagg, märken eller kategorier"
+          />
+          <button class="search-button" type="submit">Sök</button>
+        </form>
+
+        <nav class="user-nav" aria-label="Användarmeny">
+          <ul class="nav-list">
+            <li><a href="register.html">Registrera dig</a></li>
+            <li><a href="login.html">Logga in</a></li>
+
+            <li>
+              <a href="cart.html" class="cart-icon-link" aria-label="Varukorg">
+                🛒
+                <span class="cart-badge">2</span>
+              </a>
+            </li>
+
+            <li><a class="sell-link" href="seller.html">Sälj nu</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <nav class="category-nav" aria-label="Kategorier">
+        <ul class="category-list">
+          <li><a href="products.html">Dam</a></li>
+          <li><a href="products.html">Herr</a></li>
+          <li><a href="products.html">Designer</a></li>
+          <li><a href="products.html">Barn</a></li>
+          <li><a href="products.html">Hem</a></li>
+          <li><a href="products.html">Elektronik</a></li>
+          <li><a href="products.html">Sport</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="cart-page">
+        <div class="cart-header">
+          <p class="eyebrow">Din varukorg</p>
+          <h1>Varukorg</h1>
+          <p>Granska dina produkter innan du går vidare till kassan.</p>
+        </div>
+
+        <div class="cart-layout">
+          <div class="cart-items">
+            <article class="cart-item">
+              <img src="imgs/jacka.webp" alt="Svart skinnjacka" />
+
+              <div class="cart-item__info">
+                <h2>Svart skinnjacka</h2>
+                <p>Zara</p>
+                <p>Storlek: M</p>
+                <button type="button">Ta bort</button>
+              </div>
+
+              <p class="cart-item__price">350 kr</p>
+            </article>
+
+            <article class="cart-item">
+              <img src="imgs/dress.jpeg" alt="Blommig sommarklänning" />
+
+              <div class="cart-item__info">
+                <h2>Blommig sommarklänning</h2>
+                <p>Mango</p>
+                <p>Storlek: S</p>
+                <button type="button">Ta bort</button>
+              </div>
+
+              <p class="cart-item__price">180 kr</p>
+            </article>
+          </div>
+
+          <aside class="cart-summary">
+            <h2>Sammanfattning</h2>
+
+            <div class="summary-row">
+              <span>Produkter</span>
+              <span>530 kr</span>
+            </div>
+
+            <div class="summary-row">
+              <span>Frakt</span>
+              <span>49 kr</span>
+            </div>
+
+            <div class="summary-row summary-row--total">
+              <span>Totalt</span>
+              <span>579 kr</span>
+            </div>
+
+            <a href="checkout.html" class="button button-primary">
+              Gå till kassan
+            </a>
+
+            <a href="products.html" class="cart-summary__link">
+              Fortsätt handla
+            </a>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-bg-text">ReLoved</div>
+    
+      <div class="footer-inner">
+        <a href="home.html" class="footer-logo">Re<span>Loved</span></a>
+    
+        <p class="footer-tagline">Älskat tidigare. Älskat igen.</p>
+    
+        <p class="footer-text">
+          Köp, sälj och ge plagg ett nytt liv. ReLoved gör second hand enkelt,
+          tryggt och hållbart.
+        </p>
+    
+        <nav class="footer-nav" aria-label="Sidfot">
+          <a href="about.html">Om ReLoved</a>
+          <a href="faq.html">Vanliga frågor</a>
+          <a href="privacy-policy.html">Integritetspolicy</a>
+          <a href="terms-of-service.html">Användarvillkor</a>
+          <a href="contact.html">Kontakta oss</a>
+        </nav>
+    
+        <div class="footer-socials">
+          <a href="#">Instagram</a>
+          <a href="#">TikTok</a>
+          <a href="#">Pinterest</a>
+        </div>
+    
+        <p class="footer-note">
+          ReLoved är ett utbildningsprojekt utvecklat i studiesyfte.
+        </p>
+    
+        <p class="footer-copy">
+          © 2026 ReLoved. Alla rättigheter förbehållna.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

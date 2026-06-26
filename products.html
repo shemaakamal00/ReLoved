@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Damkläder | ReLoved</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-top">
+        <a href="home.html" class="logo">ReLoved</a>
+
+        <form class="search-form">
+          <label class="sr-only" for="search">Sök på ReLoved</label>
+          <input
+            class="search-input"
+            type="search"
+            id="search"
+            name="search"
+            placeholder="Sök efter plagg, märken eller kategorier"
+          />
+          <button class="search-button" type="submit">Sök</button>
+        </form>
+
+        <nav class="user-nav" aria-label="Användarmeny">
+          <ul class="nav-list">
+            <li><a href="register.html">Registrera dig</a></li>
+            <li><a href="login.html">Logga in</a></li>
+
+            <li>
+              <a href="cart.html" class="cart-icon-link" aria-label="Varukorg">
+                🛒
+                <span class="cart-badge">2</span>
+              </a>
+            </li>
+
+            <li><a class="sell-link" href="seller.html">Sälj nu</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <nav class="category-nav" aria-label="Kategorier">
+        <ul class="category-list">
+          <li><a href="products.html">Dam</a></li>
+          <li><a href="products.html">Herr</a></li>
+          <li><a href="products.html">Designer</a></li>
+          <li><a href="products.html">Barn</a></li>
+          <li><a href="products.html">Hem</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="products-page">
+        <div class="products-page__header">
+          <p class="eyebrow">Dam</p>
+          <h1>Damkläder</h1>
+          <p>
+            Upptäck handplockade second hand-favoriter, från vardagsplagg till
+            unika statement pieces.
+          </p>
+        </div>
+
+        <div class="products-toolbar">
+          <button class="filter-button" type="button">☰ Filtrera</button>
+
+          <label class="sort">
+            <span>Sortera</span>
+            <select class="sort__select">
+              <option>Senast inkommet</option>
+              <option>Lägst pris</option>
+              <option>Högst pris</option>
+              <option>Populärt</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="product-grid">
+          <article class="product-card">
+            <a href="product.html" class="product-card__image-link">
+              <img src="imgs/jacka.webp" alt="Svart skinnjacka" />
+            </a>
+
+            <div class="product-card-content">
+              <p class="product-card__brand">Zara</p>
+              <h3>Svart skinnjacka</h3>
+              <p>Storlek: M</p>
+              <p>Skick: Mycket bra</p>
+              <p class="price">350 kr</p>
+              <a href="product.html">Visa produkt</a>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <a href="product.html" class="product-card__image-link">
+              <img src="imgs/dress.jpeg" alt="Blommig sommarklänning" />
+            </a>
+
+            <div class="product-card-content">
+              <p class="product-card__brand">Mango</p>
+              <h3>Blommig sommarklänning</h3>
+              <p>Storlek: S</p>
+              <p>Skick: Bra</p>
+              <p class="price">180 kr</p>
+              <a href="product.html">Visa produkt</a>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <a href="product.html" class="product-card__image-link">
+              <img src="imgs/bag.gif" alt="Brun handväska" />
+            </a>
+
+            <div class="product-card-content">
+              <p class="product-card__brand">Vintage</p>
+              <h3>Brun handväska</h3>
+              <p>Storlek: One size</p>
+              <p>Skick: Mycket bra</p>
+              <p class="price">250 kr</p>
+              <a href="product.html">Visa produkt</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-bg-text">ReLoved</div>
+    
+      <div class="footer-inner">
+        <a href="home.html" class="footer-logo">Re<span>Loved</span></a>
+    
+        <p class="footer-tagline">Älskat tidigare. Älskat igen.</p>
+    
+        <p class="footer-text">
+          Köp, sälj och ge plagg ett nytt liv. ReLoved gör second hand enkelt,
+          tryggt och hållbart.
+        </p>
+    
+        <nav class="footer-nav" aria-label="Sidfot">
+          <a href="about.html">Om ReLoved</a>
+          <a href="faq.html">Vanliga frågor</a>
+          <a href="privacy-policy.html">Integritetspolicy</a>
+          <a href="terms-of-service.html">Användarvillkor</a>
+          <a href="contact.html">Kontakta oss</a>
+        </nav>
+    
+        <div class="footer-socials">
+          <a href="#">Instagram</a>
+          <a href="#">TikTok</a>
+          <a href="#">Pinterest</a>
+        </div>
+    
+        <p class="footer-note">
+          ReLoved är ett utbildningsprojekt utvecklat i studiesyfte.
+        </p>
+    
+        <p class="footer-copy">
+          © 2026 ReLoved. Alla rättigheter förbehållna.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
