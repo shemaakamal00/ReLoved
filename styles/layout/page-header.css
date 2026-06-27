@@ -1,0 +1,43 @@
+/* PAGE HEADERS */
+
+.products-page__header,
+.search-header,
+.favorites-header,
+.cart-header,
+.checkout-header,
+.orders-header,
+.profile-header,
+.seller-header,
+.admin-header,
+.about-hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.products-page__header h1,
+.search-header h1,
+.favorites-header h1,
+.cart-header h1,
+.checkout-header h1,
+.orders-header h1,
+.profile-header h1,
+.seller-header h1,
+.admin-header h1,
+.about-hero h1 {
+  margin-top: 0.5rem;
+  font-size: clamp(3rem, 7vw, 6.5rem);
+}
+
+.products-page__header p:not(.eyebrow),
+.search-header p:not(.eyebrow),
+.favorites-header p:not(.eyebrow),
+.cart-header p:not(.eyebrow),
+.checkout-header p:not(.eyebrow),
+.orders-header p:not(.eyebrow),
+.profile-header p:not(.eyebrow),
+.seller-header p:not(.eyebrow),
+.admin-header p:not(.eyebrow),
+.about-hero p:not(.eyebrow) {
+  max-width: 640px;
+  margin: 1rem auto 0;
+}

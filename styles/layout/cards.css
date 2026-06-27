@@ -1,0 +1,28 @@
+/* CARDS */
+
+.product-card,
+.benefit-card,
+.checkout-card,
+.checkout-summary,
+.cart-item,
+.cart-summary,
+.order-card,
+.profile-sidebar,
+.profile-card,
+.seller-section,
+.seller-stat-card,
+.admin-section,
+.admin-stat-card,
+.login-card,
+.demo-login,
+.about-card,
+.policy-card,
+.faq-item,
+.contact-form,
+.product-description,
+.seller-card {
+  background: var(--clr-card);
+  border: 1px solid rgba(186, 168, 152, 0.35);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
