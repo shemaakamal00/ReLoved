@@ -197,7 +197,7 @@
         </div>
 
         <div class="checkout-layout">
-          <form class="checkout-form">
+          <form class="checkout-form" id="checkout-form">
             <div class="checkout-card">
               <h2>Kontaktuppgifter</h2>
 
@@ -272,17 +272,17 @@
               <h2>Betalsätt</h2>
 
               <label class="radio-option">
-                <input name="payment" value="card"  type="radio" name="payment" checked />
+                <input name="payment" value="card"  type="radio" checked />
                 Kortbetalning
               </label>
 
               <label class="radio-option">
-                <input name="payment" value="swish" type="radio" name="payment" />
+                <input name="payment" value="swish" type="radio" />
                 Swish
               </label>
 
               <label class="radio-option">
-                <input name="payment" value="klarna" type="radio" name="payment" />
+                <input name="payment" value="klarna" type="radio"/>
                 Klarna
               </label>
             </div>
@@ -325,7 +325,7 @@
             </div>
 
             <form class="checkout-button-form">
-              <button type="submit" class="button button--primary">Slutför köp</button>
+              <button type="submit" form="checkout-form" class="button button--primary">Slutför köp</button>
             </form>
           </aside>
         </div>

@@ -1,6 +1,6 @@
 import { products } from "./products.js";
 
-const productGrid = document.getElementById("#productGrid");
+const productGrid = document.getElementById("productGrid");
 
 function renderProducts() {
     if (!productGrid) return;
@@ -8,7 +8,7 @@ function renderProducts() {
 
     products.forEach((product) => {
         productGrid.innerHTML += `
-        <article class="product-card">
+        <article class="product-card" data-product-id="${product.id}">
         <img 
           src="${product.image}" 
           alt="${product.alt}" 
