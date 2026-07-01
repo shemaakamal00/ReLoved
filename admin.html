@@ -234,26 +234,25 @@
               <span>Status</span>
               <span>Åtgärd</span>
             </div>
-
-            <div class="admin-table__row">
+            <div class="admin-table__row" data-listing-id="1">
               <span>Svart skinnjacka</span>
               <span>Shemaa Kamal</span>
               <span>350 kr</span>
               <span class="status-badge status-badge--pending">Väntar</span>
               <div class="admin-actions">
-                <button type="button">Godkänn</button>
-                <button type="button">Neka</button>
+                <button type="button" data-action="approve">Godkänn</button>
+                <button type="button" data-action="reject">Neka</button>
               </div>
             </div>
 
-            <div class="admin-table__row">
+            <div class="admin-table__row" data-listing-id="2">
               <span>Vintage handväska</span>
               <span>Nora Ali</span>
               <span>250 kr</span>
               <span class="status-badge status-badge--pending">Väntar</span>
               <div class="admin-actions">
-                <button type="button">Godkänn</button>
-                <button type="button">Neka</button>
+                <button type="button" data-action="approve">Godkänn</button>
+                <button type="button" data-action="reject">Neka</button>
               </div>
             </div>
           </div>
@@ -346,20 +345,20 @@
               <span>Åtgärd</span>
             </div>
 
-            <div class="admin-table__row">
+            <div class="admin-table__row" data-order-id="1024">
               <span>#1024</span>
               <span>Anna Lind</span>
               <span>579 kr</span>
               <span class="status-badge status-badge--paid">Betald</span>
-              <button type="button">Markera skickad</button>
+              <button type="button" data-action="mark-shipped">Markera skickad</button>
             </div>
 
-            <div class="admin-table__row">
+            <div class="admin-table__row" data-order-id="1025">
               <span>#1025</span>
               <span>Sarah Noor</span>
               <span>250 kr</span>
               <span class="status-badge status-badge--shipped">Skickad</span>
-              <button type="button">Visa order</button>
+              <button type="button" data-action="view-order">Visa order</button>
             </div>
           </div>
         </section>
