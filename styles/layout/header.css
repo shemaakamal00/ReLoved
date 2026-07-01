@@ -15,7 +15,7 @@
   display: block;
   padding: 0.42rem 1rem;
   background: var(--clr-accent);
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
   text-align: center;
   font-size: 0.72rem;
   font-weight: 800;
@@ -95,7 +95,7 @@
   padding: 0 0.32rem;
   border-radius: var(--radius-pill);
   background: var(--clr-accent);
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
   font-size: 0.68rem;
   font-weight: 800;
   display: flex;
@@ -235,7 +235,7 @@
       rgba(186, 168, 152, 0.65)
     ),
     var(--clr-accent);
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;

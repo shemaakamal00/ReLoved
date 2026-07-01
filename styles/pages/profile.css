@@ -34,7 +34,7 @@
 
   border-radius: 50%;
   background: var(--clr-accent);
-  color: #fff;
+  color: var(--clr-card);
   font-size: 2rem;
   font-weight: 700;
 }
@@ -103,7 +103,7 @@
   padding: 0.9rem 1rem;
   border: 1px solid rgba(186, 168, 152, 0.45);
   border-radius: 14px;
-  background: #fff;
+  background: var(--clr-card);
   font: inherit;
 }
 

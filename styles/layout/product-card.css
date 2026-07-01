@@ -36,7 +36,7 @@
 
 .product-card-content {
   padding: 1.45rem;
-  background: #fff;
+  background:var(--clr-card);
 }
 
 .product-card h3 {
@@ -55,8 +55,8 @@
 }
 
 .product-card__brand {
-  color: rgba(40, 0, 3, 0.55) !important;
-  font-size: 0.78rem !important;
+  color: rgba(40, 0, 3, 0.55);
+  font-size: 0.78rem;
   font-weight: 750;
   letter-spacing: 0.12em;
   text-transform: uppercase;

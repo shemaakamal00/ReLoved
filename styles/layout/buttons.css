@@ -32,14 +32,14 @@
 .button-primary,
 .sell-button {
   background: var(--clr-accent);
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
   box-shadow: 0 1rem 2.2rem rgba(194, 132, 122, 0.24);
 }
 
 .button-primary:hover,
 .sell-button:hover {
   background: var(--clr-heading);
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
 }
 
 .button-secondary,
@@ -52,6 +52,6 @@
 .button-secondary:hover,
 .sell-link:hover {
   background: var(--clr-accent);
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
   border-color: var(--clr-accent);
 }

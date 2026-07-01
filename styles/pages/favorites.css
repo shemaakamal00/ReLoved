@@ -58,23 +58,23 @@
 
 .favorite-actions .button-primary {
   background: var(--clr-accent);
-  color: #fffaf3 !important;
+  color: var(--clr-panel-strong);
 }
 
 .favorite-actions .button-primary:hover {
   background: var(--clr-heading);
-  color: #fffaf3 !important;
+  color: var(--clr-panel-strong);
 }
 
 .favorite-actions .button-secondary {
-  background: #fffaf3;
-  color: var(--clr-accent) !important;
+  background: var(--clr-panel-strong);
+  color: var(--clr-accent);
   border-color: rgba(194, 132, 122, 0.55);
 }
 
 .favorite-actions .button-secondary:hover {
   background: var(--clr-accent);
-  color: #fffaf3 !important;
+  color: var(--clr-panel-strong);
   border-color: var(--clr-accent);
 }
 

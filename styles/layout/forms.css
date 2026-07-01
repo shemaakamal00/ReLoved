@@ -27,7 +27,7 @@
 .search-input:focus {
   outline: none;
   border-color: rgba(194, 132, 122, 0.8);
-  background: #fffaf3;
+  background: var(--clr-panel-strong);
   box-shadow: 0 0 0 4px rgba(194, 132, 122, 0.15);
 }
 
@@ -41,7 +41,7 @@
   border: 0;
   border-radius: 50%;
   background: var(--clr-accent);
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
   display: grid;
   place-items: center;
   transition:

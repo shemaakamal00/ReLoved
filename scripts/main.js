@@ -9,11 +9,13 @@ function renderProducts() {
     products.forEach((product) => {
         productGrid.innerHTML += `
         <article class="product-card" data-product-id="${product.id}">
+        <a href="product.html?id=${product.id}">
         <img 
           src="${product.image}" 
           alt="${product.alt}" 
           class="product-card__image"
         />
+        </a>
 
         <div class="product-card__content">
           <p class="product-card__brand">${product.brand}</p>
@@ -22,6 +24,7 @@ function renderProducts() {
             ${product.size} • ${product.condition}
           </p>
           <p class="product-card__price">${product.price} kr</p>
+          <a href="product.html?id=1">Visa produkt</a>
         </div>
       </article>
         `;

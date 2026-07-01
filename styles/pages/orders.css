@@ -59,13 +59,13 @@
 }
 
 .status-badge--shipped {
-  color: #8a5b00;
-  background: #fff5d6;
+  color: var(--clr-status-pending-text);
+  background: var(--clr-status-pending-bg);
 }
 
 .status-badge--paid {
-  color: #0d6b43;
-  background: #dff6eb;
+  color: var(--clr-status-success-text);
+  background: var(--clr-status-success-bg);
 }
 
 /* Products */

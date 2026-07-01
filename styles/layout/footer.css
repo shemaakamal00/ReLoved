@@ -84,7 +84,7 @@ footer a {
 .footer-nav a:hover,
 .footer-socials a:hover,
 footer a:hover {
-  color: #fffaf3;
+  color: var(--clr-panel-strong);
 }
 
 .footer-note,
