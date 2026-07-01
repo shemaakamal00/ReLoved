@@ -1,14 +1,25 @@
 import { products } from "./products.js";
-import { addToCart, updateCartBadge, renderCartPage, setupCartEvents } from "./cart.js";
+import {
+  addToCart,
+  updateCartBadge,
+  renderCartPage,
+  setupCartEvents,
+} from "./cart.js";
+import {
+  toggleFavorite,
+  isFavorited,
+  renderFavoritesPage,
+  setupFavoritesEvents,
+} from "./favorites.js";
 
 const productGrid = document.getElementById("productGrid");
 
 function renderProducts() {
-    if (!productGrid) return;
-    productGrid.innerHTML = "";
+  if (!productGrid) return;
+  productGrid.innerHTML = "";
 
-    products.forEach((product) => {
-        productGrid.innerHTML += `
+  products.forEach((product) => {
+    productGrid.innerHTML += `
         <article class="product-card" data-product-id="${product.id}">
         <a href="product.html?id=${product.id}">
         <img 
@@ -29,22 +40,23 @@ function renderProducts() {
         </div>
       </article>
         `;
-    });
+  });
 }
 
 renderProducts();
 
-function renderProductDetails () {
+function renderProductDetails() {
   const productImage = document.getElementById("productImage");
-  if(!productImage) return;
+  if (!productImage) return;
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
 
-  const product = products.find((p)=> p.id === id);
+  const product = products.find((p) => p.id === id);
 
-  if(!product) {
-    document.querySelector(".product").innerHTML = "<p>Produkten hittades inte.</p>";
+  if (!product) {
+    document.querySelector(".product").innerHTML =
+      "<p>Produkten hittades inte.</p>";
     return;
   }
 
@@ -58,7 +70,8 @@ function renderProductDetails () {
   document.getElementById("productCondition").textContent = product.condition;
   document.getElementById("productColor").textContent = product.color;
   document.getElementById("productMaterial").textContent = product.material;
-  document.getElementById("productDescription").textContent = product.description;
+  document.getElementById("productDescription").textContent =
+    product.description;
 
   const addToCartBtn = document.getElementById("addToCartBtn");
 
@@ -68,10 +81,27 @@ function renderProductDetails () {
       alert(`${product.name} tillagd i varukorgen!`);
     });
   }
-} 
+
+  const saveFavoriteBtn = document.getElementById("saveFavoriteBtn");
+
+  if (saveFavoriteBtn) {
+    saveFavoriteBtn.textContent = isFavorited(product.id)
+      ? "♥ Sparad"
+      : "♡ Spara";
+
+    saveFavoriteBtn.addEventListener("click", () => {
+      toggleFavorite(product.id);
+      saveFavoriteBtn.textContent = isFavorited(product.id)
+        ? "♥ Sparad"
+        : "♡ Spara";
+    });
+  }
+}
 
 renderProductDetails();
 
 renderCartPage();
 setupCartEvents();
 updateCartBadge();
+renderFavoritesPage();
+setupFavoritesEvents();
