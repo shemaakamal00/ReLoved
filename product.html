@@ -195,12 +195,13 @@
         <span>/</span>
         <a href="products.html">Produkter</a>
         <span>/</span>
-        <span>Svart skinnjacka</span>
+        <span id="breadcrumbName">Svart skinnjacka</span>
       </nav>
 
       <section class="product">
         <div class="product-gallery">
           <img
+            id="productImage"
             src="imgs/jacka.webp"
             alt="Svart skinnjacka"
             class="product-image"
@@ -208,38 +209,38 @@
         </div>
 
         <div class="product-info">
-          <p class="product-brand">Zara</p>
+          <p class="product-brand" id="productBrand">Zara</p>
+          <h1 id="productName">Svart skinnjacka</h1>
+          <p class="product-price" id="productPrice">350 kr</p>
+          <p><strong>Storlek:</strong> <span id="productSize">M</span></p>
+          <p>
+            <strong>Skick:</strong>
+            <span id="productCondition">Mycket bra</span>
+          </p>
+          <p><strong>Färg:</strong> <span id="productColor">Svart</span></p>
+          <p>
+            <strong>Material:</strong> <span id="productMaterial">Skinn</span>
+          </p>
 
-          <h1>Svart skinnjacka</h1>
-
-          <p class="product-price">350 kr</p>
-
-          <p><strong>Storlek:</strong> M</p>
-
-          <p><strong>Skick:</strong> Mycket bra</p>
-
-          <p><strong>Färg:</strong> Svart</p>
-
-          <p><strong>Material:</strong> Skinn</p>
-
-          <a href="cart.html" class="button button-primary">
+          <a href="cart.html" class="button button-primary" id="addToCartBtn">
             Lägg i varukorg
           </a>
 
-          <button class="button button-secondary">♡ Spara</button>
+          <button class="button button-secondary" id="saveFavoriteBtn">
+            ♡ Spara
+          </button>
         </div>
       </section>
 
       <section class="product-description">
         <h2>Beskrivning</h2>
 
-        <p>
+        <p id="productDescription">
           Klassisk svart skinnjacka från Zara i mycket fint skick. Jackan är
           endast använd ett fåtal gånger och har inga synliga skador eller
           slitningar.
         </p>
-
-        <p>
+        <p id="productDescription">
           Perfekt som höst- eller vårjacka och passar lika bra till jeans som
           över en klänning.
         </p>

@@ -17,14 +17,14 @@ function renderProducts() {
         />
         </a>
 
-        <div class="product-card__content">
+        <div class="product-card-content">
           <p class="product-card__brand">${product.brand}</p>
           <h3 class="product-card__name">${product.name}</h3>
           <p class="product-card__meta">
             ${product.size} • ${product.condition}
           </p>
           <p class="product-card__price">${product.price} kr</p>
-          <a href="product.html?id=1">Visa produkt</a>
+          <a href="product.html?id=${product.id}">Visa produkt</a>
         </div>
       </article>
         `;
@@ -32,3 +32,32 @@ function renderProducts() {
 }
 
 renderProducts();
+
+function renderProductDetails () {
+  const productImage = document.getElementById("productImage");
+  if(!productImage) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  const product = products.find((p)=> p.id === id);
+
+  if(!product) {
+    document.querySelector(".product").innerHTML = "<p>Produkten hittades inte.</p>";
+    return;
+  }
+
+  productImage.src = product.image;
+  productImage.alt = product.alt;
+
+  document.getElementById("productBrand").textContent = product.brand;
+  document.getElementById("productName").textContent = product.name;
+  document.getElementById("productPrice").textContent = `${product.price} kr`;
+  document.getElementById("productSize").textContent = product.size;
+  document.getElementById("productCondition").textContent = product.condition;
+  document.getElementById("productColor").textContent = product.color;
+  document.getElementById("productMaterial").textContent = product.material;
+  document.getElementById("productDescription").textContent = product.description;
+}
+
+renderProductDetails ();
