@@ -53,7 +53,7 @@
               <path d="M6 7h12l-1 9H7L6 7z"></path>
               <path d="M9 7a3 3 0 0 1 6 0"></path>
             </svg>
-            <span class="icon-badge">2</span>
+            <span class="icon-badge" id="cartCount">2</span>
           </a>
 
           <a href="profile.html" class="icon-button" aria-label="Profil">
@@ -198,32 +198,8 @@
         </div>
 
         <div class="cart-layout">
-          <div class="cart-items">
-            <article class="cart-item" data-product-id="1">
-              <img src="imgs/jacka.webp" alt="Svart skinnjacka" />
-
-              <div class="cart-item__info">
-                <h2>Svart skinnjacka</h2>
-                <p>Zara</p>
-                <p>Storlek: M</p>
-                <button type="button" data-action="remove">Ta bort</button>
-              </div>
-
-              <p class="cart-item__price">350 kr</p>
-            </article>
-
-            <article class="cart-item" data-product-id="2">
-              <img src="imgs/dress.jpeg" alt="Blommig sommarklänning" />
-
-              <div class="cart-item__info">
-                <h2>Blommig sommarklänning</h2>
-                <p>Mango</p>
-                <p>Storlek: S</p>
-                <button type="button" data-action="remove">Ta bort</button>
-              </div>
-
-              <p class="cart-item__price">180 kr</p>
-            </article>
+          <div class="cart-items" id="cartItems">
+            
           </div>
 
           <aside class="cart-summary">
@@ -231,17 +207,17 @@
 
             <div class="summary-row">
               <span>Produkter</span>
-              <span>530 kr</span>
+              <span id="cartSubtotal">0 kr</span>
             </div>
-
+            
             <div class="summary-row">
               <span>Frakt</span>
-              <span>49 kr</span>
+              <span id="cartShipping">49 kr</span>
             </div>
-
+            
             <div class="summary-row summary-row--total">
               <span>Totalt</span>
-              <span>579 kr</span>
+              <span id="cartTotal">0 kr</span>
             </div>
 
             <a href="checkout.html" class="button button-primary">
@@ -290,5 +266,6 @@
         <p class="footer-copy">© 2026 ReLoved. Alla rättigheter förbehållna.</p>
       </div>
     </footer>
+    <script type="module" src="scripts/main.js" defer></script>
   </body>
 </html>

@@ -1,4 +1,5 @@
 import { products } from "./products.js";
+import { addToCart, updateCartBadge, renderCartPage, setupCartEvents } from "./cart.js";
 
 const productGrid = document.getElementById("productGrid");
 
@@ -58,6 +59,19 @@ function renderProductDetails () {
   document.getElementById("productColor").textContent = product.color;
   document.getElementById("productMaterial").textContent = product.material;
   document.getElementById("productDescription").textContent = product.description;
-}
 
-renderProductDetails ();
+  const addToCartBtn = document.getElementById("addToCartBtn");
+
+  if (addToCartBtn) {
+    addToCartBtn.addEventListener("click", () => {
+      addToCart(product.id);
+      alert(`${product.name} tillagd i varukorgen!`);
+    });
+  }
+} 
+
+renderProductDetails();
+
+renderCartPage();
+setupCartEvents();
+updateCartBadge();
