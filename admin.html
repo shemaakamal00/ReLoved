@@ -270,17 +270,27 @@
           <form class="admin-form">
             <label>
               Produktnamn
-              <input type="text" placeholder="Svart skinnjacka" />
+              <input
+                name="title"
+                id="title"
+                type="text"
+                placeholder="Svart skinnjacka"
+              />
             </label>
 
             <label>
               Pris
-              <input type="text" placeholder="350 kr" />
+              <input
+                name="price"
+                id="price"
+                type="number"
+                placeholder="350 kr"
+              />
             </label>
 
             <label>
               Kategori
-              <select>
+              <select name="category" id="category">
                 <option>Dam</option>
                 <option>Herr</option>
                 <option>Designer</option>
@@ -291,7 +301,7 @@
 
             <label>
               Skick
-              <select>
+              <select name="condition" id="condition">
                 <option>Nyskick</option>
                 <option>Mycket bra</option>
                 <option>Bra</option>
@@ -301,17 +311,18 @@
 
             <label class="admin-form__full">
               Bild-url
-              <input type="text" placeholder="imgs/jacka.webp" />
+              <input name="imageUrl" id="imageUrl" type="text" placeholder="imgs/jacka.webp" />
             </label>
 
             <label class="admin-form__full">
               Beskrivning
-              <textarea placeholder="Beskriv produkten..."></textarea>
+              <textarea name="description" id="description" placeholder="Beskriv produkten..."></textarea>
             </label>
 
             <button
+              id="save-product-btn"
               class="button button-primary admin-form__full"
-              type="button"
+              type="submit"
             >
               Spara produkt
             </button>

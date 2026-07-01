@@ -203,12 +203,22 @@
 
               <label>
                 E-post
-                <input type="email" placeholder="namn@email.se" />
+                <input
+                  name="email"
+                  id="email"
+                  type="email"
+                  placeholder="namn@email.se"
+                />
               </label>
 
               <label>
                 Telefonnummer
-                <input type="tel" placeholder="070-123 45 67" />
+                <input
+                  name="phone"
+                  id="phone"
+                  type="tel"
+                  placeholder="070-123 45 67"
+                />
               </label>
             </div>
 
@@ -217,23 +227,43 @@
 
               <label>
                 För- och efternamn
-                <input type="text" placeholder="Ditt namn" />
+                <input
+                  name="fullName"
+                  id="fullName"
+                  type="text"
+                  placeholder="Ditt namn"
+                />
               </label>
 
               <label>
                 Adress
-                <input type="text" placeholder="Gata 1" />
+                <input
+                  name="address"
+                  id="address"
+                  type="text"
+                  placeholder="Gata 1"
+                />
               </label>
 
               <div class="form-row">
                 <label>
                   Postnummer
-                  <input type="text" placeholder="852 00" />
+                  <input
+                    name="postalCode"
+                    id="postalCode"
+                    type="text"
+                    placeholder="852 00"
+                  />
                 </label>
 
                 <label>
                   Stad
-                  <input type="text" placeholder="Sundsvall" />
+                  <input
+                    name="city"
+                    id="city"
+                    type="text"
+                    placeholder="Sundsvall"
+                  />
                 </label>
               </div>
             </div>
@@ -242,17 +272,17 @@
               <h2>Betalsätt</h2>
 
               <label class="radio-option">
-                <input type="radio" name="payment" checked />
+                <input name="payment" value="card"  type="radio" name="payment" checked />
                 Kortbetalning
               </label>
 
               <label class="radio-option">
-                <input type="radio" name="payment" />
+                <input name="payment" value="swish" type="radio" name="payment" />
                 Swish
               </label>
 
               <label class="radio-option">
-                <input type="radio" name="payment" />
+                <input name="payment" value="klarna" type="radio" name="payment" />
                 Klarna
               </label>
             </div>
@@ -294,9 +324,9 @@
               <span>579 kr</span>
             </div>
 
-            <a href="orders.html" class="button button-primary">
-              Slutför köp
-            </a>
+            <form class="checkout-button-form">
+              <button type="submit" class="button button--primary">Slutför köp</button>
+            </form>
           </aside>
         </div>
       </section>
