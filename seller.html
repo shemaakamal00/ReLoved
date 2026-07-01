@@ -224,17 +224,17 @@
           <form class="seller-form">
             <label>
               Produktnamn
-              <input type="text" placeholder="Svart skinnjacka" />
+              <input name="title" id="title" type="text" placeholder="Svart skinnjacka" />
             </label>
 
             <label>
               Pris
-              <input type="text" placeholder="350 kr" />
+              <input name="price" id="price" type="text" placeholder="350 kr" />
             </label>
 
             <label>
               Kategori
-              <select>
+              <select name="category" id="category">
                 <option>Dam</option>
                 <option>Herr</option>
                 <option>Designer</option>
@@ -245,7 +245,7 @@
 
             <label>
               Skick
-              <select>
+              <select name="condition" id="condition">
                 <option>Nyskick</option>
                 <option>Mycket bra</option>
                 <option>Bra</option>
@@ -254,7 +254,7 @@
             </label>
 
             <label class="upload-box">
-              <input type="file" accept="image/*" hidden />
+              <input name="images" id="images" type="file" accept="image/*" hidden />
 
               <span class="upload-icon">📷</span>
 
@@ -265,10 +265,11 @@
 
             <label class="seller-form__full">
               Beskrivning
-              <textarea placeholder="Beskriv plagget..."></textarea>
+              <textarea name="description" id="description" placeholder="Beskriv plagget..."></textarea>
             </label>
 
             <button
+              id ="submit-listing-btn"
               class="button button-primary seller-form__full"
               type="button"
             >
@@ -293,23 +294,23 @@
               <span>Åtgärd</span>
             </div>
 
-            <div class="seller-table__row">
+            <div class="seller-table__row" data-listing-id="1">
               <span>Svart skinnjacka</span>
               <span>350 kr</span>
               <span class="status-badge status-badge--paid">Aktiv</span>
               <div class="seller-actions">
-                <button type="button">Redigera</button>
-                <button type="button">Ta bort</button>
+                <button type="button" data-action="edit">Redigera</button>
+                <button type="button" data-action="delete">Ta bort</button>
               </div>
             </div>
 
-            <div class="seller-table__row">
+            <div class="seller-table__row" data-listing-id="2">
               <span>Blommig sommarklänning</span>
               <span>180 kr</span>
               <span class="status-badge status-badge--pending">Väntar</span>
               <div class="seller-actions">
-                <button type="button">Redigera</button>
-                <button type="button">Ta bort</button>
+                <button type="button" data-action="edit">Redigera</button>
+                <button type="button" data-action="delete">Ta bort</button>
               </div>
             </div>
           </div>
@@ -332,20 +333,20 @@
               <span>Åtgärd</span>
             </div>
 
-            <div class="seller-table__row">
+            <div class="seller-table__row" data-order-id="2041">
               <span>#2041</span>
               <span>Svart skinnjacka</span>
               <span>350 kr</span>
               <span class="status-badge status-badge--paid">Betald</span>
-              <button type="button">Markera skickad</button>
+              <button type="button" data-action="mark-shipped">Markera skickad</button>
             </div>
 
-            <div class="seller-table__row">
+            <div class="seller-table__row" data-order-id="2042">
               <span>#2042</span>
               <span>Brun handväska</span>
               <span>250 kr</span>
               <span class="status-badge status-badge--shipped">Skickad</span>
-              <button type="button">Visa order</button>
+              <button type="button" data-action="view-order">Visa order</button>
             </div>
           </div>
         </section>
