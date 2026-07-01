@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Favoriter |ReLoved</title>
+    <title>Favoriter | ReLoved</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -189,71 +189,21 @@
     </header>
 
     <main>
-      <section class="favorites-page">
+      <section class="favorites-page" data-page="favorites">
         <div class="favorites-header">
           <p class="eyebrow">Mina favoriter</p>
-
           <h1>Sparade produkter</h1>
-
           <p>Här hittar du alla produkter du har sparat för senare.</p>
         </div>
 
-        <div class="product-grid">
-          <article class="product-card">
-            <a href="product.html">
-              <img src="imgs/jacka.webp" alt="Svart skinnjacka" />
-            </a>
-
-            <div class="product-card-content">
-              <p class="product-card__brand">Zara</p>
-
-              <h3>Svart skinnjacka</h3>
-
-              <p>Storlek: M</p>
-
-              <p>Skick: Mycket bra</p>
-
-              <p class="price">350 kr</p>
-
-              <div class="favorite-actions">
-                <a href="product.html" class="button button-primary">
-                  Visa produkt
-                </a>
-
-                <button type="button" class="button button-secondary">
-                  Ta bort
-                </button>
-              </div>
-            </div>
-          </article>
-
-          <article class="product-card">
-            <a href="product.html">
-              <img src="imgs/bag.gif" alt="Brun handväska" />
-            </a>
-
-            <div class="product-card-content">
-              <p class="product-card__brand">Vintage</p>
-
-              <h3>Brun handväska</h3>
-
-              <p>One Size</p>
-
-              <p>Skick: Mycket bra</p>
-
-              <p class="price">250 kr</p>
-
-              <div class="favorite-actions">
-                <a href="product.html" class="button button-primary">
-                  Visa produkt
-                </a>
-
-                <button type="button" class="button button-secondary">
-                  Ta bort
-                </button>
-              </div>
-            </div>
-          </article>
+        <div class="product-grid" data-favorites-list>
+          <div class="favorites-empty" data-favorites-empty hidden>
+            <h2>Inga favoriter ännu</h2>
+            <p>När du sparar produkter visas de här.</p>
+            <a href="products.html" class="button button-primary"
+              >Utforska produkter</a
+            >
+          </div>
         </div>
       </section>
     </main>
@@ -292,5 +242,7 @@
         <p class="footer-copy">© 2026 ReLoved. Alla rättigheter förbehållna.</p>
       </div>
     </footer>
+
+    <script type="module" src="scripts/main.js"></script>
   </body>
 </html>
