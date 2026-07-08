@@ -221,25 +221,42 @@
             </div>
           </div>
 
-          <form class="seller-form">
+          <form class="seller-form" id="seller-form">
             <label>
               Produktnamn
-              <input name="title" id="title" type="text" placeholder="Svart skinnjacka" />
+              <input
+                name="title"
+                id="title"
+                type="text"
+                placeholder="Svart skinnjacka"
+              />
+            </label>
+
+            <label>
+              Ditt namn
+              <input
+                name="sellerName"
+                id="sellerName"
+                type="text"
+                placeholder="Ditt namn"
+              />
             </label>
 
             <label>
               Pris
-              <input name="price" id="price" type="text" placeholder="350 kr" />
+              <input name="price" id="price" type="number" placeholder="350" />
             </label>
 
             <label>
               Kategori
               <select name="category" id="category">
-                <option>Dam</option>
-                <option>Herr</option>
-                <option>Designer</option>
-                <option>Barn</option>
-                <option>Hem</option>
+                <option value="1">Dam</option>
+                <option value="2">Herr</option>
+                <option value="3">Designer</option>
+                <option value="4">Barn</option>
+                <option value="5">Hem</option>
+                <option value="6">Elektronik</option>
+                <option value="7">Sport</option>
               </select>
             </label>
 
@@ -253,23 +270,50 @@
               </select>
             </label>
 
+            <label>
+              Storlek
+              <input name="size" id="size" type="text" placeholder="M" />
+            </label>
+
+            <label>
+              Färg
+              <input name="color" id="color" type="text" placeholder="Svart" />
+            </label>
+
+            <label>
+              Material
+              <input
+                name="material"
+                id="material"
+                type="text"
+                placeholder="Skinn"
+              />
+            </label>
+
             <label class="upload-box">
-              <input name="images" id="images" type="file" accept="image/*" hidden />
-
+              <input
+                name="image"
+                id="image"
+                type="file"
+                accept="image/*"
+                hidden
+              />
               <span class="upload-icon">📷</span>
-
-              <strong>Ladda upp produktbilder</strong>
-
+              <strong>Ladda upp produktbild</strong>
               <p>JPG, PNG eller WEBP</p>
             </label>
 
             <label class="seller-form__full">
               Beskrivning
-              <textarea name="description" id="description" placeholder="Beskriv plagget..."></textarea>
+              <textarea
+                name="description"
+                id="description"
+                placeholder="Beskriv plagget..."
+              ></textarea>
             </label>
 
             <button
-              id ="submit-listing-btn"
+              id="submit-listing-btn"
               class="button button-primary seller-form__full"
               type="submit"
             >
@@ -338,7 +382,9 @@
               <span>Svart skinnjacka</span>
               <span>350 kr</span>
               <span class="status-badge status-badge--paid">Betald</span>
-              <button type="submit" data-action="mark-shipped">Markera skickad</button>
+              <button type="submit" data-action="mark-shipped">
+                Markera skickad
+              </button>
             </div>
 
             <div class="seller-table__row" data-order-id="2042">
@@ -387,5 +433,6 @@
         <p class="footer-copy">© 2026 ReLoved. Alla rättigheter förbehållna.</p>
       </div>
     </footer>
+    <script type="module" src="scripts/main.js"></script>
   </body>
 </html>

@@ -224,7 +224,7 @@
               <h2>Annonser att godkänna</h2>
             </div>
           </div>
-
+        
           <div class="admin-table">
             <div class="admin-table__row admin-table__row--head">
               <span>Produkt</span>
@@ -233,28 +233,8 @@
               <span>Status</span>
               <span>Åtgärd</span>
             </div>
-
-            <div class="admin-table__row" data-listing-id="1">
-              <span>Svart skinnjacka</span>
-              <span>Shemaa Kamal</span>
-              <span>350 kr</span>
-              <span class="status-badge status-badge--pending">Väntar</span>
-              <div class="admin-actions">
-                <button type="button" data-action="approve">Godkänn</button>
-                <button type="button" data-action="reject">Neka</button>
-              </div>
-            </div>
-
-            <div class="admin-table__row" data-listing-id="2">
-              <span>Vintage handväska</span>
-              <span>Nora Ali</span>
-              <span>250 kr</span>
-              <span class="status-badge status-badge--pending">Väntar</span>
-              <div class="admin-actions">
-                <button type="button" data-action="approve">Godkänn</button>
-                <button type="button" data-action="reject">Neka</button>
-              </div>
-            </div>
+        
+            <div id="pendingListingsTable"></div>
           </div>
         </section>
 
@@ -361,7 +341,7 @@
               <h2>Senaste ordrar</h2>
             </div>
           </div>
-
+        
           <div class="admin-table">
             <div class="admin-table__row admin-table__row--head">
               <span>Order</span>
@@ -370,7 +350,7 @@
               <span>Status</span>
               <span>Åtgärd</span>
             </div>
-
+        
             <div id="adminOrdersTable"></div>
           </div>
         </section>

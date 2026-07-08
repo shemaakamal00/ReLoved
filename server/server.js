@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
-const upload = multer ({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -14,19 +14,6 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY,
 );
-
-app.get("/api/products", async (req, res) => {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("status", "approved");
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.json(data);
-});
 
 app.get("/api/products/:id", async (req, res) => {
   const { id } = req.params;
@@ -128,27 +115,30 @@ app.post("/api/orders", async (req, res) => {
 });
 
 app.get("/api/orders", async (req, res) => {
-  const {email} = req.query;
+  const { email } = req.query;
 
-  let query = supabase.from("orders").select("*").order("created_at", { ascending: false });
+  let query = supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (email) {
     query = query.eq("email", email);
   }
 
-  const {data, error} = await query;
+  const { data, error } = await query;
 
   if (error) {
     return res.status(500).json({ error: error.message });
   }
-  
+
   res.json(data);
 });
 
 app.get("api/orders/:id", async (req, res) => {
-  const {id} = req.params;
+  const { id } = req.params;
 
-  const {data: order, error: orderError} = await supabase
+  const { data: order, error: orderError } = await supabase
     .from("orders")
     .select("*")
     .eq("id", id)
@@ -158,11 +148,11 @@ app.get("api/orders/:id", async (req, res) => {
     return res.status(404).json({ error: "Ordern hittades inte" });
   }
 
-  const {data: orderItems, error: itemsError} = await supabase
+  const { data: orderItems, error: itemsError } = await supabase
     .from("order_items")
     .select("*")
     .eq("order_id", id);
-    
+
   if (itemsError) {
     return res.status(500).json({ error: itemsError.message });
   }
@@ -170,78 +160,202 @@ app.get("api/orders/:id", async (req, res) => {
   res.json([...order, items]);
 });
 
-app.patch ("/api/irders/:id/status", async (req, res) => {
-  const {id} = req.params;
-  const {status} = req.body;
+app.patch("/api/orders/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
 
-  const validStatuses = ["ordered", "processing", "shipped", "delivered", "refunded","cancelled"];
-  if(!validStatuses.includes(status)) {
-    return res.status(400).json({error:"Ogiltig status"});
+  const validStatuses = [
+    "ordered",
+    "processing",
+    "shipped",
+    "delivered",
+    "refunded",
+    "cancelled",
+  ];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: "Ogiltig status" });
   }
 
-  const {data, error} = await supabase
-  .from("orders")
-  .update({status})
-  .eq("id", id)
-  .select()
-  .single();
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ status })
+    .eq("id", id)
+    .select()
+    .single();
 
-  if(error){
-    return res.status(500).json({error: error.message});
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
 
   res.json(data);
-})
+});
 
 app.post("/api/products", upload.single("image"), async (req, res) => {
-  const { title, brand, price, category, condition, size, color, material, description } = req.body;
-
-  if (!title || !brand || !price || !condition) {
-    return res.status(400).json({ error: "Fyll i produktnamn, varumärke, pris och skick" });
-  }
-
-  let imageUrl = null;
-
-  if(req.file) {
-    const fileName = `${Date.now()}-${req.file.originalname}`;
-
-    const {error: uploadError} = await supabase.storage
-    .from("products")
-    .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-
-    if (uploadError) {
-      return res.status(500).json({ error: uploadError.message });
-    }
-
-    const { data: publicUrlData } = supabase.storage.from("products").getPublicUrl(fileName);
-    imageUrl = publicUrlData.publicUrl;
-  }
-
-  const {data, error} = await supabase 
-  .from ("products")
-  .insert({
-    name: title,
+  const {
+    title,
     brand,
     price,
-    category_id: category || null,
+    category,
     condition,
     size,
     color,
     material,
     description,
-    image_url: imageUrl,
-    alt_text: title,
-    status: "approved",
-  })
-  .select()
-  .single();
+  } = req.body;
 
-  if(error){
-    return res.status(500).json({error: error.message});
+  if (!title || !brand || !price || !condition) {
+    return res
+      .status(400)
+      .json({ error: "Fyll i produktnamn, varumärke, pris och skick" });
   }
-  
+
+  let imageUrl = null;
+
+  if (req.file) {
+    const fileName = `${Date.now()}-${req.file.originalname}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("products")
+      .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+    if (uploadError) {
+      return res.status(500).json({ error: uploadError.message });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("products")
+      .getPublicUrl(fileName);
+    imageUrl = publicUrlData.publicUrl;
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .insert({
+      name: title,
+      brand,
+      price,
+      category_id: category || null,
+      condition,
+      size,
+      color,
+      material,
+      description,
+      image_url: imageUrl,
+      alt_text: title,
+      status: "approved",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
   res.status(201).json(data);
-  })
+});
+
+app.get("/api/products", async (req, res) => {
+  const { status } = req.query;
+
+  let query = supabase.from("products").select("*");
+  query = status ? query.eq("status", status) : query.eq("status", "approved");
+
+  const { data, error } = await query;
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+  es;
+});
+
+app.post("/api/products/submit", upload.single("image"), async (req, res) => {
+  const {
+    title,
+    sellerName,
+    price,
+    category,
+    condition,
+    size,
+    color,
+    material,
+    description,
+  } = req.body;
+
+  if (!title || !sellerName || !price) {
+    return res
+      .status(400)
+      .json({ error: "Fyll i produktnamn, ditt namn och pris" });
+  }
+
+  let imageUrl = null;
+
+  if (req.file) {
+    const fileName = `${Date.now()}-${req.file.originalname}`;
+    const { error: uploadError } = await supabase.storage
+      .from("products")
+      .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+    if (uploadError) {
+      return res.status(500).json({ error: uploadError.message });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("products")
+      .getPublicUrl(fileName);
+    imageUrl = publicUrlData.publicUrl;
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .insert({
+      name: title,
+      brand: "Okänt märke",
+      seller_name: sellerName,
+      price,
+      category_id: category || null,
+      condition,
+      size,
+      color,
+      material,
+      description,
+      image_url: imageUrl,
+      alt_text: title,
+      status: "pending",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.status(201).json(data);
+});
+
+app.patch("/api/products/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ["pending", "approved", "rejected", "sold", "archived"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: "Ogiltig status" });
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .update({ status })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

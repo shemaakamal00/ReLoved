@@ -3,7 +3,8 @@ import { addToCart, updateCartBadge, renderCartPage, setupCartEvents } from "./c
 import { toggleFavorite, isFavorited, renderFavoritesPage, setupFavoritesEvents } from "./favorites.js";
 import { renderCheckoutSummary, setupCheckoutForm } from "./checkout.js";
 import { renderOrdersPage } from "./orders.js";
-import { renderAdminOrders, setupAdminOrderEvents, setupProductForm } from "./admin.js";
+import { renderAdminOrders, setupAdminOrderEvents, setupProductForm, renderPendingListings, setupPendingListingsEvents } from "./admin.js";
+import { setupSellerForm } from "./seller.js";
 
 const products = await fetchProducts();
 
@@ -91,3 +92,6 @@ renderOrdersPage();
 renderAdminOrders();
 setupAdminOrderEvents();
 setupProductForm();
+renderPendingListings();
+setupPendingListingsEvents();
+setupSellerForm();

@@ -1,4 +1,10 @@
-import { fetchAllOrders, updateOrderStatus, createProduct } from "./api.js";
+import {
+  fetchAllOrders,
+  updateOrderStatus,
+  createProduct,
+  fetchPendingProducts,
+  updateProductStatus,
+} from "./api.js";
 
 const STATUS_OPTIONS = [
   { value: "ordered", label: "Beställd" },
@@ -79,6 +85,64 @@ export function setupProductForm() {
     } catch (err) {
       console.error(err);
       alert("Kunde inte skapa produkten");
+    }
+  });
+}
+
+export async function renderPendingListings() {
+  const table = document.getElementById("pendingListingsTable");
+  if (!table) return;
+
+  let listings;
+  try {
+    listings = await fetchPendingProducts();
+  } catch (err) {
+    console.error(err);
+    table.innerHTML = "<p>Kunde inte hämta annonser.</p>";
+    return;
+  }
+
+  if (listings.length === 0) {
+    table.innerHTML = "<p>Inga annonser väntar på granskning just nu.</p>";
+    return;
+  }
+
+  table.innerHTML = "";
+
+  listings.forEach((product) => {
+    table.innerHTML += `
+      <div class="admin-table__row" data-listing-id="${product.id}">
+        <span>${product.name}</span>
+        <span>${product.seller_name ?? "Okänd säljare"}</span>
+        <span>${product.price} kr</span>
+        <span class="status-badge status-badge--pending">Väntar</span>
+        <div class="admin-actions">
+          <button type="button" data-action="approve">Godkänn</button>
+          <button type="button" data-action="reject">Neka</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+export function setupPendingListingsEvents() {
+  const table = document.getElementById("pendingListingsTable");
+  if (!table) return;
+
+  table.addEventListener("click", async (event) => {
+    const action = event.target.dataset.action;
+    if (action !== "approve" && action !== "reject") return;
+
+    const row = event.target.closest(".admin-table__row");
+    const listingId = row.dataset.listingId;
+    const newStatus = action === "approve" ? "approved" : "rejected";
+
+    try {
+      await updateProductStatus(listingId, newStatus);
+      renderPendingListings();
+    } catch (err) {
+      console.error(err);
+      alert("Kunde inte uppdatera annonsen.");
     }
   });
 }

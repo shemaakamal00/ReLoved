@@ -1,57 +1,88 @@
 const API_URL = "http://localhost:3001/api";
 
-export async function fetchProducts(){
-    const response = await fetch (`${API_URL}/products`);
-    if (!response.ok) throw new Error ("Kunde inte hämta produkter");
-    return response.json();
+export async function fetchProducts() {
+  const response = await fetch(`${API_URL}/products`);
+  if (!response.ok) throw new Error("Kunde inte hämta produkter");
+  return response.json();
 }
 
-export async function fetchProductsById(id){
-    const response = await fetch(`${API_URL}/products/${id}`);
-    if (!response.ok) throw new Error("Produkten hittades inte");
-    return response.json();
+export async function fetchProductsById(id) {
+  const response = await fetch(`${API_URL}/products/${id}`);
+  if (!response.ok) throw new Error("Produkten hittades inte");
+  return response.json();
 }
 
-export async function createOrder (orderData) {
-    const response = await fetch(`${API_URL}/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-    });
+export async function createOrder(orderData) {
+  const response = await fetch(`${API_URL}/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(orderData),
+  });
 
-    if (!response.ok) throw new Error ("Kunde inte skapa order");
-    return response.json();
+  if (!response.ok) throw new Error("Kunde inte skapa order");
+  return response.json();
 }
 
 export async function fetchOrders(email) {
-    const response = await fetch (`${API_URL}/orders?email=${encodeURIComponent(email)}`);
-    if(!response.ok) throw new Error("Kunde inte hämta ordrar");
-    return response.json();
+  const response = await fetch(
+    `${API_URL}/orders?email=${encodeURIComponent(email)}`,
+  );
+  if (!response.ok) throw new Error("Kunde inte hämta ordrar");
+  return response.json();
 }
 
-export async function fetchAllOrders(){
-    const response = await fetch(`${API_URL}/orders`);
-    if(!response.ok) throw new Error ("Kunde inte hämta ordrar");
-    return response.json()
+export async function fetchAllOrders() {
+  const response = await fetch(`${API_URL}/orders`);
+  if (!response.ok) throw new Error("Kunde inte hämta ordrar");
+  return response.json();
 }
 
-export async function updateOrderStatus(orderId, status){
-    const response = await fetch (`${API_URL}/orders/${orderId}/status`, {
-        method: "PATCH",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({status}),
-    });
+export async function updateOrderStatus(orderId, status) {
+  const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
 
-    if(!response.ok) throw new Error ("Kunde inte uppdatera status");
-    return response.json();
+  if (!response.ok) throw new Error("Kunde inte uppdatera status");
+  return response.json();
 }
 
 export async function createProduct(formData) {
-    const response = await fetch(`${API_URL}/products`, {
-        method: "POST",
-        body: formData,
-    });
+  const response = await fetch(`${API_URL}/products`, {
+    method: "POST",
+    body: formData,
+  });
 
-    if (!response.ok) throw new Error ("Kunde inte skapa produkten");
+  if (!response.ok) throw new Error("Kunde inte skapa produkten");
+  return response.json();
+}
+
+export async function submitListing(formData) {
+  const response = await fetch(`${API_URL}/products/submit`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) throw new Error("Kunde inte skicka in annonsen");
+  return response.json();
+}
+
+export async function fetchPendingProducts() {
+    const response = await fetch(`${API_URL}/products?status=pending`, {
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Kunde inte hämta annonser");
     return response.json();
+  }
+
+export async function updateProductStatus(productId, status) {
+  const response = await fetch(`${API_URL}/products/${productId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) throw new Error("Kunde inte uppdatera status");
+  return response.json();
 }

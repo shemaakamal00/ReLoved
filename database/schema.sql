@@ -101,3 +101,6 @@ INSERT INTO products (category_id, brand, name, size, condition, color, material
 (1, 'Zara', 'Svart skinnjacka', 'M', 'Mycket bra', 'Svart', 'Skinn', 'Klassisk svart skinnjacka från Zara i mycket fint skick. Jackan är endast använd ett fåtal gånger och har inga synliga skador eller slitningar.', 350, 'imgs/jacket.png', 'Svart skinnjacka', 'approved'),
 (1, 'Mango', 'Blommig sommarklänning', 'S', 'Mycket bra', 'Flerfärgad', 'Bomull', 'Söt blommig sommarklänning från Mango i mycket fint skick. Klänningen är lätt och luftig, perfekt för varma sommardagar.', 180, 'imgs/dress.png', 'Blommig sommarklänning', 'approved'),
 (1, 'Vintage', 'Brun handväska', 'One size', 'Mycket bra', 'Brun', 'Läder', 'Elegant brun handväska i vintage-stil. Väskan är i mycket fint skick och har en klassisk design som passar till många olika outfits.', 250, 'imgs/bag.png', 'Brun handväska', 'approved');
+
+-- seller_name --
+ALTER TABLE products ADD COLUMN seller_name VARCHAR(150);
