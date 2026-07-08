@@ -11,3 +11,14 @@ export async function fetchProductsById(){
     if (!response.ok) throw new Error("Produkten hittades inte");
     return response.json();
 }
+
+export async function createOrder (orderData) {
+    const response = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) throw new Error ("Kunde inte skapa order");
+    return response.json();
+}

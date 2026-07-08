@@ -1,7 +1,7 @@
 import { fetchProducts, fetchProductsById } from "./api.js";
 import { addToCart, updateCartBadge, renderCartPage, setupCartEvents } from "./cart.js";
 import { toggleFavorite, isFavorited, renderFavoritesPage, setupFavoritesEvents } from "./favorites.js";
-
+import { renderChecoutSummary, setupCheckoutForm } from "./checkout.js";
 const products = await fetchProducts();
 
 const productGrid = document.getElementById("productGrid");
@@ -82,3 +82,5 @@ setupCartEvents(products);
 renderFavoritesPage(products);
 setupFavoritesEvents(products);
 updateCartBadge();
+renderChecoutSummary(products);
+setupCheckoutForm();
