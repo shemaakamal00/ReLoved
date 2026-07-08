@@ -1,4 +1,3 @@
-import { products } from "./products.js";
 import { getFavorites, saveFavorites } from "./storage.js";
 
 export function toggleFavorite(productId) {
@@ -18,7 +17,7 @@ export function isFavorited(productId) {
   return getFavorites().includes(productId);
 }
 
-export function renderFavoritesPage() {
+export function renderFavoritesPage(products) {
   const favoritesList = document.querySelector("[data-favorites-list]");
   const favoritesEmpty = document.querySelector("[data-favorites-empty]");
   if (!favoritesList) return;
@@ -54,7 +53,7 @@ export function renderFavoritesPage() {
   });
 }
 
-export function setupFavoritesEvents() {
+export function setupFavoritesEvents(products) {
   const favoritesList = document.querySelector("[data-favorites-list]");
   if (!favoritesList) return;
 
@@ -65,6 +64,6 @@ export function setupFavoritesEvents() {
     const productId = card.dataset.productId;
 
     toggleFavorite(productId);
-    renderFavoritesPage();
+    renderFavoritesPage(products);
   });
 }

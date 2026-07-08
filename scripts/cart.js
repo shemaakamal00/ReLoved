@@ -1,4 +1,3 @@
-import { products } from "./products.js";
 import { getCart, saveCart} from "./storage.js";
 
 export function addToCart(productId, quantity = 1){
@@ -31,7 +30,7 @@ export function removeFromCart(productId) {
     updateCartBadge();
   }
   
-  export function renderCartPage() {
+  export function renderCartPage(products) {
     const cartItemsContainer = document.getElementById("cartItems");
     if (!cartItemsContainer) return;
   
@@ -79,7 +78,7 @@ export function removeFromCart(productId) {
     document.getElementById("cartTotal").textContent = `${total} kr`;
   }
   
-  export function setupCartEvents() {
+  export function setupCartEvents(products) {
     const cartItemsContainer = document.getElementById("cartItems");
     if (!cartItemsContainer) return;
   
@@ -90,6 +89,6 @@ export function removeFromCart(productId) {
       const productId = cartItem.dataset.productId;
   
       removeFromCart(productId);
-      renderCartPage();
+      renderCartPage(products);
     });
   }
