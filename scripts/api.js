@@ -6,7 +6,7 @@ export async function fetchProducts(){
     return response.json();
 }
 
-export async function fetchProductsById(){
+export async function fetchProductsById(id){
     const response = await fetch(`${API_URL}/products/${id}`);
     if (!response.ok) throw new Error("Produkten hittades inte");
     return response.json();
