@@ -45,3 +45,13 @@ export async function updateOrderStatus(orderId, status){
     if(!response.ok) throw new Error ("Kunde inte uppdatera status");
     return response.json();
 }
+
+export async function createProduct(formData) {
+    const response = await fetch(`${API_URL}/products`, {
+        method: "POST",
+        body: formData,
+    });
+
+    if (!response.ok) throw new Error ("Kunde inte skapa produkten");
+    return response.json();
+}

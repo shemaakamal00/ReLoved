@@ -183,3 +183,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Filuppladdning */
+
+.admin-form input[type="file"] {
+  padding: 0.6rem;
+  cursor: pointer;
+}
+
+.admin-form input[type="file"]::file-selector-button {
+  padding: 0.6rem 1.2rem;
+  margin-right: 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--clr-accent);
+  color: var(--clr-panel-strong);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.admin-form input[type="file"]::file-selector-button:hover {
+  background: var(--clr-heading);
+}
+
+/* Status-dropdown i ordertabellen */
+
+.admin-table__row select {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(186, 168, 152, 0.45);
+  border-radius: 10px;
+  background: var(--clr-card);
+  font: inherit;
+  cursor: pointer;
+}

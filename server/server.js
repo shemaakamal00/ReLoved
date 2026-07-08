@@ -1,10 +1,11 @@
 import express from "express";
+import multer from "multer";
 import cors from "cors";
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
-
+const upload = multer ({ storage: multer.memoryStorage() });
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -191,6 +192,56 @@ app.patch ("/api/irders/:id/status", async (req, res) => {
 
   res.json(data);
 })
+
+app.post("/api/products", upload.single("image"), async (req, res) => {
+  const { title, brand, price, category, condition, size, color, material, description } = req.body;
+
+  if (!title || !brand || !price || !condition) {
+    return res.status(400).json({ error: "Fyll i produktnamn, varumärke, pris och skick" });
+  }
+
+  let imageUrl = null;
+
+  if(req.file) {
+    const fileName = `${Date.now()}-${req.file.originalname}`;
+
+    const {error: uploadError} = await supabase.storage
+    .from("products")
+    .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+    if (uploadError) {
+      return res.status(500).json({ error: uploadError.message });
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("products").getPublicUrl(fileName);
+    imageUrl = publicUrlData.publicUrl;
+  }
+
+  const {data, error} = await supabase 
+  .from ("products")
+  .insert({
+    name: title,
+    brand,
+    price,
+    category_id: category || null,
+    condition,
+    size,
+    color,
+    material,
+    description,
+    image_url: imageUrl,
+    alt_text: title,
+    status: "approved",
+  })
+  .select()
+  .single();
+
+  if(error){
+    return res.status(500).json({error: error.message});
+  }
+  
+  res.status(201).json(data);
+  })
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

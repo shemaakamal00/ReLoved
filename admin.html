@@ -266,7 +266,7 @@
             </div>
           </div>
 
-          <form class="admin-form">
+          <form class="admin-form" id="admin-form">
             <label>
               Produktnamn
               <input
@@ -278,23 +278,25 @@
             </label>
 
             <label>
+              Varumärke
+              <input name="brand" id="brand" type="text" placeholder="Zara" />
+            </label>
+
+            <label>
               Pris
-              <input
-                name="price"
-                id="price"
-                type="number"
-                placeholder="350 kr"
-              />
+              <input name="price" id="price" type="number" placeholder="350" />
             </label>
 
             <label>
               Kategori
               <select name="category" id="category">
-                <option>Dam</option>
-                <option>Herr</option>
-                <option>Designer</option>
-                <option>Barn</option>
-                <option>Hem</option>
+                <option value="1">Dam</option>
+                <option value="2">Herr</option>
+                <option value="3">Designer</option>
+                <option value="4">Barn</option>
+                <option value="5">Hem</option>
+                <option value="6">Elektronik</option>
+                <option value="7">Sport</option>
               </select>
             </label>
 
@@ -308,14 +310,29 @@
               </select>
             </label>
 
+            <label>
+              Storlek
+              <input name="size" id="size" type="text" placeholder="M" />
+            </label>
+
+            <label>
+              Färg
+              <input name="color" id="color" type="text" placeholder="Svart" />
+            </label>
+
             <label class="admin-form__full">
-              Bild-url
+              Material
               <input
-                name="imageUrl"
-                id="imageUrl"
+                name="material"
+                id="material"
                 type="text"
-                placeholder="imgs/jacket.png"
+                placeholder="Skinn"
               />
+            </label>
+
+            <label class="admin-form__full">
+              Produktbild
+              <input name="image" id="image" type="file" accept="image/*" />
             </label>
 
             <label class="admin-form__full">
