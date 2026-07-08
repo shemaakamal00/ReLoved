@@ -28,3 +28,20 @@ export async function fetchOrders(email) {
     if(!response.ok) throw new Error("Kunde inte hämta ordrar");
     return response.json();
 }
+
+export async function fetchAllOrders(){
+    const response = await fetch(`${API_URL}/orders`);
+    if(!response.ok) throw new Error ("Kunde inte hämta ordrar");
+    return response.json()
+}
+
+export async function updateOrderStatus(orderId, status){
+    const response = await fetch (`${API_URL}/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({status}),
+    });
+
+    if(!response.ok) throw new Error ("Kunde inte uppdatera status");
+    return response.json();
+}

@@ -169,6 +169,29 @@ app.get("api/orders/:id", async (req, res) => {
   res.json([...order, items]);
 });
 
+app.patch ("/api/irders/:id/status", async (req, res) => {
+  const {id} = req.params;
+  const {status} = req.body;
+
+  const validStatuses = ["ordered", "processing", "shipped", "delivered", "refunded","cancelled"];
+  if(!validStatuses.includes(status)) {
+    return res.status(400).json({error:"Ogiltig status"});
+  }
+
+  const {data, error} = await supabase
+  .from("orders")
+  .update({status})
+  .eq("id", id)
+  .select()
+  .single();
+
+  if(error){
+    return res.status(500).json({error: error.message});
+  }
+
+  res.json(data);
+})
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servern körs på http://localhost:${PORT}`);
