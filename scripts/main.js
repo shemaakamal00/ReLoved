@@ -5,6 +5,7 @@ import { renderCheckoutSummary, setupCheckoutForm } from "./checkout.js";
 import { renderOrdersPage } from "./orders.js";
 import { renderAdminOrders, setupAdminOrderEvents, setupProductForm, renderPendingListings, setupPendingListingsEvents } from "./admin.js";
 import { setupSellerForm } from "./seller.js";
+import { setupLoginForm, setupRegisterForm, renderProfilePage, setupLogoutLink } from "./auth.js";
 
 const products = await fetchProducts();
 
@@ -95,3 +96,7 @@ setupProductForm();
 renderPendingListings();
 setupPendingListingsEvents();
 setupSellerForm();
+setupLoginForm();
+setupRegisterForm();
+renderProfilePage();
+setupLogoutLink();

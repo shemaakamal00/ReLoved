@@ -198,15 +198,15 @@
 
         <div class="profile-layout">
           <aside class="profile-sidebar">
-            <div class="profile-avatar">SK</div>
-            <h2>Shemaa Kamal</h2>
-            <p>shemaa@email.se</p>
-
+            <div class="profile-avatar"></div>
+            <h2></h2>
+            <p></p>
+          
             <nav class="profile-menu" aria-label="Kontomeny">
               <a href="orders.html">Mina ordrar</a>
               <a href="seller.html">Säljarpanel</a>
               <a href="admin.html">Adminpanel</a>
-              <a href="login.html">Logga ut</a>
+              <a href="login.html" id="logout-link">Logga ut</a>
             </nav>
           </aside>
 
@@ -217,17 +217,17 @@
               <form class="profile-form">
                 <label>
                   Förnamn
-                  <input name="firstName" id="firstName" type="text" value="Shemaa" />
+                  <input name="firstName" id="firstName" type="text" />
                 </label>
 
                 <label>
                   Efternamn
-                  <input name="lastName" id="lastName" type="text" value="Kamal" />
+                  <input name="lastName" id="lastName" type="text"/>
                 </label>
 
                 <label class="profile-form__full">
                   E-post
-                  <input name="email" id="email" type="email" value="shemaa@email.se" />
+                  <input name="email" id="email" type="email" />
                 </label>
 
                 <button
@@ -305,5 +305,6 @@
         <p class="footer-copy">© 2026 ReLoved. Alla rättigheter förbehållna.</p>
       </div>
     </footer>
+    <script type="module" src="scripts/main.js"></script>
   </body>
 </html>

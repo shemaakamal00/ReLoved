@@ -1,3 +1,5 @@
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import express from "express";
 import multer from "multer";
 import cors from "cors";
@@ -355,6 +357,75 @@ app.patch("/api/products/:id/status", async (req, res) => {
   }
 
   res.json(data);
+});
+
+app.post("/api/auth/register", async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: "Fyll i namn, e-post och lösenord" });
+  }
+
+  const [firstName, ...rest] = name.trim().split(" ");
+  const lastName = rest.join(" ") || "-";
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const { data, error } = await supabase
+    .from("users")
+    .insert({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      password_hash: passwordHash,
+      role: "customer",
+    })
+    .select("id, first_name, last_name, email, role")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "E-postadressen används redan" });
+    }
+    return res.status(500).json({ error: error.message });
+  }
+
+  const token = jwt.sign(
+    { userId: data.id, role: data.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" },
+  );
+  res.status(201).json({ user: data, token });
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Fyll i e-post och lösenord" });
+  }
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  if (error || !user) {
+    return res.status(401).json({ error: "Fel e-post eller lösenord" });
+  }
+
+  const passwordMatches = await bcrypt.compare(password, user.password_hash);
+
+  if (!passwordMatches) {
+    return res.status(401).json({ error: "Fel e-post eller lösenord" });
+  }
+
+  const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  res.json({
+    user: { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, role: user.role },
+    token,
+  });
 });
 
 const PORT = process.env.PORT || 3001;

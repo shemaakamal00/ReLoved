@@ -86,3 +86,27 @@ export async function updateProductStatus(productId, status) {
   if (!response.ok) throw new Error("Kunde inte uppdatera status");
   return response.json();
 }
+
+export async function registerUser(name, email, password){
+  const response = await fetch(`${API_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password }),
+  });
+
+  const data = await response.json();
+  if(!response.ok) throw new Error(data.error || "Kunde inte registrera dig");
+  return data;
+}
+
+export async function loginUser (email, password){
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await response.json();
+  if(!response.ok) throw new Error(data.error || "Kunde inte logga in");
+  return data;
+}
