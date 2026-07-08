@@ -54,7 +54,7 @@ export function removeFromCart(productId) {
   
       cartItemsContainer.innerHTML += `
         <article class="cart-item" data-product-id="${product.id}">
-          <img src="${product.image}" alt="${product.alt}" />
+          <img src="${product.image_url}" alt="${product.alt_text}" />
           <div class="cart-item__info">
             <h2>${product.name}</h2>
             <p>${product.brand}</p>

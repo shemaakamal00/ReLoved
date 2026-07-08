@@ -1,7 +1,7 @@
 import { fetchProducts, fetchProductsById } from "./api.js";
 import { addToCart, updateCartBadge, renderCartPage, setupCartEvents } from "./cart.js";
 import { toggleFavorite, isFavorited, renderFavoritesPage, setupFavoritesEvents } from "./favorites.js";
-import { renderChecoutSummary, setupCheckoutForm } from "./checkout.js";
+import { renderCheckoutSummary, setupCheckoutForm } from "./checkout.js";
 const products = await fetchProducts();
 
 const productGrid = document.getElementById("productGrid");
@@ -39,7 +39,7 @@ async function renderProductDetails() {
 
   let product;
   try {
-    product = await fetchProductById(id);
+    product = await fetchProductsById(id);
   } catch {
     document.querySelector(".product").innerHTML = "<p>Produkten hittades inte.</p>";
     return;
@@ -82,5 +82,5 @@ setupCartEvents(products);
 renderFavoritesPage(products);
 setupFavoritesEvents(products);
 updateCartBadge();
-renderChecoutSummary(products);
+renderCheckoutSummary(products);
 setupCheckoutForm();

@@ -43,7 +43,7 @@ app.get("/api/products/:id", async (req, res) => {
   res.json(data);
 });
 
-app.get("/api/catefories", async (req, res) => {
+app.get("/api/categories", async (req, res) => {
   const { data, error } = await supabase.from("categories").select("*");
 
   if (error) {
@@ -53,12 +53,12 @@ app.get("/api/catefories", async (req, res) => {
   res.json(data);
 });
 
-app.get("/api/orders", async (req, res) => {
+app.post("/api/orders", async (req, res) => {
   const { email, phone, full_name, address, postal_code, city, items } =
     req.body;
 
   if (!items || items.length === 0) {
-    return res.status(400).json({ errpr: "Varukorgen är tom" });
+    return res.status(400).json({ error: "Varukorgen är tom" });
   }
 
   const productsIds = items.map((item) => item.product_id);
@@ -126,7 +126,7 @@ app.get("/api/orders", async (req, res) => {
   res.status(201).json(order);
 });
 
-const PORT = process.env.port || 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servern körs på http://localhost:${PORT}`);
 });

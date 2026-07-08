@@ -290,40 +290,24 @@
 
           <aside class="checkout-summary">
             <h2>Din order</h2>
-
-            <div class="checkout-product">
-              <img src="imgs/jacket.png" alt="Svart skinnjacka" />
-              <div>
-                <h3>Svart skinnjacka</h3>
-                <p>Storlek M</p>
-                <p>350 kr</p>
-              </div>
-            </div>
-
-            <div class="checkout-product">
-              <img src="imgs/dress.png" alt="Blommig sommarklänning" />
-              <div>
-                <h3>Blommig sommarklänning</h3>
-                <p>Storlek S</p>
-                <p>180 kr</p>
-              </div>
-            </div>
-
+          
+            <div id="checkoutItems"></div>
+          
             <div class="summary-row">
               <span>Produkter</span>
-              <span>530 kr</span>
+              <span id="checkoutSubtotal">0 kr</span>
             </div>
-
+          
             <div class="summary-row">
               <span>Frakt</span>
-              <span>49 kr</span>
+              <span id="checkoutShipping">0 kr</span>
             </div>
-
+          
             <div class="summary-row summary-row--total">
               <span>Totalt</span>
-              <span>579 kr</span>
+              <span id="checkoutTotal">0 kr</span>
             </div>
-
+          
             <form class="checkout-button-form">
               <button type="submit" form="checkout-form" class="button button--primary">Slutför köp</button>
             </form>

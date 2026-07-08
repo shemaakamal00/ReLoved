@@ -2,16 +2,15 @@ import { getCart, saveCart } from "./storage.js";
 import { createOrder } from "./api.js";
 import { updateCartBadge } from "./cart.js";
 
-export function renderChecoutSummary(products) {
+export function renderCheckoutSummary(products) {
   const checkoutItems = document.getElementById("checkoutItems");
-
   if (!checkoutItems) return;
 
   const cart = getCart();
   checkoutItems.innerHTML = "";
   let subtotal = 0;
 
-  cart.fortEach((item) => {
+  cart.forEach((item) => {
     const product = products.find((p) => p.id === item.id);
     if (!product) return;
 
@@ -19,11 +18,11 @@ export function renderChecoutSummary(products) {
     subtotal += lineTotal;
 
     checkoutItems.innerHTML += `
-        <div class="checkout-item">
-            <span> ${product.name} (${item.quantity})</span>
-            <span>${lineTotal} kr</span>
-        </div>
-        `;
+      <div class="checkout-item">
+        <span>${product.name} × ${item.quantity}</span>
+        <span>${lineTotal} kr</span>
+      </div>
+    `;
   });
 
   const shipping = subtotal > 0 ? 49 : 0;
@@ -38,12 +37,12 @@ export function setupCheckoutForm() {
   const form = document.getElementById("checkout-form");
   if (!form) return;
 
-  form.addEventListner("submit", async (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const cart = getCart();
     if (cart.length === 0) {
-      alert("Din varukorg är tom");
+      alert("Din varukorg är tom.");
       return;
     }
 
@@ -52,25 +51,22 @@ export function setupCheckoutForm() {
     const orderData = {
       email: formData.get("email"),
       phone: formData.get("phone"),
-      full_name: formData.get("full_name"),
+      full_name: formData.get("fullName"),
       address: formData.get("address"),
-      postal_code: formData.get("postal_code"),
+      postal_code: formData.get("postalCode"),
       city: formData.get("city"),
-      items: cart.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity,
-      })),
+      items: cart.map((item) => ({ product_id: item.id, quantity: item.quantity })),
     };
 
     try {
       const order = await createOrder(orderData);
       saveCart([]);
       updateCartBadge();
-      alert(`Tack för din order! Order #${order.id} har skapats.`);
-      window.location.href = "order.html";
+      alert(`Tack för din order! Order #${order.id} är skapad.`);
+      window.location.href = "orders.html";
     } catch (err) {
       console.error(err);
-      alert("Något gick fel vid skapandet av ordern. Försök igen senare.");
+      alert("Något gick fel, försök igen.");
     }
   });
 }
