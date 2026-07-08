@@ -126,6 +126,49 @@ app.post("/api/orders", async (req, res) => {
   res.status(201).json(order);
 });
 
+app.get("/api/orders", async (req, res) => {
+  const {email} = req.query;
+
+  let query = supabase.from("orders").select("*").order("created_at", { ascending: false });
+
+  if (email) {
+    query = query.eq("email", email);
+  }
+
+  const {data, error} = await query;
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+  
+  res.json(data);
+});
+
+app.get("api/orders/:id", async (req, res) => {
+  const {id} = req.params;
+
+  const {data: order, error: orderError} = await supabase
+    .from("orders")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (orderError) {
+    return res.status(404).json({ error: "Ordern hittades inte" });
+  }
+
+  const {data: orderItems, error: itemsError} = await supabase
+    .from("order_items")
+    .select("*")
+    .eq("order_id", id);
+    
+  if (itemsError) {
+    return res.status(500).json({ error: itemsError.message });
+  }
+
+  res.json([...order, items]);
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servern körs på http://localhost:${PORT}`);

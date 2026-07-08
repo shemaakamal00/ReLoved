@@ -22,3 +22,9 @@ export async function createOrder (orderData) {
     if (!response.ok) throw new Error ("Kunde inte skapa order");
     return response.json();
 }
+
+export async function fetchOrders(email) {
+    const response = await fetch (`${API_URL}/orders?email=${encodeURIComponent(email)}`);
+    if(!response.ok) throw new Error("Kunde inte hämta ordrar");
+    return response.json();
+}

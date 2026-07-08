@@ -60,6 +60,7 @@ export function setupCheckoutForm() {
 
     try {
       const order = await createOrder(orderData);
+      localStorage.setItem ("reloved-order-email", orderData.email);
       saveCart([]);
       updateCartBadge();
       alert(`Tack för din order! Order #${order.id} är skapad.`);
