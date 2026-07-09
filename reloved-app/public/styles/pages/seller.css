@@ -1,0 +1,210 @@
+/* SELLER PAGE */
+
+.seller-page {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: 5.5rem 1.5rem;
+}
+
+/* Stats */
+
+.seller-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.seller-stat-card {
+  padding: 2rem;
+  text-align: center;
+}
+
+.seller-stat-card span {
+  display: block;
+  margin-bottom: 0.6rem;
+  color: var(--clr-muted);
+}
+
+.seller-stat-card strong {
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--clr-heading);
+}
+
+/* Sections */
+
+.seller-section {
+  margin-top: 3rem;
+  padding: 2rem;
+}
+
+.seller-section__header {
+  margin-bottom: 2rem;
+}
+
+/* Form */
+
+.seller-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.seller-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.seller-form input,
+.seller-form select,
+.seller-form textarea {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(186, 168, 152, 0.45);
+  border-radius: 14px;
+  background: var(--clr-card);
+  font: inherit;
+}
+
+.seller-form textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+.seller-form__full {
+  grid-column: 1 / -1;
+}
+
+.upload-box {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 180px;
+  cursor: pointer;
+
+  border: 2px dashed rgba(186, 168, 152, 0.45);
+  border-radius: var(--radius-lg);
+  transition: var(--transition);
+}
+
+.upload-box:hover {
+  border-color: var(--clr-accent);
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.seller-form .button {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Tables */
+
+.seller-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-table__row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(186, 168, 152, 0.2);
+}
+
+.seller-table__row--head {
+  font-weight: 700;
+  color: var(--clr-heading);
+}
+
+.seller-table:last-child .seller-table__row:last-child {
+  border-bottom: none;
+}
+
+/* Sales table */
+
+.seller-section:last-child .seller-table__row {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Actions */
+
+.seller-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.seller-actions button,
+.seller-table__row button {
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: rgba(194, 132, 122, 0.12);
+  color: var(--clr-accent);
+  font: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.seller-actions button:hover,
+.seller-table__row button:hover {
+  background: var(--clr-accent);
+  color: var(--clr-card);
+}
+
+/* Extra status */
+
+.status-badge--pending {
+  background: var(--clr-status-pending-bg);
+  color: var(--clr-status-pending-text);
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .seller-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-form {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-form__full {
+    grid-column: auto;
+  }
+
+  .seller-table__row,
+  .seller-section:last-child .seller-table__row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .seller-table__row--head {
+    display: none;
+  }
+
+  .seller-actions {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .seller-page {
+    padding: 4rem 1.1rem;
+  }
+
+  .seller-section,
+  .seller-stat-card {
+    padding: 1.5rem;
+  }
+}

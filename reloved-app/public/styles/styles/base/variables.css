@@ -1,0 +1,47 @@
+/* Variables */
+
+:root {
+  --clr-bg: #eee0cb;
+  --clr-bg-deep: #e5d1b8;
+  --clr-panel: #fbf5ec;
+  --clr-panel-strong: #fffaf3;
+  --clr-card: #ffffff;
+  --clr-card-warm: #f8f2ea;
+
+  --clr-heading: #280003;
+  --clr-text: #3f2927;
+  --clr-muted: #756866;
+  --clr-icon: #848586;
+
+  --clr-accent: #c2847a;
+  --clr-accent-dark: #280003;
+  --clr-accent-soft: rgba(194, 132, 122, 0.18);
+
+  --clr-border: rgba(186, 168, 152, 0.6);
+  --clr-border-strong: rgba(40, 0, 3, 0.14);
+
+  --clr-status-pending-bg: #fff5d6;
+  --clr-status-pending-text: #8a5b00;
+  --clr-status-success-bg: #dff6eb;
+  --clr-status-success-text: #0d6b43;
+
+  --font-heading: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --font-body:
+    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+
+  --container: 1280px;
+  --container-wide: 1440px;
+
+  --radius-sm: 0.9rem;
+  --radius-md: 1.6rem;
+  --radius-lg: 2.4rem;
+  --radius-xl: 3.2rem;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 1.4rem 3.5rem rgba(40, 0, 3, 0.08);
+  --shadow-card: 0 1.1rem 2.5rem rgba(40, 0, 3, 0.07);
+  --shadow-hover: 0 2rem 4rem rgba(40, 0, 3, 0.13);
+
+  --transition: 240ms ease;
+}

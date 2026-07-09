@@ -1,0 +1,29 @@
+/* BADGES */
+
+.status-badge {
+  width: fit-content;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.status-badge--pending {
+  background: var(--clr-status-pending-bg);
+  color: var(--clr-status-pending-text);
+}
+
+.status-badge--paid {
+  background: var(--clr-status-success-bg);
+  color: var(--clr-status-success-text);
+}
+
+.status-badge--shipped {
+  background: rgba(186, 168, 152, 0.25);
+  color: #6b5544;
+}
+
+.status-badge--refunded {
+  background: rgba(196, 74, 74, 0.15);
+  color: #a03a3a;
+}
