@@ -5,6 +5,7 @@ import {
   fetchPendingProducts,
   updateProductStatus,
 } from "./api.js";
+import { showToast } from "./toast.js";
 
 const STATUS_OPTIONS = [
   { value: "ordered", label: "Beställd" },
@@ -61,10 +62,10 @@ export function setupAdminOrderEvents() {
 
     try {
       await updateOrderStatus(orderId, newStatus);
-      alert(`Order #${orderId} uppdaterad!`);
+      showToast(`Order #${orderId} uppdaterad!`);
     } catch (err) {
       console.error(err);
-      alert("kunde inte uppdatera status");
+      showToast("Kunde inte uppdatera status.", "error");
     }
   });
 }
@@ -80,11 +81,11 @@ export function setupProductForm() {
 
     try {
       await createProduct(formData);
-      alert("Produkten är skapad!");
+      showToast("Produkten är skapad!");
       form.reset();
     } catch (err) {
       console.error(err);
-      alert("Kunde inte skapa produkten");
+      showToast("Kunde inte skapa produkten.", "error");
     }
   });
 }
@@ -142,7 +143,7 @@ export function setupPendingListingsEvents() {
       renderPendingListings();
     } catch (err) {
       console.error(err);
-      alert("Kunde inte uppdatera annonsen.");
+      showToast("Kunde inte uppdatera annonsen.", "error");
     }
   });
 }

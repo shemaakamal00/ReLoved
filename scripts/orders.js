@@ -17,7 +17,7 @@ export async function renderOrdersPage() {
 
   if (!email) {
     ordersList.innerHTML =
-      "<p>Duu har inga ordrar än. Handla något, så kommer de att visas här.</p>";
+      "<p>Du har inga ordrar än. Handla något, så kommer de att visas här.</p>";
     return;
   }
 
@@ -32,7 +32,7 @@ export async function renderOrdersPage() {
   }
 
 if (orders.length === 0) {
-  ordersList.innerHTML = "<p>Duu har inga ordrar än.</p>";
+  ordersList.innerHTML = "<p>Du har inga ordrar än.</p>";
   return;
 }
 

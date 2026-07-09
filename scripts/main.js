@@ -1,11 +1,36 @@
 import { fetchProducts, fetchProductsById } from "./api.js";
-import { addToCart, updateCartBadge, renderCartPage, setupCartEvents } from "./cart.js";
-import { toggleFavorite, isFavorited, renderFavoritesPage, setupFavoritesEvents } from "./favorites.js";
+import {
+  addToCart,
+  updateCartBadge,
+  renderCartPage,
+  setupCartEvents,
+} from "./cart.js";
+import {
+  toggleFavorite,
+  isFavorited,
+  renderFavoritesPage,
+  setupFavoritesEvents,
+} from "./favorites.js";
 import { renderCheckoutSummary, setupCheckoutForm } from "./checkout.js";
 import { renderOrdersPage } from "./orders.js";
-import { renderAdminOrders, setupAdminOrderEvents, setupProductForm, renderPendingListings, setupPendingListingsEvents } from "./admin.js";
+import {
+  renderAdminOrders,
+  setupAdminOrderEvents,
+  setupProductForm,
+  renderPendingListings,
+  setupPendingListingsEvents,
+} from "./admin.js";
 import { setupSellerForm } from "./seller.js";
-import { setupLoginForm, setupRegisterForm, renderProfilePage, setupLogoutLink } from "./auth.js";
+import {
+  setupLoginForm,
+  setupRegisterForm,
+  renderProfilePage,
+  setupLogoutLink,
+  requireAdminPage,
+} from "./auth.js";
+import { showToast } from "./toast.js";
+
+requireAdminPage();
 
 const products = await fetchProducts();
 
@@ -46,7 +71,8 @@ async function renderProductDetails() {
   try {
     product = await fetchProductsById(id);
   } catch {
-    document.querySelector(".product").innerHTML = "<p>Produkten hittades inte.</p>";
+    document.querySelector(".product").innerHTML =
+      "<p>Produkten hittades inte.</p>";
     return;
   }
 
@@ -63,20 +89,29 @@ async function renderProductDetails() {
   document.getElementById("productMaterial").textContent = product.material;
   document.getElementById("productDescription").textContent = product.description;
 
+  const sellerName = document.getElementById("sellerName");
+  if (sellerName) {
+    sellerName.textContent = product.seller_name ?? "ReLoved";
+  }
+
   const addToCartBtn = document.getElementById("addToCartBtn");
   if (addToCartBtn) {
     addToCartBtn.addEventListener("click", () => {
       addToCart(product.id);
-      alert(`${product.name} tillagd i varukorgen!`);
+      showToast(`${product.name} tillagd i varukorgen!`);
     });
   }
 
   const saveFavoriteBtn = document.getElementById("saveFavoriteBtn");
   if (saveFavoriteBtn) {
-    saveFavoriteBtn.textContent = isFavorited(product.id) ? "♥ Sparad" : "♡ Spara";
+    saveFavoriteBtn.textContent = isFavorited(product.id)
+      ? "♥ Sparad"
+      : "♡ Spara";
     saveFavoriteBtn.addEventListener("click", () => {
       toggleFavorite(product.id);
-      saveFavoriteBtn.textContent = isFavorited(product.id) ? "♥ Sparad" : "♡ Spara";
+      saveFavoriteBtn.textContent = isFavorited(product.id)
+        ? "♥ Sparad"
+        : "♡ Spara";
     });
   }
 }

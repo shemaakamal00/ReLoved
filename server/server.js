@@ -137,7 +137,7 @@ app.get("/api/orders", async (req, res) => {
   res.json(data);
 });
 
-app.get("api/orders/:id", async (req, res) => {
+app.get("/api/orders/:id", async (req, res) => {
   const { id } = req.params;
 
   const { data: order, error: orderError } = await supabase
@@ -159,10 +159,10 @@ app.get("api/orders/:id", async (req, res) => {
     return res.status(500).json({ error: itemsError.message });
   }
 
-  res.json([...order, items]);
+  res.json({ ...order, items: orderItems });
 });
 
-app.patch("/api/orders/:id/status", async (req, res) => {
+app.patch("/api/orders/:id/status", requireAuth, requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -192,7 +192,7 @@ app.patch("/api/orders/:id/status", async (req, res) => {
   res.json(data);
 });
 
-app.post("/api/products", upload.single("image"), async (req, res) => {
+app.post("/api/products", requireAuth, requireAdmin, upload.single("image"), async (req, res) => {
   const {
     title,
     brand,
@@ -269,7 +269,6 @@ app.get("/api/products", async (req, res) => {
   }
 
   res.json(data);
-  es;
 });
 
 app.post("/api/products/submit", upload.single("image"), async (req, res) => {
@@ -336,7 +335,7 @@ app.post("/api/products/submit", upload.single("image"), async (req, res) => {
   res.status(201).json(data);
 });
 
-app.patch("/api/products/:id/status", async (req, res) => {
+app.patch("/api/products/:id/status", requireAuth, requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -421,12 +420,45 @@ app.post("/api/auth/login", async (req, res) => {
     return res.status(401).json({ error: "Fel e-post eller lösenord" });
   }
 
-  const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign(
+    { userId: user.id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" },
+  );
   res.json({
-    user: { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, role: user.role },
+    user: {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      role: user.role,
+    },
     token,
   });
 });
+
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Du måste vara inloggad" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: "Ogiltig eller utgången session" });
+  }
+}
+function requireAdmin(req, res, next) {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Kräver admin-behörighet" });
+  }
+  next();
+}
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

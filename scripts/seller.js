@@ -1,4 +1,5 @@
 import { submitListing } from "./api.js";
+import { showToast } from "./toast.js";
 
 export function setupSellerForm() {
   const form = document.getElementById("seller-form");
@@ -11,11 +12,11 @@ export function setupSellerForm() {
 
     try {
       await submitListing(formData);
-      alert("Din annons är inskickad och väntar på granskning!");
+      showToast("Din annons är inskickad och väntar på granskning!");
       form.reset();
     } catch (err) {
       console.error(err);
-      alert("Kunde inte skicka in annonsen.");
+      showToast("Kunde inte skicka in annonsen.", "error");
     }
   });
 }

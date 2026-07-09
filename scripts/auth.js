@@ -1,4 +1,5 @@
 import { registerUser, loginUser } from "./api.js";
+import { showToast } from "./toast.js";
 
 const AUTH_KEY = "reloved-auth";
 
@@ -19,8 +20,10 @@ function saveAuth(user, token) {
 
 export function logout() {
   localStorage.removeItem(AUTH_KEY);
-  alert("Du är nu utloggad.");
-  window.location.href = "home.html";
+  showToast("Du är nu utloggad.");
+  setTimeout(() => {
+    window.location.href = "home.html";
+  }, 1200);
 }
 
 export function setupRegisterForm() {
@@ -35,7 +38,7 @@ export function setupRegisterForm() {
     const confirmPassword = formData.get("confirmPassword");
 
     if (password !== confirmPassword) {
-      alert("Lösenorden matchar inte");
+      showToast("Lösenorden matchar inte", "error");
       return;
     }
 
@@ -46,10 +49,12 @@ export function setupRegisterForm() {
         password,
       );
       saveAuth(user, token);
-      alert(`Välkommen till ReLoved, ${user.first_name}!`);
-      window.location.href = "home.html";
+      showToast(`Välkommen till ReLoved, ${user.first_name}!`);
+      setTimeout(() => {
+        window.location.href = "home.html";
+      }, 1500);
     } catch (err) {
-      alert(err.message);
+      showToast(err.message, "error");
     }
   });
 }
@@ -69,10 +74,12 @@ export function setupLoginForm() {
         formData.get("password"),
       );
       saveAuth(user, token);
-      alert(`Välkommen tillbaka, ${user.first_name}!`);
-      window.location.href = "home.html";
+      showToast(`Välkommen tillbaka, ${user.first_name}!`);
+      setTimeout(() => {
+        window.location.href = "home.html";
+      }, 1500);
     } catch (err) {
-      alert(err.message);
+      showToast(err.message, "error");
     }
   });
 }
@@ -107,4 +114,22 @@ export function setupLogoutLink() {
     event.preventDefault();
     logout();
   });
+}
+
+export function getAuthHeader() {
+  const auth = getCurrentUser();
+  return auth ? { Authorization: `Bearer ${auth.token}` } : {};
+}
+
+export function requireAdminPage() {
+  const adminPage = document.querySelector(".admin-page");
+  if (!adminPage) return;
+
+  const auth = getCurrentUser();
+  if (!auth || auth.user.role !== "admin") {
+    showToast("Du måste vara inloggad som admin för att se den här sidan.", "error");
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 1200);
+  }
 }

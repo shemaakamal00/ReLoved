@@ -1,3 +1,4 @@
+import { getAuthHeader } from "./auth.js";
 const API_URL = "http://localhost:3001/api";
 
 export async function fetchProducts() {
@@ -40,10 +41,9 @@ export async function fetchAllOrders() {
 export async function updateOrderStatus(orderId, status) {
   const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getAuthHeader() },
     body: JSON.stringify({ status }),
   });
-
   if (!response.ok) throw new Error("Kunde inte uppdatera status");
   return response.json();
 }
@@ -51,6 +51,7 @@ export async function updateOrderStatus(orderId, status) {
 export async function createProduct(formData) {
   const response = await fetch(`${API_URL}/products`, {
     method: "POST",
+    headers: { ...getAuthHeader() },
     body: formData,
   });
 
@@ -69,25 +70,24 @@ export async function submitListing(formData) {
 }
 
 export async function fetchPendingProducts() {
-    const response = await fetch(`${API_URL}/products?status=pending`, {
-      cache: "no-store",
-    });
-    if (!response.ok) throw new Error("Kunde inte hämta annonser");
-    return response.json();
-  }
+  const response = await fetch(`${API_URL}/products?status=pending`, {
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error("Kunde inte hämta annonser");
+  return response.json();
+}
 
 export async function updateProductStatus(productId, status) {
   const response = await fetch(`${API_URL}/products/${productId}/status`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getAuthHeader() },
     body: JSON.stringify({ status }),
   });
-
   if (!response.ok) throw new Error("Kunde inte uppdatera status");
   return response.json();
 }
 
-export async function registerUser(name, email, password){
+export async function registerUser(name, email, password) {
   const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -95,11 +95,11 @@ export async function registerUser(name, email, password){
   });
 
   const data = await response.json();
-  if(!response.ok) throw new Error(data.error || "Kunde inte registrera dig");
+  if (!response.ok) throw new Error(data.error || "Kunde inte registrera dig");
   return data;
 }
 
-export async function loginUser (email, password){
+export async function loginUser(email, password) {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -107,6 +107,6 @@ export async function loginUser (email, password){
   });
 
   const data = await response.json();
-  if(!response.ok) throw new Error(data.error || "Kunde inte logga in");
+  if (!response.ok) throw new Error(data.error || "Kunde inte logga in");
   return data;
 }

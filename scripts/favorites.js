@@ -39,7 +39,7 @@ export function renderFavoritesPage(products) {
     favoritesList.innerHTML += `
       <article class="product-card" data-product-id="${product.id}">
         <a href="product.html?id=${product.id}">
-          <img src="${product.image}" alt="${product.alt}" class="product-card__image" />
+        <img src="${product.image_url}" alt="${product.alt_text}" class="product-card__image" />
         </a>
         <div class="product-card-content">
           <p class="product-card__brand">${product.brand}</p>

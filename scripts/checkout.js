@@ -1,6 +1,7 @@
 import { getCart, saveCart } from "./storage.js";
 import { createOrder } from "./api.js";
 import { updateCartBadge } from "./cart.js";
+import { showToast } from "./toast.js";
 
 export function renderCheckoutSummary(products) {
   const checkoutItems = document.getElementById("checkoutItems");
@@ -42,7 +43,7 @@ export function setupCheckoutForm() {
 
     const cart = getCart();
     if (cart.length === 0) {
-      alert("Din varukorg är tom.");
+      showToast("Din varukorg är tom.", "error");
       return;
     }
 
@@ -60,14 +61,16 @@ export function setupCheckoutForm() {
 
     try {
       const order = await createOrder(orderData);
-      localStorage.setItem ("reloved-order-email", orderData.email);
+      localStorage.setItem("reloved-order-email", orderData.email);
       saveCart([]);
       updateCartBadge();
-      alert(`Tack för din order! Order #${order.id} är skapad.`);
-      window.location.href = "orders.html";
+      showToast(`Tack för din order! Order #${order.id} är skapad.`);
+      setTimeout(() => {
+        window.location.href = "orders.html";
+      }, 1800);
     } catch (err) {
       console.error(err);
-      alert("Något gick fel, försök igen.");
+      showToast("Något gick fel, försök igen.", "error");
     }
   });
 }
