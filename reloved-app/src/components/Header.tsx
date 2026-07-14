@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Header() {
+  const { user, logout } = useAuth();
   return (
     <header className="site-header">
       <div className="header-shell">
@@ -51,12 +53,26 @@ function Header() {
             </span>
           </Link>
 
-          <Link to="/profile" className="icon-button" aria-label="Profil">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="8" r="3.5"></circle>
-              <path d="M5 19c1.6-2.8 4-4.2 7-4.2s5.4 1.4 7 4.2"></path>
-            </svg>
-          </Link>
+          {user ? (
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="Logga ut"
+              onClick={logout}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5"></circle>
+                <path d="M5 19c1.6-2.8 4-4.2 7-4.2s5.4 1.4 7 4.2"></path>
+              </svg>
+            </button>
+          ) : (
+            <Link to="/login" className="icon-button" aria-label="Logga in">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5"></circle>
+                <path d="M5 19c1.6-2.8 4-4.2 7-4.2s5.4 1.4 7 4.2"></path>
+              </svg>
+            </Link>
+          )}
 
           <Link to="/seller" className="sell-button" id="sellButton">
             Sälj nu

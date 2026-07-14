@@ -61,3 +61,13 @@
   stroke: currentColor;
   stroke-width: 2;
 }
+
+.form-error {
+  background: rgba(196, 74, 74, 0.1);
+  border-left: 3px solid #a03a3a;
+  color: #a03a3a;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}

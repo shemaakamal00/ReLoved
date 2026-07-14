@@ -32,7 +32,7 @@ const steps: Step[] = [
 
 function HowItWorks() {
   return (
-    <section className="how-it-works section">
+    <section className="how-it-works section" id="how-it-works">
       <div className="container">
         <p className="eyebrow">Enkelt • Säkert • Hållbart</p>
         <h2>Så fungerar ReLoved</h2>
