@@ -138,3 +138,68 @@ export function loginUser(
     body: JSON.stringify({ email, password }),
   });
 }
+
+export function fetchCart(token: string) {
+  return apiFetch<
+    { product_id: number; quantity: number; products: Product }[]
+  >("/cart", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function addCartItem(
+  token: string,
+  productId: number,
+  quantity: number,
+) {
+  return apiFetch("/cart/items", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ product_id: productId, quantity }),
+  });
+}
+
+export function updateCartItem(
+  token: string,
+  productId: number,
+  quantity: number,
+) {
+  return apiFetch(`/cart/items/${productId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ quantity }),
+  });
+}
+
+export function removeCartItem(token: string, productId: number) {
+  return apiFetch(`/cart/items/${productId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function fetchFavorites(token: string) {
+  return apiFetch<{ product_id: number; products: Product }[]>("/favorites", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function addFavorite(token: string, productId: number) {
+  return apiFetch(`/favorites/${productId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function removeFavorite(token: string, productId: number) {
+  return apiFetch(`/favorites/${productId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}

@@ -162,99 +162,110 @@ app.get("/api/orders/:id", async (req, res) => {
   res.json({ ...order, items: orderItems });
 });
 
-app.patch("/api/orders/:id/status", requireAuth, requireAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
+app.patch(
+  "/api/orders/:id/status",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
 
-  const validStatuses = [
-    "ordered",
-    "processing",
-    "shipped",
-    "delivered",
-    "refunded",
-    "cancelled",
-  ];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ error: "Ogiltig status" });
-  }
-
-  const { data, error } = await supabase
-    .from("orders")
-    .update({ status })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.json(data);
-});
-
-app.post("/api/products", requireAuth, requireAdmin, upload.single("image"), async (req, res) => {
-  const {
-    title,
-    brand,
-    price,
-    category,
-    condition,
-    size,
-    color,
-    material,
-    description,
-  } = req.body;
-
-  if (!title || !brand || !price || !condition) {
-    return res
-      .status(400)
-      .json({ error: "Fyll i produktnamn, varumärke, pris och skick" });
-  }
-
-  let imageUrl = null;
-
-  if (req.file) {
-    const fileName = `${Date.now()}-${req.file.originalname}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("products")
-      .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-
-    if (uploadError) {
-      return res.status(500).json({ error: uploadError.message });
+    const validStatuses = [
+      "ordered",
+      "processing",
+      "shipped",
+      "delivered",
+      "refunded",
+      "cancelled",
+    ];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Ogiltig status" });
     }
 
-    const { data: publicUrlData } = supabase.storage
-      .from("products")
-      .getPublicUrl(fileName);
-    imageUrl = publicUrlData.publicUrl;
-  }
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", id)
+      .select()
+      .single();
 
-  const { data, error } = await supabase
-    .from("products")
-    .insert({
-      name: title,
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json(data);
+  },
+);
+
+app.post(
+  "/api/products",
+  requireAuth,
+  requireAdmin,
+  upload.single("image"),
+  async (req, res) => {
+    const {
+      title,
       brand,
       price,
-      category_id: category || null,
+      category,
       condition,
       size,
       color,
       material,
       description,
-      image_url: imageUrl,
-      alt_text: title,
-      status: "approved",
-    })
-    .select()
-    .single();
+    } = req.body;
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
+    if (!title || !brand || !price || !condition) {
+      return res
+        .status(400)
+        .json({ error: "Fyll i produktnamn, varumärke, pris och skick" });
+    }
 
-  res.status(201).json(data);
-});
+    let imageUrl = null;
+
+    if (req.file) {
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+      if (uploadError) {
+        return res.status(500).json({ error: uploadError.message });
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(fileName);
+      imageUrl = publicUrlData.publicUrl;
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert({
+        name: title,
+        brand,
+        price,
+        category_id: category || null,
+        condition,
+        size,
+        color,
+        material,
+        description,
+        image_url: imageUrl,
+        alt_text: title,
+        status: "approved",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.status(201).json(data);
+  },
+);
 
 app.get("/api/products", async (req, res) => {
   const { status } = req.query;
@@ -335,28 +346,39 @@ app.post("/api/products/submit", upload.single("image"), async (req, res) => {
   res.status(201).json(data);
 });
 
-app.patch("/api/products/:id/status", requireAuth, requireAdmin, async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
+app.patch(
+  "/api/products/:id/status",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
 
-  const validStatuses = ["pending", "approved", "rejected", "sold", "archived"];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ error: "Ogiltig status" });
-  }
+    const validStatuses = [
+      "pending",
+      "approved",
+      "rejected",
+      "sold",
+      "archived",
+    ];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Ogiltig status" });
+    }
 
-  const { data, error } = await supabase
-    .from("products")
-    .update({ status })
-    .eq("id", id)
-    .select()
-    .single();
+    const { data, error } = await supabase
+      .from("products")
+      .update({ status })
+      .eq("id", id)
+      .select()
+      .single();
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
 
-  res.json(data);
-});
+    res.json(data);
+  },
+);
 
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -459,6 +481,149 @@ function requireAdmin(req, res, next) {
   }
   next();
 }
+
+async function getOrCreateCart(userId) {
+  const { data: existing } = await supabase
+    .from("carts")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing) return existing;
+  const { data: created, error } = await supabase
+    .from("carts")
+    .insert({ user_id: userId })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return created;
+}
+
+app.get("/api/cart", requireAuth, async (req, res) => {
+  try {
+    const cart = await getOrCreateCart(req.user, userId);
+    const { data, error } = await supabase
+      .from("cart_items")
+      .select("product_id, quantity, products(*)")
+      .eq("cart_id", cart.id);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cart/items", requireAuth, async (req, res) => {
+  const { product_id, quantity = 1 } = req.body;
+
+  try {
+    const cart = await getOrCreateCart(req.user.userId);
+
+    const { data: existing } = await supabase
+      .from("cart_items")
+      .select("*")
+      .eq("cart_id", cart.id)
+      .eq("product_id", product_id)
+      .maybeSingle();
+
+    if (existing) {
+      const { data, error } = await supabase
+        .from("cart_items")
+        .update({ quantity: existing.quantity + quantity })
+        .eq("cart_id", cart.id)
+        .eq("product_id", product_id)
+        .select()
+        .single();
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json(data);
+    }
+
+    const { data, error } = await supabase
+      .from("cart_items")
+      .insert({ cart_id: cart.id, product_id, quantity })
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(201).json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch("/api/cart/items/:productId", requireAuth, async (res, req) => {
+  const { productId } = req.params;
+  const { quantity } = req.body;
+
+  try {
+    const cart = await getOrCreateCart(req.user.userId);
+    const { data, error } = await supabase
+      .from("cart_items")
+      .update({ quantity })
+      .eq("cart_id", cart.id)
+      .eq("product_id", productId)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/cart/items/:productId", requireAuth, async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const cart = await getOrCreateCart(req.user.userId);
+    const { error } = await supabase
+      .from("cart_items")
+      .delete()
+      .eq("cart_id", cart.id)
+      .eq("product_id", productId);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/favorites", requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from("favorites")
+    .select("product_id, products(*)")
+    .eq("user_id", req.user.userId);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.post("/api/favorites/:productId", requireAuth, async (req, res) => {
+  const { productId } = req.params;
+  const { error } = await supabase
+    .from("favorites")
+    .insert({ user_id: req.user.userId, product_id: productId });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.status(201).json({ success: true });
+});
+
+app.delete("/api/favorites/:productId", requireAuth, async (req, res) => {
+  const { productId } = req.params;
+  const { error } = await supabase
+    .from("favorites")
+    .delete()
+    .eq("user_id", req.user.userId)
+    .eq("product_id", productId);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

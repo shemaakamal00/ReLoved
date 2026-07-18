@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 function Header() {
   const { user, logout } = useAuth();
+  const { cartCount } = useCart();
   return (
     <header className="site-header">
       <div className="header-shell">
@@ -49,7 +51,7 @@ function Header() {
               <path d="M9 7a3 3 0 0 1 6 0"></path>
             </svg>
             <span className="icon-badge" id="cartCount">
-              0
+              {cartCount}
             </span>
           </Link>
 

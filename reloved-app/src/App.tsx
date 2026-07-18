@@ -7,23 +7,29 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import { CartProvider } from "./context/CartContext";
+import { FavoritesProvider } from "./context/FavoritesContext";
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Header />
+      <CartProvider>
+        <FavoritesProvider>
+          <BrowserRouter>
+            <Header />
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Routes>
 
-        <Footer />
-      </BrowserRouter>
+            <Footer />
+          </BrowserRouter>
+        </FavoritesProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }
