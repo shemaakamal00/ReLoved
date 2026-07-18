@@ -203,3 +203,10 @@ export function removeFavorite(token: string, productId: number) {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export function clearCart(token: string) {
+  return apiFetch("/cart", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}

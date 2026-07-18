@@ -11,6 +11,7 @@ import {
   addCartItem,
   updateCartItem,
   removeCartItem,
+  clearCart as clearCartApi,
   fetchProducts,
 } from "../api/client";
 import type { Product } from "../types";
@@ -33,6 +34,7 @@ interface CartContextValue {
   addToCart: (productId: number, quantity?: number) => Promise<void>;
   removeFromCart: (productId: number) => Promise<void>;
   updateQuantity: (productId: number, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -139,6 +141,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await loadCart(false);
   }
 
+  async function clearCart() {
+    if (user && token) {
+      await clearCartApi(token);
+    } else {
+      localStorage.removeItem(LOCAL_CART_KEY);
+    }
+    await loadCart(false);
+  }
+
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -150,6 +161,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addToCart,
         removeFromCart,
         updateQuantity,
+        clearCart,
       }}
     >
       {children}

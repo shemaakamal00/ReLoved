@@ -628,6 +628,21 @@ app.delete("/api/favorites/:productId", requireAuth, async (req, res) => {
   res.json({ success: true });
 });
 
+app.delete("/api/cart", requireAuth, async (req, res) => {
+  try {
+    const cart = await getOrCreateCart(req.user.userId);
+    const { error } = await supabase
+      .from("cart_items")
+      .delete()
+      .eq("cart_id", cart.id);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servern körs på http://localhost:${PORT}`);

@@ -110,6 +110,27 @@
   color: var(--clr-heading);
 }
 
+.cart-item__quantity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.cart-item__quantity button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(186, 168, 152, 0.45);
+  background: var(--clr-card);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cart-item__quantity button:hover {
+  background: var(--clr-panel-strong);
+}
+
 /* Responsive */
 
 @media (max-width: 900px) {
