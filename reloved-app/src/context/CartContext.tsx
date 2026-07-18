@@ -58,8 +58,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadCart() {
-    setLoading(true);
+  async function loadCart(showLoading = true) {
+    if (showLoading) setLoading(true);
 
     if (user && token) {
       const local = loadLocalCart();
@@ -113,7 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       else local.push({ id: productId, quantity });
       saveLocalCart(local);
     }
-    await loadCart();
+    await loadCart(false);
   }
 
   async function removeFromCart(productId: number) {
@@ -122,7 +122,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       saveLocalCart(loadLocalCart().filter((l) => l.id !== productId));
     }
-    await loadCart();
+    await loadCart(false);
   }
 
   async function updateQuantity(productId: number, quantity: number) {
@@ -136,7 +136,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (line) line.quantity = quantity;
       saveLocalCart(local);
     }
-    await loadCart();
+    await loadCart(false);
   }
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);

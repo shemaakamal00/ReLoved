@@ -483,13 +483,16 @@ function requireAdmin(req, res, next) {
 }
 
 async function getOrCreateCart(userId) {
-  const { data: existing } = await supabase
+  const { data: existingRows, error: selectError } = await supabase
     .from("carts")
     .select("*")
     .eq("user_id", userId)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
 
-  if (existing) return existing;
+  if (selectError) throw selectError;
+  if (existingRows && existingRows.length > 0) return existingRows[0];
+
   const { data: created, error } = await supabase
     .from("carts")
     .insert({ user_id: userId })
@@ -502,7 +505,7 @@ async function getOrCreateCart(userId) {
 
 app.get("/api/cart", requireAuth, async (req, res) => {
   try {
-    const cart = await getOrCreateCart(req.user, userId);
+    const cart = await getOrCreateCart(req.user.userId);
     const { data, error } = await supabase
       .from("cart_items")
       .select("product_id, quantity, products(*)")
@@ -554,7 +557,7 @@ app.post("/api/cart/items", requireAuth, async (req, res) => {
   }
 });
 
-app.patch("/api/cart/items/:productId", requireAuth, async (res, req) => {
+app.patch("/api/cart/items/:productId", requireAuth, async (req, res) => {
   const { productId } = req.params;
   const { quantity } = req.body;
 
