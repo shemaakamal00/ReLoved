@@ -8,6 +8,7 @@ import {
 import { useAuth } from "./AuthContext";
 import { fetchFavorites, addFavorite, removeFavorite } from "../api/client";
 import type { Product } from "../types";
+import { useToast } from "./ToastContext";
 
 interface FavoritesContextValue {
   favorites: Product[];
@@ -24,6 +25,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { user, token } = useAuth();
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
 
   async function loadFavorites() {
     if (!user || !token) {
@@ -48,7 +50,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   async function toggleFavorite(productId: number) {
     if (!user || !token) {
-      alert("Logga in för att spara favoriter");
+      showToast("Logga in för att spara favoriter", "error");
       return;
     }
 

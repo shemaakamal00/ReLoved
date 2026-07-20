@@ -74,3 +74,10 @@ export interface OrderItem {
 export interface OrderWithItems extends Order {
     items: OrderItem [];
 }
+
+export interface AdminStats {
+    pending: number;
+    active: number;
+    orders: number;
+    users: number;
+}

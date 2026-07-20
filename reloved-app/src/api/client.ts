@@ -4,6 +4,7 @@ import type {
   Order,
   OrderWithItems,
   AuthResponse,
+  AdminStats
 } from "../types";
 const API_URL = "http://localhost:3001/api";
 
@@ -208,5 +209,11 @@ export function clearCart(token: string) {
   return apiFetch("/cart", {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function fetchAdminStats (token: string ) {
+  return apiFetch<AdminStats> ("/admin/stats", {
+    headers: { Authorization:`Bearer ${token}` },
   });
 }

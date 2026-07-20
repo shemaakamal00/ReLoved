@@ -79,6 +79,12 @@ function Header() {
           <Link to="/seller" className="sell-button" id="sellButton">
             Sälj nu
           </Link>
+
+          {user?.role === "admin" && (
+            <Link to="/admin" className="sell-button">
+              Admin
+            </Link>
+          )}
         </nav>
       </div>
 

@@ -71,3 +71,13 @@
   font-size: 0.9rem;
   font-weight: 600;
 }
+
+.form-success {
+  background: rgba(107, 122, 94, 0.12);
+  border-left: 3px solid #6b7a5e;
+  color: #4f5a3a;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}

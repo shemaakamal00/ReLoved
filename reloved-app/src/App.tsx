@@ -13,32 +13,45 @@ import Cart from "./pages/Cart";
 import Favorites from "./pages/Favorites";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import RequireAdmin from "./components/RequireAdmin";
+import { ToastProvider } from "./context/ToastContext";
 
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <FavoritesProvider>
-          <BrowserRouter>
-            <Header />
+    <ToastProvider>
+      <AuthProvider>
+        <CartProvider>
+          <FavoritesProvider>
+            <BrowserRouter>
+              <Header />
 
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/favorites" element={<Favorites />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/orders" element={<Orders />} />
-            </Routes>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <RequireAdmin>
+                      <AdminDashboard />
+                    </RequireAdmin>
+                  }
+                />
+              </Routes>
 
-            <Footer />
-          </BrowserRouter>
-        </FavoritesProvider>
-      </CartProvider>
-    </AuthProvider>
+              <Footer />
+            </BrowserRouter>
+          </FavoritesProvider>
+        </CartProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

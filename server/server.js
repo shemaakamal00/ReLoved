@@ -643,6 +643,26 @@ app.delete("/api/cart", requireAuth, async (req, res) => {
   }
 });
 
+app.get ("/api/admin/stats", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const [pending, active, orders, users ] = await Promise.all([
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "approved"),
+      supabase.from("orders").select("*", { count: "exact", head: true }),
+      supabase.from("users").select("*", { count: "exact", head: true }),
+    ]);
+
+    res.json ({
+      pending: pending.count ?? 0,
+      active: active.count ?? 0,
+      orders: orders.count ?? 0,
+      users: users.count ?? 0,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servern körs på http://localhost:${PORT}`);
