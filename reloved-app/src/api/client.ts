@@ -4,7 +4,9 @@ import type {
   Order,
   OrderWithItems,
   AuthResponse,
-  AdminStats
+  AdminStats,
+  SellerOrderItem,
+  SellerStats,
 } from "../types";
 const API_URL = "http://localhost:3001/api";
 
@@ -48,10 +50,32 @@ export function createProduct(
   });
 }
 
-export function submitListing(formData: FormData): Promise<Product> {
+export function submitListing(
+  formData: FormData,
+  token: string,
+): Promise<Product> {
   return apiFetch<Product>("/products/submit", {
     method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
     body: formData,
+  });
+}
+
+export function fetchMyListings(token: string): Promise<Product[]> {
+  return apiFetch<Product[]>("/products/mine", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function fetchMySales(token: string): Promise<SellerOrderItem[]> {
+  return apiFetch<SellerOrderItem[]>("/orders/seller", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function fetchSellerStats(token: string): Promise<SellerStats> {
+  return apiFetch<SellerStats>("/seller/stats", {
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 
@@ -212,8 +236,8 @@ export function clearCart(token: string) {
   });
 }
 
-export function fetchAdminStats (token: string ) {
-  return apiFetch<AdminStats> ("/admin/stats", {
-    headers: { Authorization:`Bearer ${token}` },
+export function fetchAdminStats(token: string) {
+  return apiFetch<AdminStats>("/admin/stats", {
+    headers: { Authorization: `Bearer ${token}` },
   });
 }

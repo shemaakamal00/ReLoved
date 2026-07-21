@@ -282,69 +282,76 @@ app.get("/api/products", async (req, res) => {
   res.json(data);
 });
 
-app.post("/api/products/submit", upload.single("image"), async (req, res) => {
-  const {
-    title,
-    sellerName,
-    price,
-    category,
-    condition,
-    size,
-    color,
-    material,
-    description,
-  } = req.body;
-
-  if (!title || !sellerName || !price) {
-    return res
-      .status(400)
-      .json({ error: "Fyll i produktnamn, ditt namn och pris" });
-  }
-
-  let imageUrl = null;
-
-  if (req.file) {
-    const fileName = `${Date.now()}-${req.file.originalname}`;
-    const { error: uploadError } = await supabase.storage
-      .from("products")
-      .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-
-    if (uploadError) {
-      return res.status(500).json({ error: uploadError.message });
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("products")
-      .getPublicUrl(fileName);
-    imageUrl = publicUrlData.publicUrl;
-  }
-
-  const { data, error } = await supabase
-    .from("products")
-    .insert({
-      name: title,
-      brand: "Okänt märke",
-      seller_name: sellerName,
+app.post(
+  "/api/products/submit",
+  requireAuth,
+  upload.single("image"),
+  async (req, res) => {
+    const {
+      title,
       price,
-      category_id: category || null,
+      category,
       condition,
       size,
       color,
       material,
       description,
-      image_url: imageUrl,
-      alt_text: title,
-      status: "pending",
-    })
-    .select()
-    .single();
+    } = req.body;
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
+    if (!title || !price) {
+      return res.status(400).json({ error: "Fyll i produktnamn och pris" });
+    }
 
-  res.status(201).json(data);
-});
+    const { data: seller } = await supabase
+      .from("users")
+      .select("first_name, last_name")
+      .eq("id", req.user.userId)
+      .single();
+
+    let imageUrl = null;
+
+    if (req.file) {
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+      if (uploadError)
+        return res.status(500).json({ error: uploadError.message });
+
+      const { data: publicUrlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(fileName);
+      imageUrl = publicUrlData.publicUrl;
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert({
+        name: title,
+        brand: "Okänt märke",
+        seller_id: req.user.userId,
+        seller_name: seller
+          ? `${seller.first_name} ${seller.last_name}`
+          : "Okänd säljare",
+        price,
+        category_id: category || null,
+        condition,
+        size,
+        color,
+        material,
+        description,
+        image_url: imageUrl,
+        alt_text: title,
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(201).json(data);
+  },
+);
 
 app.patch(
   "/api/products/:id/status",
@@ -643,20 +650,76 @@ app.delete("/api/cart", requireAuth, async (req, res) => {
   }
 });
 
-app.get ("/api/admin/stats", requireAuth, requireAdmin, async (req, res) => {
+app.get("/api/admin/stats", requireAuth, requireAdmin, async (req, res) => {
   try {
-    const [pending, active, orders, users ] = await Promise.all([
-      supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "pending"),
-      supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "approved"),
+    const [pending, active, orders, users] = await Promise.all([
+      supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "approved"),
       supabase.from("orders").select("*", { count: "exact", head: true }),
       supabase.from("users").select("*", { count: "exact", head: true }),
     ]);
 
-    res.json ({
+    res.json({
       pending: pending.count ?? 0,
       active: active.count ?? 0,
       orders: orders.count ?? 0,
       users: users.count ?? 0,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/products/mine", requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .frpm("products")
+    .select("*")
+    .eq("seller_id", req.user.userId)
+    .order("created_at", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.get("/api/orders/seller", requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from("order_items")
+    .select("*, orders(id, status, created_at)")
+    .eq("seller_id", req.user.userId)
+    .order("id", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.get("/api/seller/stats", requireAuth, async (req, res) => {
+  try {
+    const { count: active } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", req.user.userId)
+      .eq("status", "approved");
+
+    const { count: sold } = await supabase
+      .from("order_items")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", req.user.userId);
+    const { count: pendingDelivery } = await supabase
+      .from("order_items")
+      .select("*, orders!inner(status)", { count: "exact", head: true })
+      .eq("seller_id", req.user.userId)
+      .in("orders.status", ["ordered", "processing"]);
+
+    res.json({
+      active: active ?? 0,
+      sold: sold ?? 0,
+      pendingDelivery: pendingDelivery ?? 0,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

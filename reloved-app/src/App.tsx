@@ -16,6 +16,8 @@ import Orders from "./pages/Orders";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import RequireAdmin from "./components/RequireAdmin";
 import { ToastProvider } from "./context/ToastContext";
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import RequireAuth from "./components/RequireAuth";
 
 function App() {
   return (
@@ -42,6 +44,14 @@ function App() {
                     <RequireAdmin>
                       <AdminDashboard />
                     </RequireAdmin>
+                  }
+                />
+                <Route
+                  path="/seller"
+                  element={
+                    <RequireAuth>
+                      <SellerDashboard />
+                    </RequireAuth>
                   }
                 />
               </Routes>
