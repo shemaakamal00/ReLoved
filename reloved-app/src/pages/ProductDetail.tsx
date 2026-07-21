@@ -13,13 +13,6 @@ function ProductDetail() {
   const [notFound, setNotFound] = useState(false);
   const { addToCart } = useCart();
   const { isFavorited, toggleFavorite } = useFavorites();
-  const sellerName = product.seller_name ?? "ReLoved";
-  const sellerInitials = sellerName
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
   useEffect(() => {
     if (!id) return;
@@ -43,6 +36,14 @@ function ProductDetail() {
         <p>Produkten hittades inte.</p>
       </main>
     );
+
+  const sellerName = product.seller_name ?? "ReLoved";
+  const sellerInitials = sellerName
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <main>
