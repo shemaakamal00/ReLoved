@@ -30,7 +30,6 @@ function loadStoredAuth(): { user: User; token: string } | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const stored = loadStoredAuth();
   const [user, setUser] = useState<User | null>(
     () => loadStoredAuth()?.user ?? null,
   );
