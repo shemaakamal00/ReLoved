@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
 
 function Header() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { cartCount } = useCart();
   const { favorites } = useFavorites();
   return (
