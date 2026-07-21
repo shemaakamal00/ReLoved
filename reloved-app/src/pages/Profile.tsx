@@ -65,24 +65,23 @@ function Profile() {
 
   return (
     <main>
-      <section className="profilepage">
+      <section className="profile-page">
         <div className="profile-header">
-          <p className="eyebrow"> Mitt konto </p>
-          <h1> Min profil </h1>
-          <p> Hantera dina uppgifter och navigera till dina sidor. </p>
+          <p className="eyebrow">Mitt konto</p>
+          <h1>Min profil</h1>
+          <p>Hantera dina uppgifter och navigera till dina sidor.</p>
         </div>
 
         <div className="profile-layout">
           <aside className="profile-sidebar">
-            <div className="profile-avatar"> {initials} </div>
+            <div className="profile-avatar">{initials}</div>
             <h2>
-              {" "}
-              {profile.first_name} {profile.last_name}{" "}
+              {profile.first_name} {profile.last_name}
             </h2>
-            <p> {profile.email} </p>
+            <p>{profile.email}</p>
 
             <nav className="profile-menu" aria-label="Kontomeny">
-              <Link to="/orders"> Mina ordrar </Link>
+              <Link to="/orders">Mina ordrar</Link>
               <Link to="/seller">Säljarpanel</Link>
               {authUser?.role === "admin" && (
                 <Link to="/admin">Adminpanel</Link>
@@ -93,74 +92,77 @@ function Profile() {
             </nav>
           </aside>
 
-          <div className="profile-content">
-            <form className="profile-card profile-form" onSubmit={handleSave}>
-              <h2> Profiluppgifter </h2>
+          <form className="profile-content" onSubmit={handleSave}>
+            <div className="profile-card">
+              <h2>Profiluppgifter</h2>
+              <div className="profile-form">
+                <label>
+                  Förnamn
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </label>
 
-              <label>
-                Förnamn
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                />
-              </label>
+                <label>
+                  Efternamn
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </label>
 
-              <label>
-                Efternamn
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </label>
-
-              <label className="profile-form__full">
-                E-post
-                <input type="email" value={profile.email} disabled />
-              </label>
-              <div className="profile-form__full">
-                <h2>Leveransadress</h2>
+                <label className="profile-form__full">
+                  E-post
+                  <input type="email" value={profile.email} disabled />
+                </label>
               </div>
+            </div>
 
-              <label className="profile-form__full">
-                Adress
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </label>
+            <div className="profile-card">
+              <h2>Leveransadress</h2>
+              <div className="profile-form">
+                <label className="profile-form__full">
+                  Adress
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </label>
 
-              <label>
-                Postnummer
-                <input
-                  type="text"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                />
-              </label>
+                <label>
+                  Postnummer
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                  />
+                </label>
 
-              <label>
-                Stad
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                />
-              </label>
+                <label>
+                  Stad
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                </label>
+              </div>
+            </div>
 
-              <button
-                className="button button-primary profile-form__full"
-                type="submit"
-                disabled={saving}
-              >
-                {saving ? "Sparar..." : "Spara ändringar"}
-              </button>
-            </form>
-          </div>
+            <button
+              className="button button-primary"
+              type="submit"
+              disabled={saving}
+            >
+              {saving ? "Sparar..." : "Spara ändringar"}
+            </button>
+          </form>
         </div>
       </section>
     </main>

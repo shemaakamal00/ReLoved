@@ -48,25 +48,6 @@
   color: var(--clr-muted);
 }
 
-.profile-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.profile-menu a {
-  padding: 0.9rem 1rem;
-  border-radius: 12px;
-  color: var(--clr-heading);
-  font-weight: 600;
-  transition: var(--transition);
-}
-
-.profile-menu a:hover {
-  background: rgba(194, 132, 122, 0.12);
-  color: var(--clr-accent);
-}
-
 /* Content */
 
 .profile-content {
@@ -119,6 +100,35 @@
 .profile-form .button {
   width: 100%;
   justify-content: center;
+}
+
+.profile-menu a {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  color: var(--clr-heading);
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.profile-menu a,
+.profile-menu button {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  color: var(--clr-heading);
+  font-weight: 600;
+  transition: var(--transition);
+  text-align: left;
+  background: transparent;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+
+.profile-menu a:hover,
+.profile-menu button:hover {
+  background: rgba(194, 132, 122, 0.12);
+  color: var(--clr-accent);
 }
 
 /* Responsive */
