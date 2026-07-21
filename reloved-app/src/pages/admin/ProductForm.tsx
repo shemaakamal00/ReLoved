@@ -2,9 +2,11 @@ import { useState, useEffect, type FormEvent } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { createProduct, fetchCategories } from "../../api/client";
 import type { Category } from "../../types";
+import { useToast } from "../../context/ToastContext"; 
 
 function ProductForm() {
   const { token } = useAuth();
+  const { showToast } =useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -13,6 +15,13 @@ function ProductForm() {
   useEffect(() => {
     fetchCategories().then(setCategories).catch(console.error);
   }, []);
+
+  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      showToast(`Bild vald: ${file.name}`);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -105,7 +114,7 @@ function ProductForm() {
 
         <label className="admin-form__full">
           Produktbild
-          <input name="image" type="file" accept="image/*" />
+          <input name="image" type="file" accept="image/*" onChange={handleImageChange} />
         </label>
 
         <label className="admin-form__full">

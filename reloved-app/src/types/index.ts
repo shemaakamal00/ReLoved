@@ -29,6 +29,9 @@ export interface User {
   last_name: string;
   email: string;
   role: "customer" | "seller" | "admin";
+  address?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
 }
 
 export interface AuthResponse {
@@ -97,6 +100,7 @@ export interface SellerOrderItem extends OrderItem {
 }
 
 export interface SellerStats {
+  pending: number;
   active: number;
   sold: number;
   pendingDelivery: number;

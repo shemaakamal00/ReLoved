@@ -61,6 +61,13 @@ app.post("/api/orders", async (req, res) => {
     return res.status(500).json({ error: productsError.message });
   }
 
+  const unavailable = dbProducts.filter((p) => p.status !== "approved");
+  if (unavailable.length > 0) {
+    return res.status(409).json({
+      error: `Tyvärr, ${unavailable.map((p) => p.name).join(", ")} har redan sålts.`,
+    });
+  }
+
   let subtotal = 0;
   const orderItems = items.map((item) => {
     const product = dbProducts.find((p) => p.id === item.product_id);
@@ -113,6 +120,12 @@ app.post("/api/orders", async (req, res) => {
   if (itemsError) {
     return res.status(500).json({ error: itemsError.message });
   }
+
+  await supabase
+    .from("products")
+    .update({ status: "sold " })
+    .in("id", productsIds);
+
   res.status(201).json(order);
 });
 
@@ -717,6 +730,72 @@ app.get("/api/seller/stats", requireAuth, async (req, res) => {
       .in("orders.status", ["ordered", "processing"]);
 
     res.json({
+      active: active ?? 0,
+      sold: sold ?? 0,
+      pendingDelivery: pendingDelivery ?? 0,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/users/me", requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from("users")
+    .select(
+      "id, first_name, last_name, email, address, postal_code, city, role",
+    )
+    .eq("id", req.user.userId)
+    .single();
+
+  if (error)
+    return res.status(404).json({ error: "Användaren hittades inte " });
+  res.json(data);
+});
+
+app.patch("/api/users/me", requireAuth, async (req, res) => {
+  const { first_name, last_name, address, postal_code, city } = req.body;
+
+  const { data, error } = await supabase
+    .from("users")
+    .update({ first_name, last_name, address, postal_code, city })
+    .eq("id", req.user.userId)
+    .select(
+      "id, first_name, last_name, email, address, postal_code, city, role",
+    )
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.get("/api/seller/stats", requireAuth, async (req, res) => {
+  try {
+    const { count: pending } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", req.user.userId)
+      .eq("status, pending");
+
+    const { count: active } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", req.user.userId)
+      .eq("status", "apporoved");
+
+    const { count: sold } = await supabase
+      .from("order_items")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", req.user.userId);
+
+    const { count: pendingDelivery } = await supabase
+      .from("order_items")
+      .select("*, orders!inner(status)", { count: "exact", head: true })
+      .eq("seller_id", req.user.userId)
+      .in("orders.status", ["ordered", "processing"]);
+
+    res.json({
+      pending: pending ?? 0,
       active: active ?? 0,
       sold: sold ?? 0,
       pendingDelivery: pendingDelivery ?? 0,

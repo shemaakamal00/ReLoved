@@ -7,6 +7,7 @@ import type {
   AdminStats,
   SellerOrderItem,
   SellerStats,
+  User,
 } from "../types";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -239,5 +240,32 @@ export function clearCart(token: string) {
 export function fetchAdminStats(token: string) {
   return apiFetch<AdminStats>("/admin/stats", {
     headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// profile
+export function fetchMyProfile(token: string): Promise<User> {
+  return apiFetch<User>("/users/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateMyProfile(
+  token: string,
+  updates: {
+    first_name: string;
+    last_name: string;
+    address: string;
+    postal_code: string;
+    city: string;
+  },
+): Promise<User> {
+  return apiFetch<User>("/users/me", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
   });
 }

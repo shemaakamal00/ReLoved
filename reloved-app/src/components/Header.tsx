@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useFavorites } from "../context/FavoritesContext";
 
 function Header() {
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
+  const { favorites } = useFavorites();
   return (
     <header className="site-header">
       <div className="header-shell">
@@ -40,7 +42,11 @@ function Header() {
 
         <nav className="header-actions" aria-label="Snabbmeny">
           <Link to="/favorites" className="icon-button" aria-label="Favoriter">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              fill={favorites.length > 0 ? "currentColor" : "none"}
+            >
               <path d="M12 20s-6.5-4.2-8.5-7.5C1.7 9.6 3 6 6.6 6c2.1 0 3.2 1.2 4 2.3.8-1.1 1.9-2.3 4-2.3C18.2 6 19.5 9.6 17.7 12.5 15.7 15.8 12 20 12 20z"></path>
             </svg>
           </Link>
@@ -54,27 +60,16 @@ function Header() {
               {cartCount}
             </span>
           </Link>
-
-          {user ? (
-            <button
-              type="button"
-              className="icon-button"
-              aria-label="Logga ut"
-              onClick={logout}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="8" r="3.5"></circle>
-                <path d="M5 19c1.6-2.8 4-4.2 7-4.2s5.4 1.4 7 4.2"></path>
-              </svg>
-            </button>
-          ) : (
-            <Link to="/login" className="icon-button" aria-label="Logga in">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="8" r="3.5"></circle>
-                <path d="M5 19c1.6-2.8 4-4.2 7-4.2s5.4 1.4 7 4.2"></path>
-              </svg>
-            </Link>
-          )}
+          <Link
+            to={user ? "/profile" : "/login"}
+            className="icon-button"
+            aria-label="Profil"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.5"></circle>
+              <path d="M5 19c1.6-2.8 4-4.2 7-4.2s5.4 1.4 7 4.2"></path>
+            </svg>
+          </Link>
 
           <Link to="/seller" className="sell-button" id="sellButton">
             Sälj nu

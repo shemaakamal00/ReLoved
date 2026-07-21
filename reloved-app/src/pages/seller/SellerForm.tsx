@@ -14,6 +14,13 @@ function SellerForm() {
     fetchCategories().then(setCategories).catch(console.error);
   }, []);
 
+  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      showToast(`Bild vald: ${file.name}`);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token) return;
@@ -95,7 +102,7 @@ function SellerForm() {
         </label>
 
         <label className="upload-box">
-          <input name="image" type="file" accept="image/*" hidden />
+          <input name="image" type="file" accept="image/*" onChange={handleImageChange} />
           <span className="upload-icon">📷</span>
           <strong>Ladda upp produktbild</strong>
           <p>JPG, PNG eller WEBP</p>

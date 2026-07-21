@@ -7,13 +7,13 @@ import MyListings from "./MyListings";
 import MySales from "./MySales";
 
 function SellerDashBoard() {
-    const { token } = useAuth();
-    const [ stats, setStats ] = useState<SellerStats | null>(null);
+  const { token } = useAuth();
+  const [stats, setStats] = useState<SellerStats | null>(null);
 
-    useEffect(() => {
-        if (!token) return;
-        fetchSellerStats(token).then(setStats).catch(console.error);
-    }, [token]);
+  useEffect(() => {
+    if (!token) return;
+    fetchSellerStats(token).then(setStats).catch(console.error);
+  }, [token]);
 
   return (
     <main>
@@ -25,20 +25,20 @@ function SellerDashBoard() {
         </div>
 
         <div className="seller-stats">
-            <article className="seller-stat-card">
-                <span> Aktiva annonser </span>
-                <strong> {stats ? stats.sold: "-"} </strong>
-            </article>
+          <article className="seller-stat-card">
+            <span>Väntar på granskning</span>
+            <strong>{stats ? stats.pending : "–"}</strong>
+          </article>
 
-            <article className="seller-stat-card">
-                <span> Sålda produkter </span>
-                <strong> {stats ? stats.sold : "-" } </strong>
-            </article>
-
-            <article className="seller-stat-card">
-                <span> Väntar på leverans </span>
-                <strong> {stats ? stats.pendingDelivery : "-" } </strong>
-            </article>
+          <article className="seller-stat-card">
+            <span>Aktiva annonser</span>
+            <strong>{stats ? stats.active : "–"}</strong>
+          </article>
+          
+          <article className="seller-stat-card">
+            <span>Sålda produkter</span>
+            <strong>{stats ? stats.sold : "–"}</strong>
+          </article>
         </div>
 
         <SellerForm />
