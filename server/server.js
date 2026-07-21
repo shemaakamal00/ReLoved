@@ -9,7 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 dotenv.config();
 const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "https://re-loved.vercel.app/"}));
 app.use(express.json());
 
 const supabase = createClient(
