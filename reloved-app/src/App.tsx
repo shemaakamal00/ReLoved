@@ -18,6 +18,13 @@ import RequireAdmin from "./components/RequireAdmin";
 import { ToastProvider } from "./context/ToastContext";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import RequireAuth from "./components/RequireAuth";
+import About from "./pages/About";
+import Faq from "./pages/Faq";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
   return (
@@ -54,6 +61,13 @@ function App() {
                     </RequireAuth>
                   }
                 />
+                <Route path="/about" element={<About />} />
+                <Route path="/faq" element={<Faq />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="*" element={<NotFound />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
               </Routes>
 
               <Footer />

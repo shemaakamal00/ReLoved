@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Footer(){
     return(
         <footer className="site-footer">
@@ -14,11 +16,11 @@ function Footer(){
           </p>
   
           <nav className="footer-nav" aria-label="Sidfot">
-            <a href="about.html">Om ReLoved</a>
-            <a href="faq.html">Vanliga frågor</a>
-            <a href="privacy-policy.html">Integritetspolicy</a>
-            <a href="terms-of-service.html">Användarvillkor</a>
-            <a href="contact.html">Kontakta oss</a>
+            <Link to = "/about" > Om ReLoved </Link>
+            <Link to = "/faq" > Vanliga frågor </Link>
+            <Link to = "/privacy-policy"> Integritetspolicy </Link>
+            <Link to = "/terms-of-service"> Användarvillkor </Link>
+            <Link to = "/contact"> Kontakta oss</Link>
           </nav>
   
           <div className="footer-socials">
