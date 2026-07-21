@@ -123,7 +123,7 @@ app.post("/api/orders", async (req, res) => {
 
   await supabase
     .from("products")
-    .update({ status: "sold " })
+    .update({ status: "sold" })
     .in("id", productsIds);
 
   res.status(201).json(order);
@@ -690,7 +690,7 @@ app.get("/api/admin/stats", requireAuth, requireAdmin, async (req, res) => {
 
 app.get("/api/products/mine", requireAuth, async (req, res) => {
   const { data, error } = await supabase
-    .frpm("products")
+    .from("products")
     .select("*")
     .eq("seller_id", req.user.userId)
     .order("created_at", { ascending: false });
@@ -710,34 +710,6 @@ app.get("/api/orders/seller", requireAuth, async (req, res) => {
   res.json(data);
 });
 
-app.get("/api/seller/stats", requireAuth, async (req, res) => {
-  try {
-    const { count: active } = await supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("seller_id", req.user.userId)
-      .eq("status", "approved");
-
-    const { count: sold } = await supabase
-      .from("order_items")
-      .select("*", { count: "exact", head: true })
-      .eq("seller_id", req.user.userId);
-    const { count: pendingDelivery } = await supabase
-      .from("order_items")
-      .select("*, orders!inner(status)", { count: "exact", head: true })
-      .eq("seller_id", req.user.userId)
-      .in("orders.status", ["ordered", "processing"]);
-
-    res.json({
-      active: active ?? 0,
-      sold: sold ?? 0,
-      pendingDelivery: pendingDelivery ?? 0,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.get("/api/users/me", requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from("users")
@@ -748,7 +720,7 @@ app.get("/api/users/me", requireAuth, async (req, res) => {
     .single();
 
   if (error)
-    return res.status(404).json({ error: "Användaren hittades inte " });
+    return res.status(404).json({ error: "Användaren hittades inte" });
   res.json(data);
 });
 
@@ -774,13 +746,13 @@ app.get("/api/seller/stats", requireAuth, async (req, res) => {
       .from("products")
       .select("*", { count: "exact", head: true })
       .eq("seller_id", req.user.userId)
-      .eq("status, pending");
+      .eq("status", "pending");
 
     const { count: active } = await supabase
       .from("products")
       .select("*", { count: "exact", head: true })
       .eq("seller_id", req.user.userId)
-      .eq("status", "apporoved");
+      .eq("status", "approved");
 
     const { count: sold } = await supabase
       .from("order_items")

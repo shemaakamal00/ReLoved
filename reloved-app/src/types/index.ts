@@ -40,11 +40,6 @@ export interface AuthResponse {
   token: string;
 }
 
-export interface CartItem {
-  id: string;
-  quantity: number;
-}
-
 export type OrderStatus =
   | "ordered"
   | "processing"

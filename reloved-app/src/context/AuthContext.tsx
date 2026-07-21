@@ -31,8 +31,12 @@ function loadStoredAuth(): { user: User; token: string } | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const stored = loadStoredAuth();
-  const [user, setUser] = useState<User | null>(stored?.user ?? null);
-  const [token, setToken] = useState<string | null>(stored?.token ?? null);
+  const [user, setUser] = useState<User | null>(
+    () => loadStoredAuth()?.user ?? null,
+  );
+  const [token, setToken] = useState<string | null>(
+    () => loadStoredAuth()?.token ?? null,
+  );
 
   function persist(newUser: User, newToken: string) {
     localStorage.setItem(

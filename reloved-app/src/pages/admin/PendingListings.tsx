@@ -16,7 +16,7 @@ function PendingListings() {
       const data = await fetchProducts("pending");
       setListings(data);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
