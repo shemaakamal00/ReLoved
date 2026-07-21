@@ -5,7 +5,8 @@ import { useAuth } from "../context/AuthContext";
 function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,10 +24,12 @@ function Register() {
 
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(firstName, lastName, email, password);
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte registrera dig");
+      setError(
+        err instanceof Error ? err.message : "Kunde inte registrera dig",
+      );
     } finally {
       setLoading(false);
     }
@@ -42,35 +45,76 @@ function Register() {
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label>
-              Namn
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ditt namn" required />
+              Förnamn
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Ditt förnamn"
+                required
+              />
+            </label>
+
+            <label>
+              Efternamn
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Ditt efternamn"
+                required
+              />
             </label>
 
             <label>
               E-post
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="namn@email.se" required />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="namn@email.se"
+                required
+              />
             </label>
 
             <label>
               Lösenord
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="********" required />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="********"
+                required
+              />
             </label>
 
             <label>
               Bekräfta lösenord
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="********" required />
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="********"
+                required
+              />
             </label>
 
             {error && <p className="form-error">{error}</p>}
 
-            <button type="submit" className="button button-secondary" disabled={loading}>
+            <button
+              type="submit"
+              className="button button-secondary"
+              disabled={loading}
+            >
               {loading ? "Skapar konto..." : "Skapa konto"}
             </button>
           </form>
 
           <div className="login-register">
             <p>Har du redan konto?</p>
-            <Link to="/login" className="button button-secondary">Logga in</Link>
+            <Link to="/login" className="button button-secondary">
+              Logga in
+            </Link>
           </div>
         </div>
       </section>

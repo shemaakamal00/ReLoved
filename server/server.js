@@ -401,14 +401,13 @@ app.patch(
 );
 
 app.post("/api/auth/register", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: "Fyll i namn, e-post och lösenord" });
+  if (!firstName || !lastName || !email || !password) {
+    return res
+      .status(400)
+      .json({ error: "Fyll i förnamn, efternamn, e-post och lösenord" });
   }
-
-  const [firstName, ...rest] = name.trim().split(" ");
-  const lastName = rest.join(" ") || "-";
 
   const passwordHash = await bcrypt.hash(password, 10);
 

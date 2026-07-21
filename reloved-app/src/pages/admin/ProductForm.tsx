@@ -2,11 +2,11 @@ import { useState, useEffect, type FormEvent } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { createProduct, fetchCategories } from "../../api/client";
 import type { Category } from "../../types";
-import { useToast } from "../../context/ToastContext"; 
+import { useToast } from "../../context/ToastContext";
 
 function ProductForm() {
   const { token } = useAuth();
-  const { showToast } =useToast();
+  const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -79,11 +79,20 @@ function ProductForm() {
         <label>
           Kategori
           <select name="category">
-            {categories.map((cat) => (
-              <option value={cat.id} key={cat.id}>
-                {cat.name}
-              </option>
-            ))}
+            {categories
+              .filter((cat) => cat.parent_id === null)
+              .map((parent) => (
+                <optgroup label={parent.name} key={parent.id}>
+                  <option value={parent.id}>{parent.name} (alla)</option>
+                  {categories
+                    .filter((cat) => cat.parent_id === parent.id)
+                    .map((child) => (
+                      <option value={child.id} key={child.id}>
+                        {child.name}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
           </select>
         </label>
 
@@ -114,7 +123,12 @@ function ProductForm() {
 
         <label className="admin-form__full">
           Produktbild
-          <input name="image" type="file" accept="image/*" onChange={handleImageChange} />
+          <input
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
         </label>
 
         <label className="admin-form__full">

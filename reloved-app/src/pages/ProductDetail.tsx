@@ -13,6 +13,13 @@ function ProductDetail() {
   const [notFound, setNotFound] = useState(false);
   const { addToCart } = useCart();
   const { isFavorited, toggleFavorite } = useFavorites();
+  const sellerName = product.seller_name ?? "ReLoved";
+  const sellerInitials = sellerName
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   useEffect(() => {
     if (!id) return;
@@ -98,8 +105,11 @@ function ProductDetail() {
       <section className="seller-card">
         <h2>Säljare</h2>
         <div className="seller">
+          <div className="seller__image seller__image--initials">
+            {sellerInitials}
+          </div>
           <div className="seller__info">
-            <h3>{product.seller_name ?? "ReLoved"}</h3>
+            <h3>{sellerName}</h3>
           </div>
         </div>
       </section>

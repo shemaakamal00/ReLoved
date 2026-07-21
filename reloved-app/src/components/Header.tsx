@@ -1,12 +1,27 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
+import { fetchCategories } from "../api/client";
+import type { Category } from "../types";
 
 function Header() {
   const { user } = useAuth();
   const { cartCount } = useCart();
   const { favorites } = useFavorites();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(console.error);
+  }, []);
+
+  const topLevelCategories = categories.filter((c) => c.parent_id === null);
+
+  function childrenOf(parentId: number) {
+    return categories.filter((c) => c.parent_id === parentId);
+  }
+
   return (
     <header className="site-header">
       <div className="header-shell">
@@ -18,7 +33,6 @@ function Header() {
           <label className="sr-only" htmlFor="search">
             Sök på ReLoved
           </label>
-
           <input
             className="search-input"
             type="search"
@@ -26,7 +40,6 @@ function Header() {
             name="search"
             placeholder="Sök plagg, märken..."
           />
-
           <button
             className="search-button"
             id="searchButton"
@@ -60,6 +73,7 @@ function Header() {
               {cartCount}
             </span>
           </Link>
+
           <Link
             to={user ? "/profile" : "/login"}
             className="icon-button"
@@ -85,130 +99,41 @@ function Header() {
 
       <nav className="category-nav" aria-label="Kategorier">
         <ul className="category-list">
-          <li className="category-item has-mega-menu">
-            <Link to="/products?category=1">Dam</Link>
-
-            <div className="mega-menu">
-              <div className="mega-menu-inner">
-                <div className="mega-column">
-                  <h3>Kläder</h3>
-                  <Link to="/products?category=1">Klänningar</Link>
-                  <Link to="/products?category=1">Jackor</Link>
-                  <Link to="/products?category=1">Jeans</Link>
-                  <Link to="/products?category=1">Toppar</Link>
-                  <Link to="/products?category=1">Kjolar</Link>
-                </div>
-
-                <div className="mega-column">
-                  <h3>Skor</h3>
-                  <Link to="/products?category=1">Sneakers</Link>
-                  <Link to="/products?category=1">Boots</Link>
-                  <Link to="/products?category=1">Sandaler</Link>
-                  <Link to="/products?category=1">Klackar</Link>
-                </div>
-
-                <div className="mega-column">
-                  <h3>Accessoarer</h3>
-                  <Link to="/products?category=1">Väskor</Link>
-                  <Link to="/products?category=1">Smycken</Link>
-                  <Link to="/products?category=1">Solglasögon</Link>
-                  <Link to="/products?category=1">Halsdukar</Link>
-                </div>
-
-                <Link to="/products?category=1" className="mega-feature">
-                  <span className="mega-eyebrow">Curated second hand</span>
-                  <strong>Veckans damfavoriter</strong>
-                  <p>Handplockade plagg med premiumkänsla.</p>
+          {topLevelCategories.map((category) => {
+            const children = childrenOf(category.id);
+            return (
+              <li
+                className={
+                  children.length > 0
+                    ? "category-item has-mega-menu"
+                    : "category-item"
+                }
+                key={category.id}
+              >
+                <Link to={`/products?category=${category.id}`}>
+                  {category.name}
                 </Link>
-              </div>
-            </div>
-          </li>
 
-          <li className="category-item has-mega-menu">
-            <Link to="/products?category=2">Herr</Link>
-
-            <div className="mega-menu">
-              <div className="mega-menu-inner">
-                <div className="mega-column">
-                  <h3>Kläder</h3>
-                  <Link to="/products?category=2">Jackor</Link>
-                  <Link to="/products?category=2">Skjortor</Link>
-                  <Link to="/products?category=2">Jeans</Link>
-                  <Link to="/products?category=2">Hoodies</Link>
-                </div>
-
-                <div className="mega-column">
-                  <h3>Skor</h3>
-                  <Link to="/products?category=2">Sneakers</Link>
-                  <Link to="/products?category=2">Loafers</Link>
-                  <Link to="/products?category=2">Boots</Link>
-                </div>
-
-                <div className="mega-column">
-                  <h3>Accessoarer</h3>
-                  <Link to="/products?category=2">Klockor</Link>
-                  <Link to="/products?category=2">Väskor</Link>
-                  <Link to="/products?category=2">Bälten</Link>
-                </div>
-
-                <Link to="/products?category=2" className="mega-feature">
-                  <span className="mega-eyebrow">ReLoved Picks</span>
-                  <strong>Stilrent för honom</strong>
-                  <p>Second hand med clean och modern känsla.</p>
-                </Link>
-              </div>
-            </div>
-          </li>
-
-          <li className="category-item has-mega-menu">
-            <Link to="/products?category=3">Designer</Link>
-
-            <div className="mega-menu">
-              <div className="mega-menu-inner">
-                <div className="mega-column">
-                  <h3>Kategorier</h3>
-                  <Link to="/products?category=3">Väskor</Link>
-                  <Link to="/products?category=3">Skor</Link>
-                  <Link to="/products?category=3">Jackor</Link>
-                  <Link to="/products?category=3">Accessoarer</Link>
-                </div>
-
-                <div className="mega-column">
-                  <h3>Populära märken</h3>
-                  <Link to="/products?category=3">Acne Studios</Link>
-                  <Link to="/products?category=3">Ganni</Link>
-                  <Link to="/products?category=3">Filippa K</Link>
-                  <Link to="/products?category=3">Totême</Link>
-                </div>
-
-                <div className="mega-column">
-                  <h3>Shoppa efter</h3>
-                  <Link to="/products?category=3">Nyinkommet</Link>
-                  <Link to="/products?category=3">Premium</Link>
-                  <Link to="/products?category=3">Vintage</Link>
-                </div>
-
-                <Link to="/products?category=3" className="mega-feature">
-                  <span className="mega-eyebrow">Premium corner</span>
-                  <strong>Designerfynd</strong>
-                  <p>Utvalda favoriter med lyxigare känsla.</p>
-                </Link>
-              </div>
-            </div>
-          </li>
-
-          <li className="category-item">
-            <Link to="/products?category=4">Barn</Link>
-          </li>
-          <li className="category-item">
-            <Link to="/products?category=5">Hem</Link>
-          </li>
-          <li className="category-item">
-            <Link to="/products?category=6">Elektronik</Link>
-          </li>
-          <li className="category-item">
-            <Link to="/products?category=7">Sport</Link>
-          </li>
+                {children.length > 0 && (
+                  <div className="mega-menu">
+                    <div className="mega-menu-inner">
+                      <div className="mega-column">
+                        <h3>{category.name}</h3>
+                        {children.map((child) => (
+                          <Link
+                            to={`/products?category=${child.id}`}
+                            key={child.id}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </header>

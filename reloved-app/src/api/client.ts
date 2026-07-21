@@ -143,14 +143,15 @@ export function updateOrderStatus(
 
 // Auth
 export function registerUser(
-  name: string,
+  firstName: string,
+  lastName: string,
   email: string,
   password: string,
 ): Promise<AuthResponse> {
   return apiFetch<AuthResponse>("/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ firstName, lastName, email, password }),
   });
 }
 
