@@ -104,7 +104,7 @@ interface CreateOrderPayload {
   address: string;
   postal_code: string;
   city: string;
-  items: { product_id: number; quantity: number }[];
+  items: { product_id: number; }[];
 }
 
 export function createOrder(orderData: CreateOrderPayload): Promise<Order> {
@@ -169,7 +169,7 @@ export function loginUser(
 
 export function fetchCart(token: string) {
   return apiFetch<
-    { product_id: number; quantity: number; products: Product }[]
+    { product_id: number; products: Product }[]
   >("/cart", {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -178,7 +178,6 @@ export function fetchCart(token: string) {
 export function addCartItem(
   token: string,
   productId: number,
-  quantity: number,
 ) {
   return apiFetch("/cart/items", {
     method: "POST",
@@ -186,24 +185,10 @@ export function addCartItem(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ product_id: productId, quantity }),
+    body: JSON.stringify({ product_id: productId }),
   });
 }
 
-export function updateCartItem(
-  token: string,
-  productId: number,
-  quantity: number,
-) {
-  return apiFetch(`/cart/items/${productId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ quantity }),
-  });
-}
 
 export function removeCartItem(token: string, productId: number) {
   return apiFetch(`/cart/items/${productId}`, {

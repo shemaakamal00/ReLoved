@@ -72,7 +72,6 @@ export interface OrderItem {
   seller_id: number | null;
   product_name: string;
   product_brand: string;
-  quantity: number;
   unit_price: number;
   line_total: number;
 }

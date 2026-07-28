@@ -11,7 +11,8 @@ function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const { addToCart } = useCart();
+  const { addToCart, items } = useCart();
+  const alreadyInCart = items.some((item) => item.product_id === product.id);
   const { isFavorited, toggleFavorite } = useFavorites();
 
   useEffect(() => {
@@ -44,6 +45,8 @@ function ProductDetail() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  const isAvailable = product.status === "approved";
 
   return (
     <main>
@@ -80,14 +83,17 @@ function ProductDetail() {
           <p>
             <strong>Material:</strong> {product.material}
           </p>
+          {isAvailable && (
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => addToCart(product.id)}
+              disabled={alreadyInCart}
+            >
+              {alreadyInCart ? " Redan i varukorgen" : "Lägg i varukorgen"}
+            </button>
+          )}
 
-          <button
-            type="button"
-            className="button button-primary"
-            onClick={() => addToCart(product.id)}
-          >
-            Lägg i varukorg
-          </button>
           <button
             type="button"
             className="button button-secondary"

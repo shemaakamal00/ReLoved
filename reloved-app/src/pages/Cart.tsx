@@ -2,10 +2,17 @@ import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 function Cart() {
-  const { items, loading, removeFromCart, updateQuantity } = useCart();
+  const { items, loading, removeFromCart } = useCart();
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+  const availableItems = items.filter(
+    (item) => item.product.status === "approved",
+  );
+  const unavailableItems = items.filter(
+    (item) => item.product.status !== "approved",
+  );
+
+  const subtotal = availableItems.reduce(
+    (sum, item) => sum + item.product.price,
     0,
   );
   const shipping = subtotal > 0 ? 49 : 0;
@@ -30,56 +37,47 @@ function Cart() {
               {items.length === 0 ? (
                 <p>Din varukorg är tom.</p>
               ) : (
-                items.map((item) => (
-                  <article
-                    className="cart-item"
-                    key={item.product_id}
-                    data-product-id={item.product_id}
-                  >
-                    <img
-                      src={item.product.image_url ?? ""}
-                      alt={item.product.alt_text ?? item.product.name}
-                    />
+                items.map((item) => {
+                  const isAvailable = item.product.status === "approved";
 
-                    <div className="cart-item__info">
-                      <h2>{item.product.name}</h2>
-                      <p>{item.product.brand}</p>
+                  return (
+                    <article
+                      className="cart-item"
+                      key={item.product_id}
+                      data-product-id={item.product_id}
+                    >
+                      <img
+                        src={item.product.image_url ?? ""}
+                        alt={item.product.alt_text ?? item.product.name}
+                      />
 
-                      <div className="cart-item__quantity">
+                      <div className="cart-item__info">
+                        <h2>{item.product.name}</h2>
+                        <p>{item.product.brand}</p>
+
+                        {!isAvailable && (
+                          <p className="form-error">
+                            Produkten är inte längre tillgänlig, har redan
+                            sålts.
+                          </p>
+                        )}
+
                         <button
                           type="button"
-                          onClick={() =>
-                            updateQuantity(item.product_id, item.quantity - 1)
-                          }
-                          aria-label="Minska antal"
+                          onClick={() => removeFromCart(item.product_id)}
                         >
-                          −
-                        </button>
-                        <span>{item.quantity}</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateQuantity(item.product_id, item.quantity + 1)
-                          }
-                          aria-label="Öka antal"
-                        >
-                          +
+                          Ta bort
                         </button>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => removeFromCart(item.product_id)}
-                      >
-                        Ta bort
-                      </button>
-                    </div>
-
-                    <p className="cart-item__price">
-                      {item.product.price * item.quantity} kr
-                    </p>
-                  </article>
-                ))
+                      <p className="cart-item__price">
+                        {isAvailable
+                          ? `${item.product.price} kr`
+                          : "—"}
+                      </p>
+                    </article>
+                  );
+                })
               )}
             </div>
 
@@ -101,9 +99,26 @@ function Cart() {
                 <span>{total} kr</span>
               </div>
 
-              <Link to="/checkout" className="button button-primary">
-                Gå till kassan
-              </Link>
+              {unavailableItems.length > 0 && (
+                <p className="form-error">
+                  Ta bort otillgängliga varor innan du går vidare till kassan.
+                </p>
+              )}
+
+              {unavailableItems.length === 0 ? (
+                <Link to="/checkout" className="button button-primary">
+                  Gå till kassan
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className="button button-primary"
+                  disabled
+                >
+                  Gå till kassan
+                </button>
+              )}
+
               <Link to="/products" className="cart-summary__link">
                 Fortsätt handla
               </Link>

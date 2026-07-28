@@ -12,15 +12,17 @@ const app = express();
 
 const allowedOrigins = ["http://localhost:5173", "https://re-loved.vercel.app"];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Blockerad av CORS"));
-    }
-  },
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Blockerad av CORS"));
+      }
+    },
+  }),
+);
 
 app.use(express.json());
 
@@ -94,14 +96,14 @@ app.post("/api/orders", async (req, res) => {
   let subtotal = 0;
   const orderItems = items.map((item) => {
     const product = dbProducts.find((p) => p.id === item.product_id);
-    const lineTotal = product.price * item.quantity;
+    const lineTotal = product.price;
     subtotal += lineTotal;
     return {
       product_id: product.id,
       seller_id: product.seller_id,
       product_name: product.name,
       product_brand: product.brand,
-      quantity: item.quantity,
+      quantity: 1,
       unit_price: product.price,
       line_total: lineTotal,
     };
@@ -238,6 +240,24 @@ app.patch(
 
     if (error) {
       return res.status(500).json({ error: error.message });
+    }
+
+    if (status === "refunded") {
+      const { data: orderItems } = await supabase
+        .from("order_items")
+        .select("product_id")
+        .eq("order_id", id);
+
+        const productIds = (orderItems ?? [])
+        .map((item) => item.product_id)
+        .filter(Boolean);
+
+      if (productIds.length > 0) {
+        await supabase
+          .from("products")
+          .update({ status: "approved" })
+          .in("id", productIds);
+      }
     }
 
     res.json(data);
@@ -428,7 +448,7 @@ app.patch(
 
     const { data, error } = await supabase
       .from("products")
-      .update (updates)
+      .update(updates)
       .eq("id", id)
       .select()
       .single();
@@ -568,7 +588,7 @@ app.get("/api/cart", requireAuth, async (req, res) => {
     const cart = await getOrCreateCart(req.user.userId);
     const { data, error } = await supabase
       .from("cart_items")
-      .select("product_id, quantity, products(*)")
+      .select("product_id, products(*)")
       .eq("cart_id", cart.id);
 
     if (error) return res.status(500).json({ error: error.message });
@@ -592,16 +612,7 @@ app.post("/api/cart/items", requireAuth, async (req, res) => {
       .maybeSingle();
 
     if (existing) {
-      const { data, error } = await supabase
-        .from("cart_items")
-        .update({ quantity: existing.quantity + quantity })
-        .eq("cart_id", cart.id)
-        .eq("product_id", product_id)
-        .select()
-        .single();
-
-      if (error) return res.status(500).json({ error: error.message });
-      return res.json(data);
+      return res.json(existing);
     }
 
     const { data, error } = await supabase
@@ -619,7 +630,6 @@ app.post("/api/cart/items", requireAuth, async (req, res) => {
 
 app.patch("/api/cart/items/:productId", requireAuth, async (req, res) => {
   const { productId } = req.params;
-  const { quantity } = req.body;
 
   try {
     const cart = await getOrCreateCart(req.user.userId);
@@ -738,8 +748,7 @@ app.get("/api/users/me", requireAuth, async (req, res) => {
     .eq("id", req.user.userId)
     .single();
 
-  if (error)
-    return res.status(404).json({ error: "Användaren hittades inte" });
+  if (error) return res.status(404).json({ error: "Användaren hittades inte" });
   res.json(data);
 });
 

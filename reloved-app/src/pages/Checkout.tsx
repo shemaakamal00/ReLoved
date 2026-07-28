@@ -34,10 +34,7 @@ function Checkout() {
     .catch(console.error);
   }, [token]);
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0,
-  );
+  const subtotal = items.reduce((sum, item) => sum + item.product.price, 0);
   const shipping = subtotal > 0 ? 49 : 0;
   const total = subtotal + shipping;
 
@@ -61,7 +58,6 @@ function Checkout() {
         city,
         items: items.map((item) => ({
           product_id: item.product_id,
-          quantity: item.quantity,
         })),
       });
 
@@ -214,8 +210,7 @@ function Checkout() {
                 />
                 <div>
                   <h3>{item.product.name}</h3>
-                  <p>× {item.quantity}</p>
-                  <p>{item.product.price * item.quantity} kr</p>
+                  <p>{item.product.price} kr</p>
                 </div>
               </div>
             ))}

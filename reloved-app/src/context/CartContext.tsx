@@ -9,7 +9,6 @@ import { useAuth } from "./AuthContext";
 import {
   fetchCart,
   addCartItem,
-  updateCartItem,
   removeCartItem,
   clearCart as clearCartApi,
   fetchProducts,
@@ -18,22 +17,19 @@ import type { Product } from "../types";
 
 interface CartLine {
   product_id: number;
-  quantity: number;
   product: Product;
 }
 
 interface LocalCartLine {
   id: number;
-  quantity: number;
 }
 
 interface CartContextValue {
   items: CartLine[];
   loading: boolean;
   cartCount: number;
-  addToCart: (productId: number, quantity?: number) => Promise<void>;
+  addToCart: (productId: number,) => Promise<void>;
   removeFromCart: (productId: number) => Promise<void>;
-  updateQuantity: (productId: number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
 }
 
@@ -67,7 +63,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const local = loadLocalCart();
       if (local.length > 0) {
         for (const line of local) {
-          await addCartItem(token, line.id, line.quantity);
+          await addCartItem(token, line.id);
         }
         localStorage.removeItem(LOCAL_CART_KEY);
       }
@@ -76,7 +72,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(
         data.map((row) => ({
           product_id: row.product_id,
-          quantity: row.quantity,
           product: row.products,
         })),
       );
@@ -90,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           .map((line) => {
             const product = products.find((p) => p.id === line.id);
             return product
-              ? { product_id: product.id, quantity: line.quantity, product }
+              ? { product_id: product.id, product }
               : null;
           })
           .filter((line): line is CartLine => line !== null);
@@ -105,14 +100,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadCart();
   }, [user]);
 
-  async function addToCart(productId: number, quantity = 1) {
+  async function addToCart(productId: number) {
+    const alreadyInCart = items.some((item) => item.product_id === productId);
+    if (alreadyInCart) {
+      return;
+    }
+
     if (user && token) {
-      await addCartItem(token, productId, quantity);
+      await addCartItem(token, productId);
     } else {
       const local = loadLocalCart();
-      const existing = local.find((l) => l.id === productId);
-      if (existing) existing.quantity += quantity;
-      else local.push({ id: productId, quantity });
+      local.push({ id: productId});
       saveLocalCart(local);
     }
     await loadCart(false);
@@ -127,20 +125,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await loadCart(false);
   }
 
-  async function updateQuantity(productId: number, quantity: number) {
-    if (quantity < 1) return removeFromCart(productId);
-
-    if (user && token) {
-      await updateCartItem(token, productId, quantity);
-    } else {
-      const local = loadLocalCart();
-      const line = local.find((l) => l.id === productId);
-      if (line) line.quantity = quantity;
-      saveLocalCart(local);
-    }
-    await loadCart(false);
-  }
-
   async function clearCart() {
     if (user && token) {
       await clearCartApi(token);
@@ -150,7 +134,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await loadCart(false);
   }
 
-  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = items.length;
 
   return (
     <CartContext.Provider
@@ -160,7 +144,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         cartCount,
         addToCart,
         removeFromCart,
-        updateQuantity,
         clearCart,
       }}
     >
