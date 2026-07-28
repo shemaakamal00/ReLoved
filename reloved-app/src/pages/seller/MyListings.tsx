@@ -58,6 +58,12 @@ function MyListings() {
                 <span className={`status-badge ${status.className}`}>
                   {status.text}
                 </span>
+                {product.status === "rejected" && product.rejection_reason && (
+                  <span className="rejection-reason">
+                    {" "}
+                    {product.rejection_reason}
+                  </span>
+                )}
               </div>
             );
           })

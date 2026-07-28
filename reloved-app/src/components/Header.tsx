@@ -58,7 +58,7 @@ function Header() {
             <svg
               viewBox="0 0 24 24"
               aria-hidden="true"
-              fill={favorites.length > 0 ? "currentColor" : "none"}
+              className={favorites.length >0 ? "icon-filled" : "" }
             >
               <path d="M12 20s-6.5-4.2-8.5-7.5C1.7 9.6 3 6 6.6 6c2.1 0 3.2 1.2 4 2.3.8-1.1 1.9-2.3 4-2.3C18.2 6 19.5 9.6 17.7 12.5 15.7 15.8 12 20 12 20z"></path>
             </svg>

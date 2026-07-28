@@ -1,12 +1,14 @@
-import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../api/client";
+import { fetchMyProfile } from "../api/client";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate, Link } from "react-router-dom";
+
 
 function Checkout() {
   const { items, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState(user?.email ?? "");
@@ -20,6 +22,17 @@ function Checkout() {
   const [payment, setPayment] = useState("card");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    fetchMyProfile(token)
+    .then((profile) => {
+      if (profile.address) setAddress(profile.address);
+      if (profile.postal_code) setPostalCode(profile.postal_code);
+      if (profile.city) setCity(profile.city);
+    })
+    .catch(console.error);
+  }, [token]);
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -67,6 +80,14 @@ function Checkout() {
     <main>
       <section className="checkout-page">
         <h1>Kassan</h1>
+
+        <nav className="breadcrumbs" aria-label="Brödsumlor">
+          <Link to="/">Hem</Link>
+          <span>/</span>
+          <Link to="/cart">Varukorg</Link>
+          <span>/</span>
+          <span>Kassa</span>
+        </nav>
 
         <div className="checkout-layout">
           <form

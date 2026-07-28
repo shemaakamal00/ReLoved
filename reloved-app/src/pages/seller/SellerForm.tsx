@@ -25,13 +25,14 @@ function SellerForm() {
     event.preventDefault();
     if (!token) return;
 
+    const form = event.currentTarget;
     setSubmitting(true);
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
 
     try {
       await submitListing(formData, token);
       showToast("Din annons är inskickad och väntar på granskning! ");
-      event.currentTarget.reset();
+      form.reset();
     } catch (err) {
       console.error(err);
       showToast("Kunde inte skicka in annonsen.", "error");

@@ -84,6 +84,7 @@ export function updateProductStatus(
   id: number,
   status: string,
   token: string,
+  reason?: string,
 ): Promise<Product> {
   return apiFetch<Product>(`/products/${id}/status`, {
     method: "PATCH",
@@ -91,7 +92,7 @@ export function updateProductStatus(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, reason }),
   });
 }
 

@@ -9,13 +9,36 @@ import { createClient } from "@supabase/supabase-js";
 dotenv.config();
 const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
-app.use(cors({ origin: "https://re-loved.vercel.app" }));
+
+const allowedOrigins = ["http://localhost:5173", "https://re-loved.vercel.app"];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Blockerad av CORS"));
+    }
+  },
+}));
+
 app.use(express.json());
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY,
 );
+
+app.get("/api/products/mine", requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("seller_id", req.user.userId)
+    .order("created_at", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
 
 app.get("/api/products/:id", async (req, res) => {
   const { id } = req.params;
@@ -147,6 +170,17 @@ app.get("/api/orders", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
+  res.json(data);
+});
+
+app.get("/api/orders/seller", requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from("order_items")
+    .select("*, orders(id, status, created_at)")
+    .eq("seller_id", req.user.userId)
+    .order("id", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
 
@@ -372,7 +406,7 @@ app.patch(
   requireAdmin,
   async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, reason } = req.body;
 
     const validStatuses = [
       "pending",
@@ -385,9 +419,16 @@ app.patch(
       return res.status(400).json({ error: "Ogiltig status" });
     }
 
+    const updates = { status };
+    if (status === "rejected") {
+      updates.rejection_reason = reason || "Ingen anledning angavs.";
+    } else {
+      updates.rejection_reason = null;
+    }
+
     const { data, error } = await supabase
       .from("products")
-      .update({ status })
+      .update (updates)
       .eq("id", id)
       .select()
       .single();
@@ -686,28 +727,6 @@ app.get("/api/admin/stats", requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-app.get("/api/products/mine", requireAuth, async (req, res) => {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("seller_id", req.user.userId)
-    .order("created_at", { ascending: false });
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-app.get("/api/orders/seller", requireAuth, async (req, res) => {
-  const { data, error } = await supabase
-    .from("order_items")
-    .select("*, orders(id, status, created_at)")
-    .eq("seller_id", req.user.userId)
-    .order("id", { ascending: false });
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
 });
 
 app.get("/api/users/me", requireAuth, async (req, res) => {

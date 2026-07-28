@@ -158,6 +158,10 @@
   width: 100%;
 }
 
+.icon-button svg.icon-filled {
+  fill: var(--clr-accent);
+}
+
 /* Mega menu */
 .has-mega-menu {
   position: static;

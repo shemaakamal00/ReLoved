@@ -15,6 +15,7 @@ export interface Product {
   seller_name: string | null;
   status: "pending" | "approved" | "rejected" | "sold" | "archived";
   created_at: string;
+  rejection_reason: string | null;
 }
 
 export interface Category {

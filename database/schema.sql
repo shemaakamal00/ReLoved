@@ -104,3 +104,6 @@ INSERT INTO products (category_id, brand, name, size, condition, color, material
 
 -- seller_name --
 ALTER TABLE products ADD COLUMN seller_name VARCHAR(150);
+
+-- rejection_reason --
+ALTER TABLE products ADD COLUMN rejection_reason TEXT;

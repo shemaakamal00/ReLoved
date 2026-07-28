@@ -28,8 +28,14 @@ function PendingListings() {
 
   async function handleDecision(id: number, status: "approved" | "rejected") {
     if (!token) return;
+
+    let reason: string | undefined;
+    if (status === "rejected") {
+      reason = window.prompt ("Anledning till nekande (visas för säljaren):") ?? undefined;
+    }
+
     try {
-      await updateProductStatus(id, status, token);
+      await updateProductStatus(id, status, token, reason);
       await load();
       showToast(
         status === "approved" ? "Annonsen godkändes!" : "Annonsen nekades.",

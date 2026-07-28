@@ -130,6 +130,13 @@
   border-bottom: none;
 }
 
+.rejection-reason {
+  grid-column: 1 / -1;
+  font-size: 0.85rem;
+  color: #a03a3a;
+  font-style: italic;
+}
+
 /* Sales table */
 
 .seller-section:last-child .seller-table__row {
