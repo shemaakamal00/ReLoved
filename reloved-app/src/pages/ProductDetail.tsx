@@ -12,7 +12,6 @@ function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { addToCart, items } = useCart();
-  const alreadyInCart = items.some((item) => item.product_id === product.id);
   const { isFavorited, toggleFavorite } = useFavorites();
 
   useEffect(() => {
@@ -47,6 +46,7 @@ function ProductDetail() {
     .toUpperCase();
 
   const isAvailable = product.status === "approved";
+  const alreadyInCart = items.some((item) => item.product_id === product.id);
 
   return (
     <main>
