@@ -30,6 +30,16 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY,
 );
+app.get("/api/products/all", requireAuth, requireAdmin, async (req, res) => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
 
 app.get("/api/products/mine", requireAuth, async (req, res) => {
   const { data, error } = await supabase
@@ -42,31 +52,62 @@ app.get("/api/products/mine", requireAuth, async (req, res) => {
   res.json(data);
 });
 
-app.get("/api/products/:id", async (req, res) => {
-  const { id } = req.params;
+app.patch(
+  "/api/products/:id",
+  requireAuth,
+  requireAdmin,
+  upload.single("image"),
+  async (req, res) => {
+    const { id } = req.params;
+    const {
+      title,
+      brand,
+      price,
+      category,
+      condition,
+      size,
+      color,
+      material,
+      description,
+    } = req.body;
+    const updates = {
+      name: title,
+      brand,
+      price,
+      category_id: category || null,
+      condition,
+      size,
+      color,
+      material,
+      description,
+    };
 
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", id)
-    .single();
+    if (req.file) {
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
 
-  if (error) {
-    return res.status(404).json({ error: "Produkten hittades inte" });
-  }
+      if (uploadError)
+        return res.status(500).json({ error: uploadError.message });
 
-  res.json(data);
-});
+      const { data: publicUrlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(fileName);
+      updates.image_url = publicUrlData.publicUrl;
+      updates.alt_text = title;
+    }
+    const { data, error } = await supabase
+      .from("products")
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single();
 
-app.get("/api/categories", async (req, res) => {
-  const { data, error } = await supabase.from("categories").select("*");
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.json(data);
-});
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  },
+);
 
 app.post("/api/orders", async (req, res) => {
   const { email, phone, full_name, address, postal_code, city, items } =
@@ -248,7 +289,7 @@ app.patch(
         .select("product_id")
         .eq("order_id", id);
 
-        const productIds = (orderItems ?? [])
+      const productIds = (orderItems ?? [])
         .map((item) => item.product_id)
         .filter(Boolean);
 
@@ -628,26 +669,6 @@ app.post("/api/cart/items", requireAuth, async (req, res) => {
   }
 });
 
-app.patch("/api/cart/items/:productId", requireAuth, async (req, res) => {
-  const { productId } = req.params;
-
-  try {
-    const cart = await getOrCreateCart(req.user.userId);
-    const { data, error } = await supabase
-      .from("cart_items")
-      .update({ quantity })
-      .eq("cart_id", cart.id)
-      .eq("product_id", productId)
-      .select()
-      .single();
-
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.delete("/api/cart/items/:productId", requireAuth, async (req, res) => {
   const { productId } = req.params;
 
@@ -804,6 +825,70 @@ app.get("/api/seller/stats", requireAuth, async (req, res) => {
   }
 });
 
+app.post("/api/categories", requireAuth, requireAdmin, async (req, res) => {
+  const { name, parent_id } = req.body;
+
+  if (!name) return res.status(400).json({ error: "Ange ett namn" });
+
+  const slug = name
+    .toLowerCase()
+    .replace(/[åä]/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  const { data, error } = await supabase
+    .from("categories")
+    .insert({ name, slug, parent_id: parent_id || null })
+    .select()
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.status(201).json(data);
+});
+
+app.patch(
+  "/api/categories/:id",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name) return res.status(400).json({ error: "Ange ett namn" });
+
+    const { data, error } = await supabase
+      .from("categories")
+      .update({ name })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  },
+);
+
+app.delete(
+  "/api/categories/:id",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const { id } = req.params;
+
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  },
+);
+
+app.get("/api/categories", async (req, res) => {
+  const { data, error } = await supabase.from("categories").select("*");
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servern körs på http://localhost:${PORT}`);

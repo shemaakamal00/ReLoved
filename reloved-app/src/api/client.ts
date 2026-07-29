@@ -104,7 +104,7 @@ interface CreateOrderPayload {
   address: string;
   postal_code: string;
   city: string;
-  items: { product_id: number; }[];
+  items: { product_id: number }[];
 }
 
 export function createOrder(orderData: CreateOrderPayload): Promise<Order> {
@@ -168,17 +168,12 @@ export function loginUser(
 }
 
 export function fetchCart(token: string) {
-  return apiFetch<
-    { product_id: number; products: Product }[]
-  >("/cart", {
+  return apiFetch<{ product_id: number; products: Product }[]>("/cart", {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
 
-export function addCartItem(
-  token: string,
-  productId: number,
-) {
+export function addCartItem(token: string, productId: number) {
   return apiFetch("/cart/items", {
     method: "POST",
     headers: {
@@ -188,7 +183,6 @@ export function addCartItem(
     body: JSON.stringify({ product_id: productId }),
   });
 }
-
 
 export function removeCartItem(token: string, productId: number) {
   return apiFetch(`/cart/items/${productId}`, {
@@ -254,5 +248,63 @@ export function updateMyProfile(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(updates),
+  });
+}
+
+export function fetchAllProducts(token: string): Promise<Product[]> {
+  return apiFetch<Product[]>("/products/all", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateProduct(
+  id: number,
+  formData: FormData,
+  token: string,
+): Promise<Product> {
+  return apiFetch<Product>(`/products/${id}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+}
+
+export function createCategory(
+  name: string,
+  parentId: number | null,
+  token: string,
+): Promise<Category> {
+  return apiFetch<Category>("/categories", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name, parent_id: parentId }),
+  });
+}
+
+export function updateCategory(
+  id: number,
+  name: string,
+  token: string,
+): Promise<Category> {
+  return apiFetch<Category>(`/categories/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function deleteCategory(
+  id: number,
+  token: string,
+): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>(`/categories/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
