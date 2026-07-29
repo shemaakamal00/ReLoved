@@ -40,7 +40,6 @@ app.get("/api/products/all", requireAuth, requireAdmin, async (req, res) => {
   res.json(data);
 });
 
-
 app.get("/api/products/mine", requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from("products")
@@ -108,6 +107,110 @@ app.patch(
     res.json(data);
   },
 );
+
+app.patch(
+  "/api/products/:id/mine",
+  requireAuth,
+  upload.single("image"),
+  async (req, res) => {
+    const { id } = req.params;
+    const {
+      title,
+      price,
+      category,
+      condition,
+      size,
+      color,
+      material,
+      description,
+    } = req.body;
+
+    const { data: existing, error: fetchError } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existing) {
+      return res.status(404).json({ error: "Produkten hittades inte" });
+    }
+
+    if (existing.seller_id !== req.user.user_id) {
+      return res.status(403).json({ error: "Du äger inte den här annonsen" });
+    }
+
+    if (existing.status === "sold") {
+      return res
+        .status(409)
+        .json({ error: "Du kan inte redigera en redan såld produkt" });
+    }
+
+    const updates = {
+      name: title,
+      price,
+      category_id: category || null,
+      condition,
+      size,
+      color,
+      material,
+      description,
+    };
+
+    if (req.file) {
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+      if (uploadError)
+        return res.status(500).json({ error: uploadError.message });
+
+      const { data: publicUrlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(fileName);
+      updates.image_url = publicUrlData.publicUrl;
+      updates.alt_text = title;
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  },
+);
+
+app.delete("/api/products/:id/mine", requireAuth, async (req, res) => {
+  const { id } = req.params;
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !existing) {
+    return res.status(404).json({ error: "Produkten hittades inte" });
+  }
+
+  if (existing.seller_id !== req.user.userId) {
+    return res.status(403).json({ error: "Du äger inte den här annonsen" });
+  }
+
+  if (existing.status === "sold") {
+    return res
+      .status(409)
+      .json({ error: "Du kan inte ta bort en redan såld produkt" });
+  }
+
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
 
 app.post("/api/orders", async (req, res) => {
   const { email, phone, full_name, address, postal_code, city, items } =

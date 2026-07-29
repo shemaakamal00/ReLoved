@@ -308,3 +308,25 @@ export function deleteCategory(
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export function updateMyListing(
+  id: number,
+  formData: FormData,
+  token: string,
+): Promise<Product> {
+  return apiFetch<Product>(`/products/${id}/mine`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+}
+
+export function deleteMyListing(
+  id: number,
+  token: string,
+): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>(`/products/${id}/mine`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}

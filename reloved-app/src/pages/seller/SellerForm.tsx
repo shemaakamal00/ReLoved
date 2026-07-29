@@ -1,10 +1,19 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent, type ChangeEvent } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { submitListing, fetchCategories } from "../../api/client";
-import type { Category } from "../../types";
+import {
+  submitListing,
+  updateMyListing,
+  fetchCategories,
+} from "../../api/client";
+import type { Category, Product } from "../../types";
 
-function SellerForm() {
+interface SellerFormProps {
+  editingProduct?: Product | null;
+  onSaved?: () => void;
+}
+
+function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
   const { token } = useAuth();
   const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -14,11 +23,9 @@ function SellerForm() {
     fetchCategories().then(setCategories).catch(console.error);
   }, []);
 
-  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) {
-      showToast(`Bild vald: ${file.name}`);
-    }
+    if (file) showToast(`Bild vald: ${file.name}`);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -30,12 +37,18 @@ function SellerForm() {
     const formData = new FormData(form);
 
     try {
-      await submitListing(formData, token);
-      showToast("Din annons är inskickad och väntar på granskning! ");
-      form.reset();
+      if (editingProduct) {
+        await updateMyListing(editingProduct.id, formData, token);
+        showToast("Annonsen är uppdaterad!");
+      } else {
+        await submitListing(formData, token);
+        showToast("Din annons är inskickad och väntar på granskning!");
+        form.reset();
+      }
+      onSaved?.();
     } catch (err) {
       console.error(err);
-      showToast("Kunde inte skicka in annonsen.", "error");
+      showToast("Kunde inte spara annonsen.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -46,16 +59,25 @@ function SellerForm() {
       <div className="seller-section__header">
         <div>
           <p className="eyebrow">Produkt</p>
-          <h2>Lägg upp ny annons</h2>
+          <h2>
+            {editingProduct
+              ? `Redigera: ${editingProduct.name}`
+              : "Lägg upp ny annons"}
+          </h2>
         </div>
       </div>
 
-      <form className="seller-form" onSubmit={handleSubmit}>
+      <form
+        className="seller-form"
+        onSubmit={handleSubmit}
+        key={editingProduct?.id ?? "new"}
+      >
         <label>
           Produktnamn
           <input
             name="title"
             type="text"
+            defaultValue={editingProduct?.name}
             placeholder="Svart skinnjacka"
             required
           />
@@ -63,12 +85,21 @@ function SellerForm() {
 
         <label>
           Pris
-          <input name="price" type="number" placeholder="350" required />
+          <input
+            name="price"
+            type="number"
+            defaultValue={editingProduct?.price}
+            placeholder="350"
+            required
+          />
         </label>
 
         <label>
           Kategori
-          <select name="category">
+          <select
+            name="category"
+            defaultValue={editingProduct?.category_id ?? undefined}
+          >
             {categories
               .filter((cat) => cat.parent_id === null)
               .map((parent) => (
@@ -88,7 +119,7 @@ function SellerForm() {
 
         <label>
           Skick
-          <select name="condition">
+          <select name="condition" defaultValue={editingProduct?.condition}>
             <option>Nyskick</option>
             <option>Mycket bra</option>
             <option>Bra</option>
@@ -98,17 +129,32 @@ function SellerForm() {
 
         <label>
           Storlek
-          <input name="size" type="text" placeholder="M" />
+          <input
+            name="size"
+            type="text"
+            defaultValue={editingProduct?.size ?? ""}
+            placeholder="M"
+          />
         </label>
 
         <label>
           Färg
-          <input name="color" type="text" placeholder="Svart" />
+          <input
+            name="color"
+            type="text"
+            defaultValue={editingProduct?.color ?? ""}
+            placeholder="Svart"
+          />
         </label>
 
         <label>
           Material
-          <input name="material" type="text" placeholder="Skinn" />
+          <input
+            name="material"
+            type="text"
+            defaultValue={editingProduct?.material ?? ""}
+            placeholder="Skinn"
+          />
         </label>
 
         <label className="upload-box">
@@ -117,9 +163,14 @@ function SellerForm() {
             type="file"
             accept="image/*"
             onChange={handleImageChange}
+            hidden
           />
           <span className="upload-icon">📷</span>
-          <strong>Ladda upp produktbild</strong>
+          <strong>
+            {editingProduct
+              ? "Byt produktbild (valfritt)"
+              : "Ladda upp produktbild"}
+          </strong>
           <p>JPG, PNG eller WEBP</p>
         </label>
 
@@ -127,6 +178,7 @@ function SellerForm() {
           Beskrivning
           <textarea
             name="description"
+            defaultValue={editingProduct?.description ?? ""}
             placeholder="Beskriv plagget..."
           ></textarea>
         </label>
@@ -136,8 +188,22 @@ function SellerForm() {
           type="submit"
           disabled={submitting}
         >
-          {submitting ? "Skickar in..." : "Skicka för granskning"}
+          {submitting
+            ? "Sparar..."
+            : editingProduct
+              ? "Spara ändringar"
+              : "Skicka för granskning"}
         </button>
+
+        {editingProduct && (
+          <button
+            type="button"
+            className="button button-secondary seller-form__full"
+            onClick={onSaved}
+          >
+            Avbryt
+          </button>
+        )}
       </form>
     </section>
   );

@@ -12,17 +12,22 @@ const STATUS_LABELS: Record<string, { text: string; className: string }> = {
   cancelled: { text: "Avbruten", className: "status-badge--refunded" },
 };
 
-function MySales() {
+interface MySalesProps {
+  refreshKey: number;
+}
+
+function MySales({ refreshKey }: MySalesProps) {
   const { token } = useAuth();
   const [sales, setSales] = useState<SellerOrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (!token) return;
+    setLoading(true);
     fetchMySales(token)
       .then(setSales)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, refreshKey]);
 
   return (
     <section className="seller-section">
