@@ -87,6 +87,7 @@ function Orders() {
 
                     <div className="order-card__bottom">
                       <span>Totalt: {order.total} kr</span>
+                      <Link to={`/orders/${order.id}`}>Visa detaljer</Link>
                     </div>
                   </article>
                 );

@@ -330,7 +330,7 @@ app.get("/api/orders/seller", requireAuth, async (req, res) => {
   res.json(data);
 });
 
-app.get("/api/orders/:id", async (req, res) => {
+app.get("/api/orders/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
 
   const { data: order, error: orderError } = await supabase
@@ -341,6 +341,15 @@ app.get("/api/orders/:id", async (req, res) => {
 
   if (orderError) {
     return res.status(404).json({ error: "Ordern hittades inte" });
+  }
+
+  const osOwner = order.email === req.user.email;
+  const isAdmin = req.user.role === "admin";
+
+  if (!isOwner && !isAdmin) {
+    return res
+      .status(403)
+      .json({ error: "Du har inte tillgång till den här ordern " });
   }
 
   const { data: orderItems, error: itemsError } = await supabase
@@ -407,6 +416,22 @@ app.patch(
     res.json(data);
   },
 );
+
+app.get("/api/products/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    return res.status(404).json({ error: "Produkten hittades inte" });
+  }
+
+  res.json(data);
+});
 
 app.post(
   "/api/products",
@@ -636,7 +661,7 @@ app.post("/api/auth/register", async (req, res) => {
   }
 
   const token = jwt.sign(
-    { userId: data.id, role: data.role },
+    { userId: data.id, role: data.role, email: data.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" },
   );
@@ -667,7 +692,7 @@ app.post("/api/auth/login", async (req, res) => {
   }
 
   const token = jwt.sign(
-    { userId: user.id, role: user.role },
+    { userId: user.id, role: user.role, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" },
   );

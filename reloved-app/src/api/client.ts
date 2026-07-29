@@ -123,8 +123,10 @@ export function fetchAllOrders(): Promise<Order[]> {
   return apiFetch<Order[]>("/orders");
 }
 
-export function fetchOrderById(id: number): Promise<OrderWithItems> {
-  return apiFetch<OrderWithItems>(`/orders/${id}`);
+export function fetchOrderById(id: number, token: string): Promise<OrderWithItems> {
+  return apiFetch<OrderWithItems>(`/orders/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
 
 export function updateOrderStatus(

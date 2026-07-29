@@ -11,6 +11,9 @@ function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">(
+    "newest",
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -23,9 +26,22 @@ function Products() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredProducts = categoryId
-    ? products.filter((p) => p.category_id === Number(categoryId))
-    : products;
+  const searchQuery = searchParams.get("search")?.toLowerCase() ?? "";
+
+  const filteredProducts = products
+    .filter((p) => (categoryId ? p.category_id === Number(categoryId) : true))
+    .filter((p) =>
+      searchQuery
+        ? p.name.toLowerCase().includes(searchQuery) ||
+          p.brand.toLowerCase().includes(searchQuery)
+        : true,
+    );
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortBy === "price-asc") return a.price - b.price;
+    if (sortBy === "price-desc") return b.price - a.price;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   const activeCategory = categories.find((c) => c.id === Number(categoryId));
 
@@ -35,16 +51,33 @@ function Products() {
         <div className="container">
           <div className="page-header">
             <p className="eyebrow">Produkter</p>
-            <h1>{activeCategory ? activeCategory.name : "Alla produkter"}</h1>
+            <h1>
+              {searchQuery
+                ? `Sökresultat för "${searchQuery}"`
+                : activeCategory
+                  ? activeCategory.name
+                  : "Alla produkter"}
+            </h1>
+          </div>
+
+          <div className="products-toolbar">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            >
+              <option value="newest">Nyast först</option>
+              <option value="price-asc">Lägst pris</option>
+              <option value="price-desc">Högst pris</option>
+            </select>
           </div>
 
           {loading ? (
             <p>Laddar produkter...</p>
-          ) : filteredProducts.length === 0 ? (
+          ) : sortedProducts.length === 0 ? (
             <p>Inga produkter hittades i den här kategorin.</p>
           ) : (
             <div className="product-grid">
-              {filteredProducts.map((product) => (
+              {sortedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

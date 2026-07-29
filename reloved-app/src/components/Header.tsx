@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
@@ -22,6 +22,17 @@ function Header() {
     return categories.filter((c) => c.parent_id === parentId);
   }
 
+  const navigate = useNavigate();
+
+  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const query = (formData.get("search") as string)?.trim();
+    if (query) {
+      navigate(`/products?search=${encodeURIComponent(query)}`);
+    }
+  }
+
   return (
     <header className="site-header">
       <div className="header-shell">
@@ -29,7 +40,7 @@ function Header() {
           Re<span>Loved</span>
         </Link>
 
-        <form className="search-form" id="searchForm">
+        <form className="search-form" id="searchForm" onSubmit={handleSearch}>
           <label className="sr-only" htmlFor="search">
             Sök på ReLoved
           </label>
@@ -58,7 +69,7 @@ function Header() {
             <svg
               viewBox="0 0 24 24"
               aria-hidden="true"
-              className={favorites.length >0 ? "icon-filled" : "" }
+              className={favorites.length > 0 ? "icon-filled" : ""}
             >
               <path d="M12 20s-6.5-4.2-8.5-7.5C1.7 9.6 3 6 6.6 6c2.1 0 3.2 1.2 4 2.3.8-1.1 1.9-2.3 4-2.3C18.2 6 19.5 9.6 17.7 12.5 15.7 15.8 12 20 12 20z"></path>
             </svg>

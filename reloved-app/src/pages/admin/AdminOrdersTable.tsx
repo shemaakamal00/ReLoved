@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { fetchAllOrders, updateOrderStatus } from "../../api/client";
 import type { Order, OrderStatus } from "../../types";
 import { useToast } from "../../context/ToastContext";
+import { Link } from "react-router-dom";
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
   { value: "ordered", label: "Beställd" },
@@ -44,75 +45,80 @@ function OrderRow({ order, saving, onSave }: OrderRowProps) {
       >
         {saving ? "Sparar..." : "Spara"}
       </button>
+      <Link to={`/orders/${order.id}`}>Visa</Link>
     </div>
   );
 }
 
 function AdminOrdersTable() {
-    const { token } = useAuth();
-    const [ orders, setOrders ] = useState<Order[]>([]);
-    const [ loading, setLoading ] = useState(true);
-    const [savingId, setSavingId ] = useState<number | null>(null);
-    const { showToast } = useToast();
+  const { token } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const { showToast } = useToast();
 
-    async function load() {
-        setLoading(true);
-        try {
-            setOrders (await fetchAllOrders());
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading (false);
-        }
+  async function load() {
+    setLoading(true);
+    try {
+      setOrders(await fetchAllOrders());
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    useEffect(() => {
-        load();
-    }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
+  async function handleSave(orderId: number, status: OrderStatus) {
+    if (!token) return;
+    setSavingId(orderId);
+    try {
+      await updateOrderStatus(orderId, status, token);
+      showToast(`Order #${orderId} uppdaterad!`);
+    } catch (err) {
+      console.error(err);
+      showToast("Kunde inte uppdatera status.", "error");
+    } finally {
+      setSavingId(null);
+    }
+  }
 
-    async function handleSave(orderId: number, status: OrderStatus) {
-        if (!token) return;
-        setSavingId(orderId);
-        try {
-          await updateOrderStatus(orderId, status, token);
-          showToast(`Order #${orderId} uppdaterad!`);
-        } catch (err) {
-          console.error(err);
-          showToast("Kunde inte uppdatera status.", "error");
-        } finally {
-          setSavingId(null);
-        }
-      }
-
-      return (
-        <section className="admin-section">
-        <div className="admin-section__header">
-          <div>
-            <p className="eyebrow">Ordrar</p>
-            <h2>Senaste ordrar</h2>
-          </div>
+  return (
+    <section className="admin-section">
+      <div className="admin-section__header">
+        <div>
+          <p className="eyebrow">Ordrar</p>
+          <h2>Senaste ordrar</h2>
         </div>
-  
-        <div className="admin-table">
-          <div className="admin-table__row admin-table__row--head">
-            <span>Order</span>
-            <span>Kund</span>
-            <span>Total</span>
-            <span>Status</span>
-            <span>Åtgärd</span>
-          </div>
-  
-          {loading ? (
-            <p>Laddar ordrar...</p>
-          ) : (
-            orders.map((order) => (
-              <OrderRow key={order.id} order={order} saving={savingId === order.id} onSave={handleSave} />
-            ))
-          )}
+      </div>
+
+      <div className="admin-table">
+        <div className="admin-table__row admin-table__row--head">
+          <span>Order</span>
+          <span>Kund</span>
+          <span>Total</span>
+          <span>Status</span>
+          <span>Åtgärd</span>
         </div>
-      </section>
-      );
+
+        {loading ? (
+          <p>Laddar ordrar...</p>
+        ) : (
+          orders.map((order) => (
+            <OrderRow
+              key={order.id}
+              order={order}
+              saving={savingId === order.id}
+              onSave={handleSave}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  );
 }
 
 export default AdminOrdersTable;
