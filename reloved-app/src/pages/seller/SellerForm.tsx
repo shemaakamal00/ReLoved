@@ -104,6 +104,17 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
         </label>
 
         <label>
+          Varumärke
+          <input
+            name="brand"
+            type="text"
+            defaultValue={editingProduct?.brand}
+            placeholder="Zara"
+            required
+          />
+        </label>
+
+        <label>
           Pris
           <input
             name="price"

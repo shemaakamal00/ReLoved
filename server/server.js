@@ -69,6 +69,7 @@ app.patch(
       material,
       description,
     } = req.body;
+
     const updates = {
       name: title,
       brand,
@@ -80,7 +81,6 @@ app.patch(
       material,
       description,
     };
-
     if (req.file) {
       const fileName = `${Date.now()}-${req.file.originalname}`;
       const { error: uploadError } = await supabase.storage
@@ -525,6 +525,7 @@ app.post(
   async (req, res) => {
     const {
       title,
+      brand,
       price,
       category,
       condition,
@@ -534,8 +535,10 @@ app.post(
       description,
     } = req.body;
 
-    if (!title || !price) {
-      return res.status(400).json({ error: "Fyll i produktnamn och pris" });
+    if (!title || !brand || !price) {
+      return res
+        .status(400)
+        .json({ error: "Fyll i produktnamn, varumärke och pris" });
     }
 
     const { data: seller } = await supabase
@@ -565,7 +568,7 @@ app.post(
       .from("products")
       .insert({
         name: title,
-        brand: "Okänt märke",
+        brand,
         seller_id: req.user.userId,
         seller_name: seller
           ? `${seller.first_name} ${seller.last_name}`
