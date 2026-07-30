@@ -39,7 +39,6 @@ function Cart() {
               ) : (
                 items.map((item) => {
                   const isAvailable = item.product.status === "approved";
-
                   return (
                     <article
                       className="cart-item"
@@ -57,8 +56,7 @@ function Cart() {
 
                         {!isAvailable && (
                           <p className="form-error">
-                            Produkten är inte längre tillgänlig, har redan
-                            sålts.
+                            Inte längre tillgänglig — har redan sålts.
                           </p>
                         )}
 
@@ -71,9 +69,7 @@ function Cart() {
                       </div>
 
                       <p className="cart-item__price">
-                        {isAvailable
-                          ? `${item.product.price} kr`
-                          : "—"}
+                        {isAvailable ? `${item.product.price} kr` : "—"}
                       </p>
                     </article>
                   );
@@ -88,12 +84,10 @@ function Cart() {
                 <span>Produkter</span>
                 <span>{subtotal} kr</span>
               </div>
-
               <div className="summary-row">
                 <span>Frakt</span>
                 <span>{shipping} kr</span>
               </div>
-
               <div className="summary-row summary-row--total">
                 <span>Totalt</span>
                 <span>{total} kr</span>

@@ -3,12 +3,12 @@ import { useAuth } from "../../context/AuthContext";
 import { fetchAllProducts } from "../../api/client";
 import type { Product } from "../../types";
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Väntar",
-  approved: "Aktiv",
-  rejected: "Nekad",
-  sold: "Såld",
-  archived: "Arkiverad",
+const STATUS_LABELS: Record<string, { text: string; className: string }> = {
+  pending: { text: "Väntar", className: "status-badge--pending" },
+  approved: { text: "Aktiv", className: "status-badge--paid" },
+  rejected: { text: "Nekad", className: "status-badge--refunded" },
+  sold: { text: "Såld", className: "status-badge--shipped" },
+  archived: { text: "Arkiverad", className: "status-badge--pending" },
 };
 
 interface AdminProductsListProps {
@@ -35,13 +35,13 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
   }, [load, refreshKey]);
 
   return (
-    <section className="admin-section">
-      <div className="admin-section__header">
+    <details className="admin-section">
+      <summary className="admin-section__header">
         <div>
           <p className="eyebrow">Produkter</p>
           <h2>Alla produkter</h2>
         </div>
-      </div>
+      </summary>
 
       <div className="admin-table">
         <div className="admin-table__row admin-table__row--head">
@@ -54,25 +54,32 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
         {loading ? (
           <p>Laddar produkter...</p>
         ) : (
-          products.map((product) => (
-            <div
-              className="admin-table__row"
-              data-product-id={product.id}
-              key={product.id}
-            >
-              <span>{product.name}</span>
-              <span>{product.price} kr</span>
-              <span className="status-badge status-badge--pending">
-                {STATUS_LABELS[product.status] ?? product.status}
-              </span>
-              <button type="button" onClick={() => onEdit(product)}>
-                Redigera
-              </button>
-            </div>
-          ))
+          products.map((product) => {
+            const status = STATUS_LABELS[product.status] ?? {
+              text: product.status,
+              className: "status-badge--pending",
+            };
+
+            return (
+              <div
+                className="admin-table__row"
+                data-product-id={product.id}
+                key={product.id}
+              >
+                <span>{product.name}</span>
+                <span>{product.price} kr</span>
+                <span className={`status-badge ${status.className}`}>
+                  {status.text}
+                </span>
+                <button type="button" onClick={() => onEdit(product)}>
+                  Redigera
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
-    </section>
+    </details>
   );
 }
 

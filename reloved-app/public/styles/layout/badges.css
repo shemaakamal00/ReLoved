@@ -1,11 +1,9 @@
-/* BADGES */
-
 .status-badge {
-  width: fit-content;
-  padding: 0.45rem 1rem;
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
-  font-size: 0.8rem;
-  font-weight: 750;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .status-badge--pending {
@@ -19,11 +17,11 @@
 }
 
 .status-badge--shipped {
-  background: rgba(186, 168, 152, 0.25);
-  color: #6b5544;
+  background: var(--clr-status-shipped-bg);
+  color: var(--clr-status-shipped-text);
 }
 
 .status-badge--refunded {
-  background: rgba(196, 74, 74, 0.15);
-  color: #a03a3a;
+  background: var(--clr-status-refunded-bg);
+  color: var(--clr-status-refunded-text);
 }

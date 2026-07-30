@@ -30,13 +30,13 @@ function MySales({ refreshKey }: MySalesProps) {
   }, [token, refreshKey]);
 
   return (
-    <section className="seller-section">
-      <div className="seller-section__header">
+    <details className="seller-section">
+      <summary className="seller-section__header">
         <div>
           <p className="eyebrow">Försäljningar</p>
           <h2>Senaste försäljningar</h2>
         </div>
-      </div>
+      </summary>
 
       <div className="seller-table">
         <div className="seller-table__row seller-table__row--head">
@@ -70,7 +70,7 @@ function MySales({ refreshKey }: MySalesProps) {
           })
         )}
       </div>
-    </section>
+    </details>
   );
 }
 

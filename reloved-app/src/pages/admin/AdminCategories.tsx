@@ -75,13 +75,13 @@ function AdminCategories() {
   const topLevel = categories.filter((c) => c.parent_id === null);
 
   return (
-    <section className="admin-section">
-      <div className="admin-section__header">
+    <details className="admin-section">
+      <summary className="admin-section__header">
         <div>
           <p className="eyebrow">Kategorier</p>
           <h2>Hantera kategorier</h2>
         </div>
-      </div>
+      </summary>
 
       <form className="admin-form" onSubmit={handleCreate}>
         <label>
@@ -118,7 +118,7 @@ function AdminCategories() {
         </button>
       </form>
 
-      <div className="admin-table">
+      <div className="admin-table category-table">
         <div className="admin-table__row admin-table__row--head">
           <span>Namn</span>
           <span>Typ</span>
@@ -205,7 +205,7 @@ function AdminCategories() {
           </div>
         ))}
       </div>
-    </section>
+    </details>
   );
 }
 

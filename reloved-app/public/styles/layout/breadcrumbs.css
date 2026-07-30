@@ -1,0 +1,19 @@
+@charset "UTF-8";
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--clr-muted);
+  margin: 1.5rem 0;
+}
+
+.breadcrumbs a:hover {
+  color: var(--clr-accent);
+}
+
+.breadcrumbs span:last-child {
+  color: var(--clr-ink);
+  font-weight: 600;
+}

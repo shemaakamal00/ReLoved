@@ -1,10 +1,8 @@
-import { createOrder } from "../api/client";
-import { fetchMyProfile } from "../api/client";
-import { useAuth } from "../context/AuthContext";
+import { useState, useEffect, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
-
+import { useAuth } from "../context/AuthContext";
+import { createOrder, fetchMyProfile } from "../api/client";
 
 function Checkout() {
   const { items, clearCart } = useCart();
@@ -26,12 +24,12 @@ function Checkout() {
   useEffect(() => {
     if (!token) return;
     fetchMyProfile(token)
-    .then((profile) => {
-      if (profile.address) setAddress(profile.address);
-      if (profile.postal_code) setPostalCode(profile.postal_code);
-      if (profile.city) setCity(profile.city);
-    })
-    .catch(console.error);
+      .then((profile) => {
+        if (profile.address) setAddress(profile.address);
+        if (profile.postal_code) setPostalCode(profile.postal_code);
+        if (profile.city) setCity(profile.city);
+      })
+      .catch(console.error);
   }, [token]);
 
   const subtotal = items.reduce((sum, item) => sum + item.product.price, 0);
@@ -56,9 +54,7 @@ function Checkout() {
         address,
         postal_code: postalCode,
         city,
-        items: items.map((item) => ({
-          product_id: item.product_id,
-        })),
+        items: items.map((item) => ({ product_id: item.product_id })),
       });
 
       await clearCart();
@@ -74,10 +70,8 @@ function Checkout() {
 
   return (
     <main>
-      <section className="checkout-page">
-        <h1>Kassan</h1>
-
-        <nav className="breadcrumbs" aria-label="Brödsumlor">
+      <div className="container">
+        <nav className="breadcrumbs" aria-label="Brödsmulor">
           <Link to="/">Hem</Link>
           <span>/</span>
           <Link to="/cart">Varukorg</Link>
@@ -85,160 +79,157 @@ function Checkout() {
           <span>Kassa</span>
         </nav>
 
-        <div className="checkout-layout">
-          <form
-            className="checkout-form"
-            id="checkout-form"
-            onSubmit={handleSubmit}
-          >
-            <div className="checkout-card">
-              <h2>Kontaktuppgifter</h2>
+        <section className="checkout-page">
+          <h1>Kassan</h1>
 
-              <label>
-                E-post
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </label>
-
-              <label>
-                Telefon
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </label>
-            </div>
-
-            <div className="checkout-card">
-              <h2>Leveransadress</h2>
-
-              <label>
-                För- och efternamn
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </label>
-
-              <label>
-                Adress
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                />
-              </label>
-
-              <div className="form-row">
+          <div className="checkout-layout">
+            <form
+              className="checkout-form"
+              id="checkout-form"
+              onSubmit={handleSubmit}
+            >
+              <div className="checkout-card">
+                <h2>Kontaktuppgifter</h2>
                 <label>
-                  Postnummer
+                  E-post
                   <input
-                    type="text"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </label>
-
                 <label>
-                  Stad
+                  Telefon
                   <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     required
                   />
                 </label>
               </div>
-            </div>
 
-            <div className="checkout-card">
-              <h2>Betalsätt</h2>
-
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="payment"
-                  value="card"
-                  checked={payment === "card"}
-                  onChange={(e) => setPayment(e.target.value)}
-                />
-                Kort
-              </label>
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="payment"
-                  value="swish"
-                  checked={payment === "swish"}
-                  onChange={(e) => setPayment(e.target.value)}
-                />
-                Swish
-              </label>
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="payment"
-                  value="klarna"
-                  checked={payment === "klarna"}
-                  onChange={(e) => setPayment(e.target.value)}
-                />
-                Klarna
-              </label>
-            </div>
-
-            {error && <p className="form-error">{error}</p>}
-          </form>
-
-          <aside className="checkout-summary">
-            <h2>Din order</h2>
-
-            {items.map((item) => (
-              <div className="checkout-product" key={item.product_id}>
-                <img
-                  src={item.product.image_url ?? ""}
-                  alt={item.product.alt_text ?? item.product.name}
-                />
-                <div>
-                  <h3>{item.product.name}</h3>
-                  <p>{item.product.price} kr</p>
+              <div className="checkout-card">
+                <h2>Leveransadress</h2>
+                <label>
+                  För- och efternamn
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Adress
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    required
+                  />
+                </label>
+                <div className="form-row">
+                  <label>
+                    Postnummer
+                    <input
+                      type="text"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Stad
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      required
+                    />
+                  </label>
                 </div>
               </div>
-            ))}
 
-            <div className="summary-row">
-              <span>Produkter</span>
-              <span>{subtotal} kr</span>
-            </div>
-            <div className="summary-row">
-              <span>Frakt</span>
-              <span>{shipping} kr</span>
-            </div>
-            <div className="summary-row summary-row--total">
-              <span>Totalt</span>
-              <span>{total} kr</span>
-            </div>
+              <div className="checkout-card">
+                <h2>Betalsätt</h2>
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="card"
+                    checked={payment === "card"}
+                    onChange={(e) => setPayment(e.target.value)}
+                  />
+                  Kort
+                </label>
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="swish"
+                    checked={payment === "swish"}
+                    onChange={(e) => setPayment(e.target.value)}
+                  />
+                  Swish
+                </label>
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="klarna"
+                    checked={payment === "klarna"}
+                    onChange={(e) => setPayment(e.target.value)}
+                  />
+                  Klarna
+                </label>
+              </div>
 
-            <button
-              type="submit"
-              form="checkout-form"
-              className="button button-primary"
-              disabled={submitting}
-            >
-              {submitting ? "Skapar order..." : "Slutför köp"}
-            </button>
-          </aside>
-        </div>
-      </section>
+              {error && <p className="form-error">{error}</p>}
+            </form>
+
+            <aside className="checkout-summary">
+              <h2>Din order</h2>
+
+              {items.map((item) => (
+                <div className="checkout-product" key={item.product_id}>
+                  <img
+                    src={item.product.image_url ?? ""}
+                    alt={item.product.alt_text ?? item.product.name}
+                  />
+                  <div>
+                    <h3>{item.product.name}</h3>
+                    <p>{item.product.price} kr</p>
+                  </div>
+                </div>
+              ))}
+
+              <div className="summary-row">
+                <span>Produkter</span>
+                <span>{subtotal} kr</span>
+              </div>
+              <div className="summary-row">
+                <span>Frakt</span>
+                <span>{shipping} kr</span>
+              </div>
+              <div className="summary-row summary-row--total">
+                <span>Totalt</span>
+                <span>{total} kr</span>
+              </div>
+
+              <button
+                type="submit"
+                form="checkout-form"
+                className="button button-primary"
+                disabled={submitting}
+              >
+                {submitting ? "Skapar order..." : "Slutför köp"}
+              </button>
+            </aside>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

@@ -54,13 +54,13 @@ function MyListings({ onEdit, refreshKey }: MyListingsProps) {
   }
 
   return (
-    <section className="seller-section">
-      <div className="seller-section__header">
+    <details className="seller-section">
+      <summary className="seller-section__header">
         <div>
           <p className="eyebrow">Mina annonser</p>
           <h2>Upplagda produkter</h2>
         </div>
-      </div>
+      </summary>
 
       <div className="seller-table">
         <div className="seller-table__row seller-table__row--head">
@@ -116,7 +116,7 @@ function MyListings({ onEdit, refreshKey }: MyListingsProps) {
           })
         )}
       </div>
-    </section>
+    </details>
   );
 }
 

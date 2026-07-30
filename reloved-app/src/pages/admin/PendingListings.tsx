@@ -31,7 +31,9 @@ function PendingListings() {
 
     let reason: string | undefined;
     if (status === "rejected") {
-      reason = window.prompt ("Anledning till nekande (visas för säljaren):") ?? undefined;
+      reason =
+        window.prompt("Anledning till nekande (visas för säljaren):") ??
+        undefined;
     }
 
     try {
@@ -47,13 +49,13 @@ function PendingListings() {
   }
 
   return (
-    <section className="admin-section">
-      <div className="admin-section__header">
+    <details className="admin-section">
+      <summary className="admin-section__header">
         <div>
           <p className="eyebrow"> Granskning </p>
           <h2> Annonser att godkänna </h2>
         </div>
-      </div>
+      </summary>
 
       <div className="admin-table">
         <div className="admin-table__row admin-table__row--head">
@@ -98,7 +100,7 @@ function PendingListings() {
           ))
         )}
       </div>
-    </section>
+    </details>
   );
 }
 

@@ -1,57 +1,56 @@
-/* Buttons */
-
-.button,
-.sell-button,
-.sell-link,
-.filter-button {
+.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 3.1rem;
-  padding: 0.9rem 1.5rem;
-  border: 1px solid transparent;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
   border-radius: var(--radius-sm);
-  font-size: 0.86rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  transition:
-    transform var(--transition),
-    background var(--transition),
-    color var(--transition),
-    border-color var(--transition),
-    box-shadow var(--transition);
-}
-
-.button:hover,
-.sell-button:hover,
-.sell-link:hover,
-.filter-button:hover {
-  transform: translateY(-2px);
+  font-weight: 600;
+  font-size: 0.92rem;
+  border: 1.5px solid transparent;
+  transition: var(--transition);
+  cursor: pointer;
 }
 
 .button-primary,
-.sell-button {
+.button--primary {
   background: var(--clr-accent);
-  color: var(--clr-panel-strong);
-  box-shadow: 0 1rem 2.2rem rgba(194, 132, 122, 0.24);
+  color: var(--clr-on-accent);
 }
 
 .button-primary:hover,
-.sell-button:hover {
-  background: var(--clr-heading);
-  color: var(--clr-panel-strong);
+.button--primary:hover {
+  background: #3a2837;
 }
 
 .button-secondary,
-.sell-link {
+.button--secondary {
   background: transparent;
   color: var(--clr-accent);
-  border-color: rgba(194, 132, 122, 0.55);
+  border-color: var(--clr-accent);
 }
 
 .button-secondary:hover,
-.sell-link:hover {
+.button--secondary:hover {
+  background: var(--clr-accent-light);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sell-button {
   background: var(--clr-accent);
-  color: var(--clr-panel-strong);
-  border-color: var(--clr-accent);
+  color: var(--clr-on-accent);
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: var(--transition);
+}
+
+.sell-button:hover {
+  background: #3a2837;
 }

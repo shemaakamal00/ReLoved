@@ -1,31 +1,24 @@
-/* Reset */
-
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-body,
-h1,
-h2,
-h3,
-h4,
-p,
-ul,
-ol,
-figure {
+* {
   margin: 0;
 }
 
-ul,
-ol {
-  list-style: none;
-  padding: 0;
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--clr-bg);
+  color: var(--clr-ink);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 img,
@@ -35,15 +28,18 @@ svg {
   max-width: 100%;
 }
 
-button,
 input,
-select,
-textarea {
+button,
+textarea,
+select {
   font: inherit;
+  color: inherit;
 }
 
 button {
   cursor: pointer;
+  background: none;
+  border: none;
 }
 
 a {
@@ -51,36 +47,18 @@ a {
   text-decoration: none;
 }
 
-body {
-  min-height: 100vh;
-  font-family: var(--font-body);
-  color: var(--clr-text);
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(255, 250, 243, 0.55),
-      transparent 32rem
-    ),
-    linear-gradient(
-      180deg,
-      var(--clr-bg) 0%,
-      var(--clr-bg) 52%,
-      var(--clr-bg-deep) 100%
-    );
-  line-height: 1.55;
-  text-rendering: optimizeLegibility;
+ul,
+ol {
+  list-style: none;
 }
 
-main {
-  overflow: hidden;
-}
-
-section {
-  padding: 5.5rem 1.5rem;
-}
-
-@media (max-width: 700px) {
-  section {
-    padding: 4rem 1.1rem;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

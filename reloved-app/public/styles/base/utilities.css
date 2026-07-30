@@ -1,31 +1,3 @@
-/* Utilities */
-
-.container {
-  width: min(100% - 3rem, var(--container));
-  margin-inline: auto;
-}
-
-.section {
-  max-width: var(--container);
-  margin-inline: auto;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 2.8rem;
-}
-
-.section-header h2 {
-  margin-top: 0.5rem;
-  font-size: clamp(3rem, 7vw, 6.5rem);
-}
-
-.section-header p {
-  max-width: 640px;
-  margin: 1rem auto 0;
-  font-size: 1.05rem;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -38,39 +10,32 @@
   border: 0;
 }
 
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.container {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: 2rem;
 }
 
-@keyframes floatIcon {
-  0% {
-    transform: translateY(0) rotate(-6deg);
-  }
-
-  50% {
-    transform: translateY(-8px) rotate(4deg);
-  }
-
-  100% {
-    transform: translateY(0) rotate(-6deg);
-  }
+.section {
+  padding-block: 3.5rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.form-error {
+  background: var(--clr-status-refunded-bg);
+  border-left: 3px solid var(--clr-status-refunded-text);
+  color: var(--clr-status-refunded-text);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.form-success {
+  background: var(--clr-status-success-bg);
+  border-left: 3px solid var(--clr-status-success-text);
+  color: var(--clr-status-success-text);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
 }

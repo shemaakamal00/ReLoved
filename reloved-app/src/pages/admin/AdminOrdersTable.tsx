@@ -87,13 +87,13 @@ function AdminOrdersTable() {
   }
 
   return (
-    <section className="admin-section">
-      <div className="admin-section__header">
+    <details className="admin-section">
+      <summary className="admin-section__header">
         <div>
           <p className="eyebrow">Ordrar</p>
           <h2>Senaste ordrar</h2>
         </div>
-      </div>
+      </summary>
 
       <div className="admin-table">
         <div className="admin-table__row admin-table__row--head">
@@ -117,7 +117,7 @@ function AdminOrdersTable() {
           ))
         )}
       </div>
-    </section>
+    </details>
   );
 }
 

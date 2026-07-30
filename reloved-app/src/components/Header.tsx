@@ -16,7 +16,9 @@ function Header() {
     fetchCategories().then(setCategories).catch(console.error);
   }, []);
 
-  const topLevelCategories = categories.filter((c) => c.parent_id === null);
+  const topLevelCategories = categories
+    .filter((c) => c.parent_id === null)
+    .sort((a, b) => a.id - b.id);
 
   function childrenOf(parentId: number) {
     return categories.filter((c) => c.parent_id === parentId);

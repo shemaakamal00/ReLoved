@@ -1,24 +1,46 @@
-/* Typography  */
 h1,
 h2,
 h3,
-.logo,
-.footer-logo {
+h4 {
   font-family: var(--font-heading);
+  font-weight: 500;
   color: var(--clr-heading);
-  font-weight: 600;
-  letter-spacing: -0.065em;
-  line-height: 0.92;
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: 2.75rem;
+}
+h2 {
+  font-size: 1.85rem;
+}
+h3 {
+  font-size: 1.2rem;
+}
+
+h1 em,
+h2 em {
+  font-style: italic;
+  color: var(--clr-accent);
 }
 
 p {
-  color: var(--clr-muted);
+  color: var(--clr-muted-strong);
 }
 
 .eyebrow {
-  color: var(--clr-accent);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--clr-accent);
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 2.1rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+  }
 }
