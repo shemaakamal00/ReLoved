@@ -1,3 +1,26 @@
+@charset "UTF-8";
+
+.seller-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.seller-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.seller-stat-card {
+  padding: 1.75rem;
+}
+
+.seller-section {
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+}
+
 .seller-section summary {
   cursor: pointer;
   list-style: none;
@@ -26,26 +49,87 @@
   margin-top: 1.5rem;
 }
 
-.seller-header {
-  margin-bottom: 2.5rem;
-  text-align: center;
-}
-
-.seller-stats {
-  gap: 1.25rem;
-  margin-bottom: 2rem;
-}
-
-.seller-stat-card {
-  padding: 1.75rem;
-}
-
-.seller-section {
-  padding: 2.5rem;
-  margin-bottom: 2rem;
-}
-
 .seller-form {
   gap: 1.5rem;
   margin-top: 1.5rem;
+}
+
+.seller-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-table__row {
+  display: grid;
+  grid-template-columns: 2fr 0.9fr 1fr 1.2fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 0.75rem;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.seller-table__row:not(.seller-table__row--head):hover {
+  background: var(--clr-card-warm);
+}
+
+.seller-table__row--head {
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--clr-muted);
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.seller-table__row:not(.seller-table__row--head) {
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.seller-table__row:last-child {
+  border-bottom: none;
+}
+
+.seller-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.seller-table__row button {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: var(--clr-accent);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--clr-accent);
+  width: fit-content;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.seller-table__row button:hover:not(:disabled) {
+  background: var(--clr-accent);
+  color: var(--clr-on-accent);
+}
+
+.seller-table__row button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: var(--clr-border);
+  color: var(--clr-muted);
+}
+
+@media (max-width: 900px) {
+  .seller-table__row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .seller-table__row--head {
+    display: none;
+  }
 }

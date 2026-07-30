@@ -3,7 +3,7 @@
 .site-footer {
   position: relative;
   overflow: hidden;
-  background: var(--clr-ink);
+  background: var(--clr-accent-deep);
   color: var(--clr-bg);
   margin-top: 4rem;
   padding: 4rem 2rem 3rem;
@@ -18,7 +18,7 @@
   font-family: var(--font-heading);
   font-size: 10rem;
   font-weight: 500;
-  color: rgba(247, 243, 234, 0.04);
+  color: rgba(247, 243, 234, 0.05);
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
@@ -40,7 +40,7 @@
 }
 
 .footer-logo span {
-  color: var(--clr-accent);
+  color: var(--clr-accent-tint);
   font-style: italic;
 }
 
