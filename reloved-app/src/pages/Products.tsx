@@ -28,8 +28,21 @@ function Products() {
 
   const searchQuery = searchParams.get("search")?.toLowerCase() ?? "";
 
+  const matchingCategoryIds = categoryId
+    ? categories
+        .filter(
+          (c) =>
+            c.id === Number(categoryId) || c.parent_id === Number(categoryId),
+        )
+        .map((c) => c.id)
+    : null;
+
   const filteredProducts = products
-    .filter((p) => (categoryId ? p.category_id === Number(categoryId) : true))
+    .filter((p) =>
+      matchingCategoryIds
+        ? matchingCategoryIds.includes(p.category_id ?? -1)
+        : true,
+    )
     .filter((p) =>
       searchQuery
         ? p.name.toLowerCase().includes(searchQuery) ||

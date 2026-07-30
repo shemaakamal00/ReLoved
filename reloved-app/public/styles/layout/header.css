@@ -133,6 +133,7 @@
 /* Kategori-nav + mega-meny */
 .category-nav {
   border-top: 1px solid var(--clr-border);
+  position: relative;
 }
 
 .category-list {
@@ -146,14 +147,13 @@
 }
 
 .category-item {
-  position: relative;
+  position: static;
 }
 
 .category-item__row {
   display: flex;
   align-items: center;
 }
-
 
 .mega-menu-toggle {
   display: none;
@@ -168,11 +168,11 @@
   visibility: hidden;
   pointer-events: none;
   transform: translateY(12px);
-  background: var(--clr-card);
-  border-top: 1px solid var(--clr-border);
-  border-bottom: 1px solid var(--clr-border);
+  background: var(--clr-card-warm);
+  border-bottom: 2px solid var(--clr-accent);
   box-shadow: var(--shadow-hover);
   transition: var(--transition);
+  z-index: 500;
 }
 
 .has-mega-menu:hover .mega-menu,
@@ -216,19 +216,12 @@
   color: var(--clr-ink);
 }
 
-.mega-column a,
-.mega-column .mega-feature {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--clr-ink);
-}
-
 .mega-column a:hover {
   color: var(--clr-accent);
 }
 
 .mega-feature {
-  background: var(--clr-card-warm);
+  background: var(--clr-card);
   border-radius: var(--radius-md);
   padding: 1.2rem;
   display: flex;

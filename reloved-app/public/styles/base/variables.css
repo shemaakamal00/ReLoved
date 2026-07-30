@@ -1,37 +1,35 @@
 :root {
   /* Bas */
-  --clr-bg: #f7f3ea;
-  --clr-card: #ffffff;
-  --clr-card-warm: #fbf8f2;
-  --clr-border: #efe8da;
-  --clr-accent-deep: #34252F;
-  --clr-accent-tint: #C9A3C4;
+  --clr-bg: #F7F3EA;
+  --clr-card: #FFFFFF;
+  --clr-card-warm: #FBF8F2;
+  --clr-border: #EFE8DA;
 
   /* Text */
-  --clr-ink: #211f1b;
-  --clr-heading: #211f1b;
-  --clr-muted: #7a756c;
-  --clr-muted-strong: #56514a;
+  --clr-ink: #211F1B;
+  --clr-heading: #211F1B;
+  --clr-muted: #7A756C;
+  --clr-muted-strong: #56514A;
 
   /* Accent — en enda genomgående färg */
-  --clr-accent: #4a3347;
+  --clr-accent: #4A3347;
   --clr-accent-light: rgba(74, 51, 71, 0.08);
-  --clr-on-accent: #f7f3ea;
+  --clr-on-accent: #F7F3EA;
 
   /* Skick — semantisk färgkodning, samma överallt (produktkort, badges) */
-  --clr-condition-new: #4c7a5e;
-  --clr-condition-good: #c7973e;
-  --clr-condition-used: #a15c3e;
+  --clr-condition-new: #4C7A5E;
+  --clr-condition-good: #C7973E;
+  --clr-condition-used: #A15C3E;
 
   /* Status — ordrar/annonser */
-  --clr-status-pending-bg: #fbf0dc;
-  --clr-status-pending-text: #8a6015;
-  --clr-status-success-bg: #e3eee6;
-  --clr-status-success-text: #2f5c42;
-  --clr-status-shipped-bg: #efe8da;
-  --clr-status-shipped-text: #56514a;
-  --clr-status-refunded-bg: #f3e3dc;
-  --clr-status-refunded-text: #a15c3e;
+  --clr-status-pending-bg: #FBF0DC;
+  --clr-status-pending-text: #8A6015;
+  --clr-status-success-bg: #E3EEE6;
+  --clr-status-success-text: #2F5C42;
+  --clr-status-shipped-bg: #EFE8DA;
+  --clr-status-shipped-text: #56514A;
+  --clr-status-refunded-bg: #F3E3DC;
+  --clr-status-refunded-text: #A15C3E;
 
   /* Typografi */
   --font-heading: "Newsreader", serif;
