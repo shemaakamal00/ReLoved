@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { useFavorites } from "../context/FavoritesContext";
+import ProductCard from "../components/ProductCard";
 
 function Favorites() {
-  const { favorites, loading, toggleFavorite } = useFavorites();
+  const { favorites, loading } = useFavorites();
 
   if (loading) {
     return (
@@ -17,6 +18,7 @@ function Favorites() {
       <section className="favorites-page section">
         <div className="container">
           <div className="favorites-header">
+            <p className="eyebrow">Mina sparade plagg</p>
             <h1>Mina favoriter</h1>
           </div>
 
@@ -29,37 +31,9 @@ function Favorites() {
               </Link>
             </div>
           ) : (
-            <div className="product-grid" data-favorites-list>
+            <div className="product-grid">
               {favorites.map((product) => (
-                <article
-                  className="product-card"
-                  data-product-id={product.id}
-                  key={product.id}
-                >
-                  <Link to={`/product/${product.id}`}>
-                    <img
-                      src={product.image_url ?? ""}
-                      alt={product.alt_text ?? product.name}
-                      className="product-card__image"
-                    />
-                  </Link>
-
-                  <div className="product-card-content">
-                    <p className="product-card__brand">{product.brand}</p>
-                    <h3 className="product-card__name">{product.name}</h3>
-                    <p className="product-card__meta">
-                      {product.size} • {product.condition}
-                    </p>
-                    <p className="product-card__price">{product.price} kr</p>
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      onClick={() => toggleFavorite(product.id)}
-                    >
-                      ♥ Ta bort
-                    </button>
-                  </div>
-                </article>
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           )}

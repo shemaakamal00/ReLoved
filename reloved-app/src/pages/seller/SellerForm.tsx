@@ -55,17 +55,13 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
   }
 
   return (
-    <section className="seller-section">
-      <div className="seller-section__header">
+    <details className="seller-section">
+      <summary className="seller-section__header">
         <div>
           <p className="eyebrow">Produkt</p>
-          <h2>
-            {editingProduct
-              ? `Redigera: ${editingProduct.name}`
-              : "Lägg upp ny annons"}
-          </h2>
+          <h2>Lägg upp ny annons</h2>
         </div>
-      </div>
+      </summary>
 
       <form
         className="seller-form"
@@ -205,7 +201,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
           </button>
         )}
       </form>
-    </section>
+    </details>
   );
 }
 

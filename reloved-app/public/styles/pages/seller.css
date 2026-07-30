@@ -25,3 +25,27 @@
 .seller-section > *:not(summary) {
   margin-top: 1.5rem;
 }
+
+.seller-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.seller-stats {
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.seller-stat-card {
+  padding: 1.75rem;
+}
+
+.seller-section {
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.seller-form {
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}

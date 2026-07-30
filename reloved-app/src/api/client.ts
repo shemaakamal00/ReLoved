@@ -13,13 +13,19 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, options);
-  const data = await response.json();
+
+  if (response.status === 401) {
+    localStorage.removeItem("reloved-auth");
+    window.location.href = "/login";
+    throw new Error("Sessionen har gått ut, logga in igen.");
+  }
 
   if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
     throw new Error(data.error || "Något gick fel");
   }
 
-  return data as T;
+  return response.json();
 }
 
 // Produkter
@@ -123,7 +129,10 @@ export function fetchAllOrders(): Promise<Order[]> {
   return apiFetch<Order[]>("/orders");
 }
 
-export function fetchOrderById(id: number, token: string): Promise<OrderWithItems> {
+export function fetchOrderById(
+  id: number,
+  token: string,
+): Promise<OrderWithItems> {
   return apiFetch<OrderWithItems>(`/orders/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });

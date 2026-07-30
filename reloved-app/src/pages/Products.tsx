@@ -49,7 +49,7 @@ function Products() {
     <main>
       <section className="products-page section">
         <div className="container">
-          <div className="page-header">
+          <div className="products-page__header">
             <p className="eyebrow">Produkter</p>
             <h1>
               {searchQuery

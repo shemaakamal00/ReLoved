@@ -82,8 +82,8 @@
 .profile-form input {
   width: 100%;
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(186, 168, 152, 0.45);
-  border-radius: 14px;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
   background: var(--clr-card);
   font: inherit;
 }
@@ -102,16 +102,16 @@
   justify-content: center;
 }
 
-.profile-menu a {
-  padding: 0.9rem 1rem;
-  border-radius: 12px;
-  color: var(--clr-heading);
-  font-weight: 600;
-  transition: var(--transition);
+.profile-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .profile-menu a,
 .profile-menu button {
+  display: flex;
+  align-items: center;
   padding: 0.9rem 1rem;
   border-radius: 12px;
   color: var(--clr-heading);
@@ -127,7 +127,7 @@
 
 .profile-menu a:hover,
 .profile-menu button:hover {
-  background: rgba(194, 132, 122, 0.12);
+  background: var(--clr-accent-light);
   color: var(--clr-accent);
 }
 

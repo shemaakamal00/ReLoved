@@ -8,7 +8,9 @@ interface HeroProps {
 function Hero({ featured = [] }: HeroProps) {
   return (
     <section className="hero">
-      <div className="container hero-grid">
+      <div
+        className={`container hero-grid ${featured.length === 0 ? "hero-grid--centered" : ""}`}
+      >
         <div className="hero-copy">
           <p className="eyebrow">Älskat tidigare · älskat igen</p>
           <h1>
