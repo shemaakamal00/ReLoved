@@ -343,7 +343,7 @@ app.get("/api/orders/:id", requireAuth, async (req, res) => {
     return res.status(404).json({ error: "Ordern hittades inte" });
   }
 
-  const osOwner = order.email === req.user.email;
+  const isOwner = order.email === req.user.email;
   const isAdmin = req.user.role === "admin";
 
   if (!isOwner && !isAdmin) {

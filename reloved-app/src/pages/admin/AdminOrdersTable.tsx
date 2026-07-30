@@ -28,24 +28,17 @@ function OrderRow({ order, saving, onSave }: OrderRowProps) {
       <span>#{order.id}</span>
       <span>{order.full_name}</span>
       <span>{order.total} kr</span>
-      <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value as OrderStatus)}
-      >
+      <select value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)}>
         {STATUS_OPTIONS.map((opt) => (
-          <option value={opt.value} key={opt.value}>
-            {opt.label}
-          </option>
+          <option value={opt.value} key={opt.value}>{opt.label}</option>
         ))}
       </select>
-      <button
-        type="button"
-        onClick={() => onSave(order.id, status)}
-        disabled={saving}
-      >
-        {saving ? "Sparar..." : "Spara"}
-      </button>
-      <Link to={`/orders/${order.id}`}>Visa</Link>
+      <div className="admin-actions">
+        <button type="button" onClick={() => onSave(order.id, status)} disabled={saving}>
+          {saving ? "Sparar..." : "Spara"}
+        </button>
+        <Link to={`/orders/${order.id}`}>Visa</Link>
+      </div>
     </div>
   );
 }

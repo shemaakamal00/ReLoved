@@ -6,6 +6,8 @@
 }
 
 .admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.25rem;
   margin-bottom: 2rem;
 }
@@ -17,11 +19,6 @@
 .admin-section {
   padding: 2.5rem;
   margin-bottom: 2rem;
-}
-
-.admin-form {
-  gap: 1.5rem;
-  margin-top: 1.5rem;
 }
 
 .admin-section summary {
@@ -52,6 +49,12 @@
   margin-top: 1.5rem;
 }
 
+.admin-form {
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Tabell */
 .admin-table {
   display: flex;
   flex-direction: column;
@@ -102,7 +105,8 @@
   gap: 0.5rem;
 }
 
-.admin-table__row button {
+.admin-table__row button,
+.admin-actions a {
   display: inline-flex;
   align-items: center;
   background: transparent;
@@ -114,22 +118,21 @@
   border: 1.5px solid var(--clr-accent);
   width: fit-content;
   transition: var(--transition);
+  cursor: pointer;
 }
 
-.admin-table__row button:hover {
+.admin-table__row button:hover,
+.admin-actions a:hover {
   background: var(--clr-accent);
   color: var(--clr-on-accent);
 }
 
-.admin-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
+/* Kategori-tabellen — bredare Åtgärd-kolumn (två knappar) */
 .category-table .admin-table__row {
   grid-template-columns: 2fr 1fr 1.6fr;
 }
 
+/* Nekad-annons-anledning */
 .rejection-reason {
   grid-column: 1 / -1;
   font-size: 0.82rem;
@@ -148,6 +151,76 @@
   grid-column: 1 / -1;
 }
 
+/* Utfällbara annonsrader (PendingListings) */
+.pending-row {
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.pending-row:last-child {
+  border-bottom: none;
+}
+
+.pending-row summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.pending-row summary::-webkit-details-marker {
+  display: none;
+}
+
+.pending-row .admin-table__row {
+  border-bottom: none;
+}
+
+.pending-row__hint {
+  font-size: 0.78rem;
+  color: var(--clr-accent);
+  font-weight: 600;
+}
+
+.pending-row__detail {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 1.5rem;
+  padding: 0 0.75rem 1.25rem;
+}
+
+.pending-row__detail img {
+  width: 100%;
+  border-radius: var(--radius-md);
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.pending-row__info p {
+  font-size: 0.88rem;
+  margin-bottom: 0.4rem;
+}
+
+.pending-row__info .admin-actions {
+  margin-top: 1rem;
+}
+
+.pending-row__info .admin-actions button {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: var(--clr-accent);
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--clr-accent);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pending-row__info .admin-actions button:hover {
+  background: var(--clr-accent);
+  color: var(--clr-on-accent);
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -162,12 +235,17 @@
 }
 
 @media (max-width: 900px) {
-  .admin-table__row {
+  .admin-table__row,
+  .category-table .admin-table__row {
     grid-template-columns: 1fr;
     gap: 0.4rem;
   }
 
   .admin-table__row--head {
     display: none;
+  }
+
+  .pending-row__detail {
+    grid-template-columns: 1fr;
   }
 }

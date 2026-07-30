@@ -154,9 +154,6 @@
   align-items: center;
 }
 
-.has-mega-menu {
-  position: static;
-}
 
 .mega-menu-toggle {
   display: none;
@@ -196,17 +193,27 @@
 }
 
 .mega-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  columns: 2;
+  column-gap: 1.5rem;
+  display: block;
 }
 
 .mega-column h3 {
+  column-span: all;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--clr-muted);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.mega-column a {
+  display: block;
+  break-inside: avoid;
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--clr-ink);
 }
 
 .mega-column a,

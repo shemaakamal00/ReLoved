@@ -60,7 +60,6 @@ function OrderDetail() {
         </nav>
 
         <div className="orders-header">
-          <p className="eyebrow">Order #{order.id}</p>
           <h1>{new Date(order.created_at).toLocaleDateString("sv-SE")}</h1>
           <span className={`status-badge ${status.className}`}>
             {status.text}

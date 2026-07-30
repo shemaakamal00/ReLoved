@@ -41,3 +41,13 @@
   border-bottom: 1px solid var(--clr-border);
   font-size: 0.9rem;
 }
+
+.orders-page {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: 3.5rem 2rem;
+}
+
+.orders-page .breadcrumbs {
+  margin-top: 0;
+}

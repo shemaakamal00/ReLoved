@@ -1,4 +1,10 @@
-import { useState, useEffect, type FormEvent, type ChangeEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  type FormEvent,
+  type ChangeEvent,
+} from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import {
@@ -18,10 +24,17 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
   const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     fetchCategories().then(setCategories).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (editingProduct && detailsRef.current) {
+      detailsRef.current.open = true;
+    }
+  }, [editingProduct]);
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -55,7 +68,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
   }
 
   return (
-    <details className="seller-section">
+    <details className="seller-section" ref={detailsRef}>
       <summary className="seller-section__header">
         <div>
           <p className="eyebrow">Produkt</p>

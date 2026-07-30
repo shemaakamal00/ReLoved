@@ -52,51 +52,79 @@ function PendingListings() {
     <details className="admin-section">
       <summary className="admin-section__header">
         <div>
-          <p className="eyebrow"> Granskning </p>
-          <h2> Annonser att godkänna </h2>
+          <p className="eyebrow">Granskning</p>
+          <h2>Annonser att godkänna</h2>
         </div>
       </summary>
 
       <div className="admin-table">
         <div className="admin-table__row admin-table__row--head">
-          <span> Produkt </span>
-          <span> Säljare </span>
-          <span> Pris </span>
-          <span> Status </span>
-          <span> Åtgärd </span>
+          <span>Produkt</span>
+          <span>Säljare</span>
+          <span>Pris</span>
+          <span>Status</span>
+          <span>Detaljer</span>
         </div>
 
         {loading ? (
-          <p> Laddar annonser ... </p>
+          <p>Laddar annonser...</p>
         ) : listings.length === 0 ? (
-          <p> Inga annonser väntar på granskning just nu. </p>
+          <p>Inga annonser väntar på granskning just nu.</p>
         ) : (
           listings.map((product) => (
-            <div
-              className="admin-table__row"
-              data-listing-id={product.id}
+            <details
+              className="pending-row"
               key={product.id}
+              data-listing-id={product.id}
             >
-              <span> {product.name} </span>
-              <span> {product.seller_name ?? "Okänd säljare"} </span>
-              <span> {product.price} kr </span>
-              <span className="status-badge status-badge--pending">Väntar</span>
-              <div className="admin-actions">
-                <button
-                  type="button"
-                  onClick={() => handleDecision(product.id, "approved")}
-                >
-                  Godkänn
-                </button>
+              <summary className="admin-table__row">
+                <span>{product.name}</span>
+                <span>{product.seller_name ?? "Okänd säljare"}</span>
+                <span>{product.price} kr</span>
+                <span className="status-badge status-badge--pending">
+                  Väntar
+                </span>
+                <span className="pending-row__hint">Visa detaljer ▾</span>
+              </summary>
 
-                <button
-                  type="button"
-                  onClick={() => handleDecision(product.id, "rejected")}
-                >
-                  Neka
-                </button>
+              <div className="pending-row__detail">
+                <img
+                  src={product.image_url ?? ""}
+                  alt={product.alt_text ?? product.name}
+                />
+
+                <div className="pending-row__info">
+                  <p>
+                    <strong>Skick:</strong> {product.condition}
+                  </p>
+                  <p>
+                    <strong>Storlek:</strong> {product.size}
+                  </p>
+                  <p>
+                    <strong>Färg:</strong> {product.color}
+                  </p>
+                  <p>
+                    <strong>Material:</strong> {product.material}
+                  </p>
+                  <p>{product.description}</p>
+
+                  <div className="admin-actions">
+                    <button
+                      type="button"
+                      onClick={() => handleDecision(product.id, "approved")}
+                    >
+                      Godkänn
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDecision(product.id, "rejected")}
+                    >
+                      Neka
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            </details>
           ))
         )}
       </div>
