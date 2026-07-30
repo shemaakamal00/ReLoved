@@ -135,7 +135,7 @@ app.patch(
       return res.status(404).json({ error: "Produkten hittades inte" });
     }
 
-    if (existing.seller_id !== req.user.user_id) {
+    if (existing.seller_id !== req.user.userId) {
       return res.status(403).json({ error: "Du äger inte den här annonsen" });
     }
 
