@@ -46,9 +46,20 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
     if (!token) return;
 
     const form = event.currentTarget;
-    setSubmitting(true);
     const formData = new FormData(form);
 
+    if (!editingProduct) {
+      const imageFile = formData.get("image") as File | null;
+      if (!imageFile || imageFile.size === 0) {
+        showToast(
+          "Du måste ladda upp en bild för att skicka in annonsen.",
+          "error",
+        );
+        return;
+      }
+    }
+
+    setSubmitting(true);
     try {
       if (editingProduct) {
         await updateMyListing(editingProduct.id, formData, token);
@@ -107,8 +118,12 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
           Kategori
           <select
             name="category"
-            defaultValue={editingProduct?.category_id ?? undefined}
+            defaultValue={editingProduct?.category_id ?? ""}
+            required
           >
+            <option value="" disabled>
+              Välj kategori
+            </option>
             {categories
               .filter((cat) => cat.parent_id === null)
               .map((parent) => (
@@ -128,7 +143,14 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
 
         <label>
           Skick
-          <select name="condition" defaultValue={editingProduct?.condition}>
+          <select
+            name="condition"
+            defaultValue={editingProduct?.condition ?? ""}
+            required
+          >
+            <option value="" disabled>
+              Välj skick
+            </option>
             <option>Nyskick</option>
             <option>Mycket bra</option>
             <option>Bra</option>
@@ -143,6 +165,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
             type="text"
             defaultValue={editingProduct?.size ?? ""}
             placeholder="M"
+            required
           />
         </label>
 
@@ -153,6 +176,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
             type="text"
             defaultValue={editingProduct?.color ?? ""}
             placeholder="Svart"
+            required
           />
         </label>
 
@@ -163,6 +187,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
             type="text"
             defaultValue={editingProduct?.material ?? ""}
             placeholder="Skinn"
+            required
           />
         </label>
 
@@ -178,7 +203,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
           <strong>
             {editingProduct
               ? "Byt produktbild (valfritt)"
-              : "Ladda upp produktbild"}
+              : "Ladda upp produktbild (obligatoriskt)"}
           </strong>
           <p>JPG, PNG eller WEBP</p>
         </label>
@@ -189,6 +214,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
             name="description"
             defaultValue={editingProduct?.description ?? ""}
             placeholder="Beskriv plagget..."
+            required
           ></textarea>
         </label>
 
