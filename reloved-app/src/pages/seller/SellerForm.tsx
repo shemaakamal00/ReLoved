@@ -118,7 +118,9 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
           Kategori
           <select
             name="category"
-            defaultValue={editingProduct?.category_id ?? ""}
+            defaultValue={
+              editingProduct ? String(editingProduct.category_id ?? "") : ""
+            }
             required
           >
             <option value="" disabled>
