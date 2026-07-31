@@ -17,9 +17,17 @@ function Home() {
       .finally(() => setLoading(false));
   }, []);
 
+  const featuredProducts = [...products]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
+    .slice(0, 5);
+
   return (
     <main>
-      <Hero />
+      <Hero featured={products} />
+
       <section className="featured-products section">
         <div className="container">
           <div className="featured-products__header">
@@ -32,15 +40,16 @@ function Home() {
             <p>Laddar produkter...</p>
           ) : (
             <div className="product-grid">
-              {products.map((product) => (
+              {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           )}
         </div>
       </section>
-      <HowItWorks/>
-      <WhySell/>
+
+      <HowItWorks />
+      <WhySell />
     </main>
   );
 }
