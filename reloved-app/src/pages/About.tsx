@@ -56,7 +56,7 @@ function About() {
       <section className="about-developer about-developer--split">
         <div className="developer-image-wrap">
           <img
-            src="/imgs/shemaa.jpg"
+            src="/imgs/shemaa.JPG"
             alt="Bild på Shemaa"
             className="developer-image"
           />
