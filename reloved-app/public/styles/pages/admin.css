@@ -240,6 +240,19 @@
   cursor: not-allowed;
 }
 
+.admin-actions .button-danger {
+  color: var(--clr-status-refunded-text);
+  border-color: var(--clr-status-refunded-text);
+}
+.admin-actions .button-danger:hover {
+  background: var(--clr-status-refunded-text);
+  color: #fff;
+}
+.admin-actions .button-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
   .admin-table__row,
   .category-table .admin-table__row {

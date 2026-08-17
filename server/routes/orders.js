@@ -4,8 +4,6 @@ import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const router = Router();
 
-// OBS: /seller måste ligga FÖRE /:id, annars fångar /:id den först
-
 router.get("/seller", requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from("order_items")
@@ -51,16 +49,14 @@ router.get("/:id", requireAuth, async (req, res) => {
   res.json({ ...order, items: orderItems });
 });
 
-router.get("/", async (req, res) => {
-  const { email } = req.query;
-
+router.get("/", requireAuth, async (req, res) => {
   let query = supabase
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (email) {
-    query = query.eq("email", email);
+  if (req.user.role !== "admin") {
+    query = query.eq("email", req.user.email);
   }
 
   const { data, error } = await query;

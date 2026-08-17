@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { fetchAllProducts, deleteProduct } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
-import { fetchAllProducts } from "../../api/client";
+import { useState, useEffect, useCallback } from "react";
+import { useToast } from "../../context/ToastContext";
 import type { Product } from "../../types";
 
 const STATUS_LABELS: Record<string, { text: string; className: string }> = {
@@ -18,8 +19,29 @@ interface AdminProductsListProps {
 
 function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
   const { token } = useAuth();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  async function handleDelete(product: Product) {
+    if (!token) return;
+    const confirmed = window.confirm(
+      `Ta bort "${product.name}"? Detta går inte att ångra.`,
+    );
+    if (!confirmed) return;
+    setDeletingId(product.id);
+    try {
+      await deleteProduct(product.id, token);
+      showToast("Produkten togs bort.");
+      load();
+    } catch (err) {
+      console.error(err);
+      showToast("Kunde inte ta bort produkten.", "error");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const load = useCallback(() => {
     if (!token) return;
@@ -71,9 +93,19 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
                 <span className={`status-badge ${status.className}`}>
                   {status.text}
                 </span>
-                <button type="button" onClick={() => onEdit(product)}>
-                  Redigera
-                </button>
+                <div className="admin-actions">
+                  <button type="button" onClick={() => onEdit(product)}>
+                    Redigera
+                  </button>
+                  <button
+                    type="button"
+                    className="button-danger"
+                    onClick={() => handleDelete(product)}
+                    disabled={deletingId === product.id}
+                  >
+                    {deletingId === product.id ? "Tar bort..." : "Ta bort"}
+                  </button>
+                </div>
               </div>
             );
           })

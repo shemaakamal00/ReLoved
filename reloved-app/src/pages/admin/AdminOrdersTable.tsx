@@ -51,9 +51,10 @@ function AdminOrdersTable() {
   const { showToast } = useToast();
 
   async function load() {
-    setLoading(true);
+    if (!token) return;
+    setLoading(false);
     try {
-      setOrders(await fetchAllOrders());
+      setOrders(await fetchAllOrders(token));
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,7 +64,7 @@ function AdminOrdersTable() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [token]);
 
   async function handleSave(orderId: number, status: OrderStatus) {
     if (!token) return;

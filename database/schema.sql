@@ -16,12 +16,14 @@ CREATE TABLE users (
 CREATE TABLE categories (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL UNIQUE,
-  slug VARCHAR(120) NOT NULL UNIQUE
+  slug VARCHAR(120) NOT NULL UNIQUE,
+  parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL
 );
 
 CREATE TABLE products (
   id SERIAL PRIMARY KEY,
   seller_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  seller_name VARCHAR(150),
   category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   brand VARCHAR(100) NOT NULL,
   name VARCHAR(150) NOT NULL,
@@ -34,6 +36,7 @@ CREATE TABLE products (
   image_url VARCHAR(500),
   alt_text VARCHAR(255),
   status VARCHAR(30) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'sold', 'archived')),
+  rejection_reason TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -101,9 +104,3 @@ INSERT INTO products (category_id, brand, name, size, condition, color, material
 (1, 'Zara', 'Svart skinnjacka', 'M', 'Mycket bra', 'Svart', 'Skinn', 'Klassisk svart skinnjacka från Zara i mycket fint skick. Jackan är endast använd ett fåtal gånger och har inga synliga skador eller slitningar.', 350, 'imgs/jacket.png', 'Svart skinnjacka', 'approved'),
 (1, 'Mango', 'Blommig sommarklänning', 'S', 'Mycket bra', 'Flerfärgad', 'Bomull', 'Söt blommig sommarklänning från Mango i mycket fint skick. Klänningen är lätt och luftig, perfekt för varma sommardagar.', 180, 'imgs/dress.png', 'Blommig sommarklänning', 'approved'),
 (1, 'Vintage', 'Brun handväska', 'One size', 'Mycket bra', 'Brun', 'Läder', 'Elegant brun handväska i vintage-stil. Väskan är i mycket fint skick och har en klassisk design som passar till många olika outfits.', 250, 'imgs/bag.png', 'Brun handväska', 'approved');
-
--- seller_name --
-ALTER TABLE products ADD COLUMN seller_name VARCHAR(150);
-
--- rejection_reason --
-ALTER TABLE products ADD COLUMN rejection_reason TEXT;

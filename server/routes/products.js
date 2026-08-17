@@ -374,7 +374,7 @@ router.patch("/:id/status", requireAuth, requireAdmin, async (req, res) => {
   res.json(data);
 });
 
-// --- Ta bort produkter ---
+// --- Ta bort produkter säljare ---
 
 router.delete("/:id/mine", requireAuth, async (req, res) => {
   const { id } = req.params;
@@ -397,6 +397,26 @@ router.delete("/:id/mine", requireAuth, async (req, res) => {
     return res
       .status(409)
       .json({ error: "Du kan inte ta bort en redan såld produkt" });
+  }
+
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
+// --- Ta bort produkt (admin) ---
+
+router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("products")
+    .select("id")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !existing) {
+    return res.status(404).json({ error: "Produkten hittades inte" });
   }
 
   const { error } = await supabase.from("products").delete().eq("id", id);

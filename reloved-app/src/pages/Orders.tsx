@@ -15,21 +15,21 @@ const STATUS_LABELS: Record<OrderStatus, { text: string; className: string }> =
   };
 
 function Orders() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !token) {
       setLoading(false);
       return;
     }
 
-    fetchOrders(user.email)
+    fetchOrders(token)
       .then(setOrders)
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user || token]);
 
   if (!user) {
     return (

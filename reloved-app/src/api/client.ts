@@ -121,12 +121,16 @@ export function createOrder(orderData: CreateOrderPayload): Promise<Order> {
   });
 }
 
-export function fetchOrders(email: string): Promise<Order[]> {
-  return apiFetch<Order[]>(`/orders?email=${encodeURIComponent(email)}`);
+export function fetchOrders(token: string): Promise<Order[]> {
+  return apiFetch<Order[]>("/orders", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
 
-export function fetchAllOrders(): Promise<Order[]> {
-  return apiFetch<Order[]>("/orders");
+export function fetchAllOrders(token: string): Promise<Order[]> {
+  return apiFetch<Order[]>("/orders/all", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
 
 export function fetchOrderById(
@@ -277,6 +281,16 @@ export function updateProduct(
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
+  });
+}
+
+export function deleteProduct(
+  id: number,
+  token: string,
+): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>(`/products/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 

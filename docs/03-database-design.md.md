@@ -1,6 +1,7 @@
 # ReLoved — Databasdiagram
 
-Motsvarar `database/schema.sql`. GitHub renderar diagrammet nedan automatiskt när filen visas på github.com. Se även `ER-diagram.png` för en exporterad bild av samma diagram.
+Motsvarar `database/schema.sql`. 
+Nedan finns för att visa samma diagram i Mermaid-format som GitHub renderar automatiskt när filen visas på github.com.
 
 ```mermaid
 erDiagram

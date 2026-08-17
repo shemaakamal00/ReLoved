@@ -46,7 +46,14 @@ function App() {
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/checkout" element={<Checkout />} />
-                <Route path="/orders" element={<Orders />} />
+                <Route
+                  path="/orders"
+                  element={
+                    <RequireAuth>
+                      <Orders />
+                    </RequireAuth>
+                  }
+                />
                 <Route
                   path="/orders/:id"
                   element={
