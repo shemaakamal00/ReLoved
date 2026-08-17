@@ -16,10 +16,17 @@ const app = express();
 
 const allowedOrigins = ["http://localhost:5173", "https://re-loved.vercel.app"];
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true; // Allow requests with no origin (like mobile apps or curl requests)
+  if (allowedOrigins.includes(origin)) return true;
+  if (/^https:\/\/re-loved-.*\.vercel\.app$/.test(origin)) return true;
+  return false;
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Blockerad av CORS"));
