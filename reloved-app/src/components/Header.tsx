@@ -68,7 +68,6 @@ function Header() {
         </form>
 
         <nav className="header-actions" aria-label="Snabbmeny">
-          <CurrencySelect />
           <Link to="/favorites" className="icon-button" aria-label="Favoriter">
             <svg
               viewBox="0 0 24 24"
@@ -113,43 +112,47 @@ function Header() {
       </div>
 
       <nav className="category-nav" aria-label="Kategorier">
-        <ul className="category-list">
-          {topLevelCategories.map((category) => {
-            const children = childrenOf(category.id);
-            return (
-              <li
-                className={
-                  children.length > 0
-                    ? "category-item has-mega-menu"
-                    : "category-item"
-                }
-                key={category.id}
-              >
-                <Link to={`/products?category=${category.id}`}>
-                  {category.name}
-                </Link>
+        <div className="category-bar">
+          <ul className="category-list">
+            {topLevelCategories.map((category) => {
+              const children = childrenOf(category.id);
+              return (
+                <li
+                  className={
+                    children.length > 0
+                      ? "category-item has-mega-menu"
+                      : "category-item"
+                  }
+                  key={category.id}
+                >
+                  <Link to={`/products?category=${category.id}`}>
+                    {category.name}
+                  </Link>
 
-                {children.length > 0 && (
-                  <div className="mega-menu">
-                    <div className="mega-menu-inner">
-                      <div className="mega-column">
-                        <h3>{category.name}</h3>
-                        {children.map((child) => (
-                          <Link
-                            to={`/products?category=${child.id}`}
-                            key={child.id}
-                          >
-                            {child.name}
-                          </Link>
-                        ))}
+                  {children.length > 0 && (
+                    <div className="mega-menu">
+                      <div className="mega-menu-inner">
+                        <div className="mega-column">
+                          <h3>{category.name}</h3>
+                          {children.map((child) => (
+                            <Link
+                              to={`/products?category=${child.id}`}
+                              key={child.id}
+                            >
+                              {child.name}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          <CurrencySelect />
+        </div>
       </nav>
     </header>
   );

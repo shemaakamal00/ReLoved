@@ -28,7 +28,7 @@ function CurrencySelect() {
       >
         {CURRENCIES.map((c) => (
           <option key={c.code} value={c.code}>
-            {c.label}
+            {c.code}
           </option>
         ))}
       </select>

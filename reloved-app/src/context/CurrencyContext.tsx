@@ -8,10 +8,15 @@ import {
 import { fetchExchangeRates } from "../api/client";
 
 export const CURRENCIES = [
-  { code: "SEK", label: "SEK (kr)", decimals: 0 },
-  { code: "EUR", label: "EUR (€)", decimals: 2 },
-  { code: "USD", label: "USD ($)", decimals: 2 },
+  { code: "SEK", prefix: "", suffix: " kr" },
+  { code: "EUR", prefix: "€", suffix: "" },
+  { code: "USD", prefix: "$", suffix: "" },
+  { code: "GBP", prefix: "£", suffix: "" },
 ] as const;
+
+const numberFormat = new Intl.NumberFormat("sv-SE", {
+  maximumFractionDigits: 0,
+});
 
 export type CurrencyCode = (typeof CURRENCIES)[number]["code"];
 
@@ -87,13 +92,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   }
 
   function formatPrice(sekAmount: number) {
-    const { decimals } = CURRENCIES.find((c) => c.code === currency)!;
-    return new Intl.NumberFormat("sv-SE", {
-      style: "currency",
-      currency,
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    }).format(convert(sekAmount));
+    const { prefix, suffix } = CURRENCIES.find((c) => c.code === currency)!;
+    const amount = Math.round(convert(sekAmount));
+    return `${prefix}${numberFormat.format(amount)}${suffix}`;
   }
 
   return (
