@@ -4,7 +4,7 @@ import { getExchangeRates } from "../integrations/currencyAdapter.ts";
 const router = express.Router();
 
 const BASE_CURRENCY = "SEK";
-const SUPPORTED_CURRENCIES = ["SEK", "EUR", "USD", "IDR"];
+const SUPPORTED_CURRENCIES = ["SEK", "EUR", "USD", "GBP"];
 
 router.get("/rates", async (req, res) => {
   const rates = await getExchangeRates(BASE_CURRENCY, SUPPORTED_CURRENCIES);
