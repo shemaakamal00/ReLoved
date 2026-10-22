@@ -4,6 +4,7 @@ import { fetchProductById } from "../api/client";
 import type { Product } from "../types";
 import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 const CONDITION_STYLES: Record<string, { className: string; label: string }> = {
   Nyskick: { className: "cond-new", label: "Nyskick" },
@@ -19,6 +20,7 @@ function ProductDetail() {
   const [notFound, setNotFound] = useState(false);
   const { addToCart, items } = useCart();
   const { isFavorited, toggleFavorite } = useFavorites();
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     if (!id) return;
@@ -94,7 +96,7 @@ function ProductDetail() {
 
             <p className="product-brand">{product.brand}</p>
             <h1>{product.name}</h1>
-            <p className="product-price">{product.price} kr</p>
+            <p className="product-price">{formatPrice(product.price)}</p>
 
             <div className="product-specs">
               <div>

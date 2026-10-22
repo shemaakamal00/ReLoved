@@ -11,6 +11,7 @@ import usersRouter from "./routes/users.js";
 import categoriesRouter from "./routes/categories.js";
 import adminRouter from "./routes/admin.js";
 import sellerRouter from "./routes/seller.js";
+import currencyRouter from "./routes/currency.js";
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/seller", sellerRouter);
+app.use("/api/currency", currencyRouter);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Product } from "../types";
+import { useCurrency } from "../context/CurrencyContext";
 
 interface ProductCardProps {
   product: Product;
@@ -13,6 +14,7 @@ const CONDITION_STYLES: Record<string, { className: string; label: string }> = {
 };
 
 function ProductCard({ product }: ProductCardProps) {
+  const { formatPrice } = useCurrency();
   const condition = CONDITION_STYLES[product.condition] ?? {
     className: "cond-good",
     label: product.condition,
@@ -56,7 +58,9 @@ function ProductCard({ product }: ProductCardProps) {
         </Link>
 
         <div className="price-row">
-          <span className="product-card__price">{product.price} kr</span>
+          <span className="product-card__price">
+            {formatPrice(product.price)}
+          </span>
           <span className="product-card__size">Stl {product.size}</span>
         </div>
       </div>

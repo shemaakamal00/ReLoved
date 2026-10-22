@@ -99,6 +99,11 @@
   color: var(--clr-accent);
 }
 
+.cart-summary__note {
+  font-size: 0.8rem;
+  color: var(--clr-muted);
+}
+
 @media (max-width: 800px) {
   .cart-layout {
     grid-template-columns: 1fr;

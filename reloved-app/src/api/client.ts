@@ -8,6 +8,7 @@ import type {
   SellerOrderItem,
   SellerStats,
   User,
+  ExchangeRates,
 } from "../types";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -354,4 +355,10 @@ export function deleteMyListing(
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
+}
+
+export function fetchExchangeRates(
+  signal?: AbortSignal,
+): Promise<ExchangeRates> {
+  return apiFetch<ExchangeRates>("/currency/rates", { signal });
 }

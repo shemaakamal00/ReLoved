@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 function Cart() {
   const { items, loading, removeFromCart } = useCart();
+  const { currency, formatPrice } = useCurrency();
 
   const availableItems = items.filter(
     (item) => item.product.status === "approved",
@@ -69,7 +71,7 @@ function Cart() {
                       </div>
 
                       <p className="cart-item__price">
-                        {isAvailable ? `${item.product.price} kr` : "—"}
+                        {isAvailable ? formatPrice(item.product.price) : "—"}
                       </p>
                     </article>
                   );
@@ -82,16 +84,23 @@ function Cart() {
 
               <div className="summary-row">
                 <span>Produkter</span>
-                <span>{subtotal} kr</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
               <div className="summary-row">
                 <span>Frakt</span>
-                <span>{shipping} kr</span>
+                <span>{formatPrice(shipping)}</span>
               </div>
               <div className="summary-row summary-row--total">
                 <span>Totalt</span>
-                <span>{total} kr</span>
+                <span>{formatPrice(total)}</span>
               </div>
+
+              {currency !== "SEK" && (
+                <p className="cart-summary__note">
+                  Priserna är omräknade från SEK och kan variera beroende på
+                  valutakurs. Du betalar {total} kr i SEK vid kassan.
+                </p>
+              )}
 
               {unavailableItems.length > 0 && (
                 <p className="form-error">

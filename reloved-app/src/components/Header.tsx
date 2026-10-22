@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { fetchCategories } from "../api/client";
 import type { Category } from "../types";
+import CurrencySelect from "./CurrencySelect";
 
 function Header() {
   const { user } = useAuth();
@@ -67,6 +68,7 @@ function Header() {
         </form>
 
         <nav className="header-actions" aria-label="Snabbmeny">
+          <CurrencySelect />
           <Link to="/favorites" className="icon-button" aria-label="Favoriter">
             <svg
               viewBox="0 0 24 24"

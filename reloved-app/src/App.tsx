@@ -27,79 +27,85 @@ import RequireAdmin from "./components/RequireAdmin";
 import RequireAuth from "./components/RequireAuth";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import TermsOfService from "./pages/TermsOfService";
+import { CurrencyProvider } from "./context/CurrencyContext";
 
 function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <CartProvider>
-          <FavoritesProvider>
-            <BrowserRouter>
-              <Header />
+      <CurrencyProvider>
+        <AuthProvider>
+          <CartProvider>
+            <FavoritesProvider>
+              <BrowserRouter>
+                <Header />
 
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route
-                  path="/orders"
-                  element={
-                    <RequireAuth>
-                      <Orders />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/orders/:id"
-                  element={
-                    <RequireAuth>
-                      <OrderDetail />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <RequireAdmin>
-                      <AdminDashboard />
-                    </RequireAdmin>
-                  }
-                />
-                <Route
-                  path="/seller"
-                  element={
-                    <RequireAuth>
-                      <SellerDashboard />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <RequireAuth>
-                      <Profile />
-                    </RequireAuth>
-                  }
-                />
-                <Route path="/about" element={<About />} />
-                <Route path="/faq" element={<Faq />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route
+                    path="/orders"
+                    element={
+                      <RequireAuth>
+                        <Orders />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/orders/:id"
+                    element={
+                      <RequireAuth>
+                        <OrderDetail />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <RequireAdmin>
+                        <AdminDashboard />
+                      </RequireAdmin>
+                    }
+                  />
+                  <Route
+                    path="/seller"
+                    element={
+                      <RequireAuth>
+                        <SellerDashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <RequireAuth>
+                        <Profile />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/faq" element={<Faq />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route
+                    path="/terms-of-service"
+                    element={<TermsOfService />}
+                  />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
 
-              <Footer />
-            </BrowserRouter>
-          </FavoritesProvider>
-        </CartProvider>
-      </AuthProvider>
+                <Footer />
+              </BrowserRouter>
+            </FavoritesProvider>
+          </CartProvider>
+        </AuthProvider>
+      </CurrencyProvider>
     </ToastProvider>
   );
 }

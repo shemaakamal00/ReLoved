@@ -101,3 +101,9 @@ export interface SellerStats {
   sold: number;
   pendingDelivery: number;
 }
+
+export interface ExchangeRates {
+  base: string;
+  date: string;
+  rates: Record<string, number>;
+}

@@ -18,6 +18,7 @@ Administratörer kan lägga till och redigera produkter, samt godkänna eller ne
 ## Funktionskrav
 
 ### Betyg G
+
 - [x] Diagram för databas (ER), sitemap, användarflöde och tidsplan — se [`docs/`](docs/)
 - [x] Databas uppsatt enligt diagram — se [`database/schema.sql`](database/schema.sql)
 - [x] Admin-gränssnitt för att lägga till/redigera produkter
@@ -28,20 +29,21 @@ Administratörer kan lägga till och redigera produkter, samt godkänna eller ne
 - [x] Deployad live (Vercel + separat API)
 
 ### Betyg VG
+
 - [x] Varukorgen sparas i databasen (gäst-korg i `localStorage` slås ihop till DB-korgen vid inloggning)
 - [x] Inloggning krävs för att redigera produkter (admin-roll, skyddat i både frontend och backend)
 - [x] Admin kan uppdatera orderstatus (Beställd, Behandlas, Skickad, Levererad, Återbetald, Avbruten)
 
 ## Tech-stack
 
-| Lager | Teknik |
-|-------|--------|
-| Frontend | React + TypeScript, Vite, React Router |
-| Backend | Node.js + Express (REST API) |
-| Databas | PostgreSQL (Supabase) |
-| Auth | JWT + bcrypt, roller (customer / seller / admin) |
-| Filer | Supabase Storage (produktbilder via multer) |
-| Deploy | Vercel (frontend) + Node-host (API) |
+| Lager    | Teknik                                           |
+| -------- | ------------------------------------------------ |
+| Frontend | React + TypeScript, Vite, React Router           |
+| Backend  | Node.js + Express (REST API)                     |
+| Databas  | PostgreSQL (Supabase)                            |
+| Auth     | JWT + bcrypt, roller (customer / seller / admin) |
+| Filer    | Supabase Storage (produktbilder via multer)      |
+| Deploy   | Vercel (frontend) + Node-host (API)              |
 
 ## Projektstruktur
 
@@ -70,39 +72,52 @@ ReLoved/
 Projektet består av två delar som körs samtidigt: API:et (`server/`) och frontend (`reloved-app/`).
 
 ### 1. Databas
+
 Skapa ett gratis Supabase-projekt och kör [`database/schema.sql`](database/schema.sql) i SQL-editorn så att tabeller och exempel-data skapas. Skapa även en Storage-bucket som heter `products` för produktbilder.
 
 ### 2. Backend (API)
+
 ```bash
 cd server
 npm install
 ```
+
 Skapa en `.env` i `server/`:
+
 ```
 SUPABASE_URL=din-supabase-url
 SUPABASE_SERVICE_KEY=din-service-key
 JWT_SECRET=en-lang-slumpmassig-strang
 PORT=3001
 ```
+
 Starta:
+
 ```bash
 node server.js
 ```
+
 API:et körs på `http://localhost:3001`.
 
 ### 3. Frontend
+
 ```bash
 cd reloved-app
 npm install
 ```
+
 Skapa en `.env` i `reloved-app/` (valfritt lokalt, default pekar på localhost):
+
 ```
 VITE_API_URL=http://localhost:3001/api
 ```
+
 Starta:
+
 ```bash
 npm run dev
 ```
+
 Appen körs på `http://localhost:5173`.
 
 ## Licens
