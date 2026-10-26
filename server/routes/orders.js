@@ -15,6 +15,16 @@ router.get("/seller", requireAuth, async (req, res) => {
   res.json(data);
 });
 
+router.get("/all", requireAuth, requireAdmin, async (req, res) => {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
 router.get("/:id", requireAuth, async (req, res) => {
   const { id } = req.params;
 
