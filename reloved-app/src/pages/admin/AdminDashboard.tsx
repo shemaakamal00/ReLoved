@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../../context/AuthContext";
 import { fetchAdminStats } from "../../api/client";
-import type { AdminStats, Product } from "../../types";
+import { useAuth } from "../../context/AuthContext";
+import { useState, useEffect, useCallback } from "react";
+import AdminCategories from "./AdminCategories";
+import AdminOrdersTable from "./AdminOrdersTable";
+import AdminProductsList from "./AdminProductsList";
 import PendingListings from "./PendingListings";
 import ProductForm from "./ProductForm";
-import AdminCategories from "./AdminCategories";
-import AdminProductsList from "./AdminProductsList";
-import AdminOrdersTable from "./AdminOrdersTable";
+import SupplierImport from "./SupplierImport";
+import type { AdminStats, Product } from "../../types";
 
 function AdminDashboard() {
   const { token } = useAuth();
@@ -55,12 +56,12 @@ function AdminDashboard() {
           </article>
         </div>
 
+        <SupplierImport onImported={() => setRefreshKey((k) => k + 1)} />
         <PendingListings />
         <ProductForm editingProduct={editingProduct} onSaved={handleSaved} />
         <AdminProductsList onEdit={setEditingProduct} refreshKey={refreshKey} />
         <AdminCategories />
         <AdminOrdersTable />
-        
       </section>
     </main>
   );

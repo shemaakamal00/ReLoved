@@ -2,15 +2,15 @@ const RETRYABLE = new Set([408, 429, 500, 502, 503, 504]);
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 1000;
 
-type FetchJsonOptions = {
+type FetchOptions = {
   headers?: Record<string, string>;
   timeoutMs?: number;
 };
 
-export async function fetchJson(
+export async function fetchWithRetry(
   url: string,
-  { headers = {}, timeoutMs = 5000 }: FetchJsonOptions = {},
-): Promise<unknown> {
+  { headers = {}, timeoutMs = 5000 }: FetchOptions = {},
+): Promise<Response> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     let response: Response;
     try {
@@ -42,5 +42,13 @@ export async function fetchJson(
     );
     await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
   }
-  throw new Error("Oväntat slut på fetchJson");
+  throw new Error("Oväntat slut på fetchWithRetry");
+}
+
+export async function fetchJson(
+  url: string,
+  options: FetchOptions = {},
+) : Promise<unknown> {
+  const response = await fetchWithRetry(url, options);
+  return response.json();
 }

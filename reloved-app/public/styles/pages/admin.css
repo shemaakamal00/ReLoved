@@ -253,6 +253,26 @@
   cursor: not-allowed;
 }
 
+/* Import av leverantörens katalog */
+.import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.import-report__summary {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.import-skipped .admin-table__row {
+  grid-template-columns: 0.8fr 1.2fr 2fr;
+}
+
+.import-skipped__reason {
+  color: var(--clr-condition-used);
+}
+
 @media (max-width: 900px) {
   .admin-table__row,
   .category-table .admin-table__row {

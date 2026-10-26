@@ -16,6 +16,10 @@ export interface Product {
   status: "pending" | "approved" | "rejected" | "sold" | "archived";
   created_at: string;
   rejection_reason: string | null;
+  sku: string | null;
+  ean: string | null;
+  stock: number | null;
+  variants: string[];
 }
 
 export interface Category {
@@ -106,4 +110,13 @@ export interface ExchangeRates {
   base: string;
   date: string;
   rates: Record<string, number>;
+}
+
+export type ImportFormat = "csv" | "xml";
+export interface ImportReport {
+  format: ImportFormat;
+  total: number;
+  created: number;
+  updated: number;
+  skipped: { sku: string | null; name: string; reason: string }[];
 }

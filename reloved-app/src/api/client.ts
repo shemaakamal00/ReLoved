@@ -9,6 +9,8 @@ import type {
   SellerStats,
   User,
   ExchangeRates,
+  ImportFormat,
+  ImportReport,
 } from "../types";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -361,4 +363,15 @@ export function fetchExchangeRates(
   signal?: AbortSignal,
 ): Promise<ExchangeRates> {
   return apiFetch<ExchangeRates>("/currency/rates", { signal });
+}
+
+// Admin: importera leverantörens katalog
+export function importSupplierCatalog(
+  format: ImportFormat,
+  token: string,
+): Promise<ImportReport> {
+  return apiFetch<ImportReport>(`/admin/products/import/${format}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
