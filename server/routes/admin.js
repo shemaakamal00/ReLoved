@@ -47,7 +47,7 @@ const ImportedProduct = z.object({
     .number({ error: "Lagersaldot är inte ett giltigt tal" })
     .int("Lagetsaldot måste vara ett heltal")
     .nonnegative("Lagersaldot kan inte vara negativit"),
-  variants: z.array(z.array(z.string().min(1))),
+  variants: z.array(z.string().min(1)),
 });
 
 const IMPORT_DEFAULTS = {
