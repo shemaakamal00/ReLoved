@@ -11,5 +11,5 @@
     "erasableSyntaxOnly": true,
     "skipLibCheck": true
   },
-  "include": ["integrations/**/*.ts"]
+  "include": ["integrations/**/*.ts", "lib/**/*.ts"]
 }

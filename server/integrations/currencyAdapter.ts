@@ -1,6 +1,20 @@
+import { number, z } from "zod";
+import { fetchJson } from "../lib/fetchJson.ts";
+import { fa } from "zod/locales";
+
 const BASE_URL =
-  process.env.FRANKFURTER_BASE_URL ?? "https://api.frankfurter.dev/v1";
+  process.env.CURRENCY_API_URL ?? "https://api.frankfurter.dev/v1";
 const TIMEOUT_MS = Number(process.env.CURRENCY_API_TIMEOUT_MS ?? 5000);
+const CACHE_MS = Number(process.env.CURRENCY_CACHE_SECONDS ?? 3600) * 1000;
+
+const FrankfurterRates = z.object({
+  amount: z.number(),
+  base: z.string().length(3),
+  date: z.iso.date(),
+  rates: z.record(z.string().length(3), z.number().positive()),
+});
+
+type FrankfurterRates = z.infer<typeof FrankfurterRates>;
 
 export interface ExchangeRates {
   base: string;
@@ -8,73 +22,58 @@ export interface ExchangeRates {
   rates: Record<string, number>;
 }
 
-export class CurrencyAdapterError extends Error {
-  status: number;
-
-  constructor(message: string, status = 502) {
-    super(message);
-    this.name = "CurrencyAdapterError";
-    this.status = status;
-  }
+function toExchangeRates(data: FrankfurterRates): ExchangeRates {
+  return {
+    base: data.base,
+    date: data.date,
+    rates: { ...data.rates, [data.base]: 1 },
+  };
 }
 
-interface FrankfurterLatestResponse {
-  amount: number;
-  base: string;
-  date: string;
-  rates: Record<string, number>;
-}
-
-export async function getExchangeRates(
+async function fetchRates(
   base: string,
-  targets: string[],
+  symbols: string[],
 ): Promise<ExchangeRates> {
-  const symbols = targets.filter((code) => code !== base);
-
   const url = new URL(`${BASE_URL}/latest`);
   url.searchParams.set("base", base);
   if (symbols.length > 0) {
     url.searchParams.set("symbols", symbols.join(","));
   }
 
-  let response: Response;
-  try {
-    response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
-  } catch (error) {
-    if (error instanceof Error && error.name === "TimeoutError") {
-      throw new CurrencyAdapterError(
-        `Valutatjänsten svarade inte inom ${TIMEOUT_MS} ms`,
-        504,
-      );
-    }
-    throw new CurrencyAdapterError("Kunde inte nå valutatjänsten");
-  }
+  const data = await fetchJson(url.toString(), { timeoutMs: TIMEOUT_MS });
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new CurrencyAdapterError(`Okänd valuta: ${base}`, 400);
-    }
-    throw new CurrencyAdapterError(
-      `Valutatjänsten svarade med status ${response.status}`,
+  const parsed = FrankfurterRates.safeParse(data);
+  if (!parsed.success) {
+    throw new Error(
+      `Valutatjänsten svarade med ett oväntat format:\n${z.prettifyError(parsed.error)}`,
     );
   }
 
-  let data: FrankfurterLatestResponse;
-  try {
-    data = (await response.json()) as FrankfurterLatestResponse;
-  } catch {
-    throw new CurrencyAdapterError("Valutatjänsten skickade ogiltig JSON");
+  const missing = symbols.filter((code) => !(code in parsed.data.rates));
+  if (missing.length > 0) {
+    throw new Error(`Valutatjänsten saknar kurs för: ${missing.join(", ")}`);
   }
 
-  if (!data || typeof data.rates !== "object" || data.rates === null) {
-    throw new CurrencyAdapterError("Oväntat svar från valutatjänsten");
+  return toExchangeRates(parsed.data);
+}
+
+const cache = new Map<string, { value: ExchangeRates; expiresAt: number }>();
+
+export async function getExchangeRates(
+  base: string,
+  targets: string[],
+): Promise<ExchangeRates & { fromCache: boolean }> {
+  const symbols = targets.filter((code) => code !== base).sort();
+  const key = `${base}:${symbols.join(",")}`;
+
+  const cached = cache.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    return { ...cached.value, fromCache: true };
   }
 
-  return {
-    base: data.base,
-    date: data.base,
-    rates: { ...data.rates, [data.base]: 1 },
-  };
+  const value = await fetchRates(base, symbols);
+  cache.set(key, { value, expiresAt: Date.now() + CACHE_MS });
+  return { ...value, fromCache: false };
 }
 
 export async function getExchangeRate(
@@ -85,12 +84,8 @@ export async function getExchangeRate(
 
   const { rates } = await getExchangeRates(from, [to]);
   const rate = rates[to];
-
-  if (typeof rate !== "number") {
-    throw new CurrencyAdapterError(
-      `Ingen kurs hittades för ${from} → ${to}`,
-      400,
-    );
+  if (rate === undefined) {
+    throw new Error(`Ingen kurs hittades för ${from} → ${to}`);
   }
   return rate;
 }

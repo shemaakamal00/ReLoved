@@ -7,7 +7,11 @@ const BASE_CURRENCY = "SEK";
 const SUPPORTED_CURRENCIES = ["SEK", "EUR", "USD", "GBP"];
 
 router.get("/rates", async (req, res) => {
-  const rates = await getExchangeRates(BASE_CURRENCY, SUPPORTED_CURRENCIES);
+  const { fromCache, ...rates } = await getExchangeRates(
+    BASE_CURRENCY,
+    SUPPORTED_CURRENCIES,
+  );
+  res.set("X-Cache", fromCache ? "HIT" : "MISS");
   res.json(rates);
 });
 

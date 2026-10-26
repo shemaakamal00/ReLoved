@@ -49,6 +49,11 @@ app.use("/api/admin", adminRouter);
 app.use("/api/seller", sellerRouter);
 app.use("/api/currency", currencyRouter);
 
+app.use((err, req, res, next) => {
+  const message = err instanceof Error ? err.message : String(err);
+  console.error(`${req.method} ${req.originalUrl} misslyckades: ${message}`);
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servern körs på http://localhost:${PORT}`);
