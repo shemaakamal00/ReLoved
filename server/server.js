@@ -52,6 +52,7 @@ app.use("/api/currency", currencyRouter);
 app.use((err, req, res, next) => {
   const message = err instanceof Error ? err.message : String(err);
   console.error(`${req.method} ${req.originalUrl} misslyckades: ${message}`);
+  res.status(500).json({ error: "Något gick fel på servern" });
 });
 
 const PORT = process.env.PORT || 3001;
