@@ -1,4 +1,4 @@
-import { getSupplierCatalog } from "../integrations/supplierAdapter.js";
+import { getSupplierCatalog } from "../integrations/supplierAdapter.ts";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";

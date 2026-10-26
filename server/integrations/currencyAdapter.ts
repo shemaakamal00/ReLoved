@@ -1,5 +1,5 @@
 import { number, z } from "zod";
-import { fetchJson } from "../lib/fetchJson.ts";
+import { fetchJson } from "../lib/fetchjson.ts";
 import { fa } from "zod/locales";
 
 const BASE_URL =
