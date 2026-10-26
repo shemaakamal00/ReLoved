@@ -1,10 +1,11 @@
-import { Link, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { fetchProductById } from "../api/client";
-import type { Product } from "../types";
+import { Link, useParams } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { useFavorites } from "../context/FavoritesContext";
 import { useCurrency } from "../context/CurrencyContext";
+import { useFavorites } from "../context/FavoritesContext";
+import { useState, useEffect } from "react";
+import ProductImage from "../components/ProductImage";
+import type { Product } from "../types";
 
 const CONDITION_STYLES: Record<string, { className: string; label: string }> = {
   Nyskick: { className: "cond-new", label: "Nyskick" },
@@ -74,11 +75,7 @@ function ProductDetail() {
 
         <section className="product">
           <div className="product-gallery">
-            <img
-              src={product.image_url ?? ""}
-              alt={product.alt_text ?? product.name}
-              className="product-image"
-            />
+            <ProductImage product={product} className="product-image" />
             <span className={`condition-badge ${condition.className}`}>
               <span className="ring"></span>
               {condition.label}

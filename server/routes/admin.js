@@ -51,7 +51,7 @@ const ImportedProduct = z.object({
 });
 
 const IMPORT_DEFAULTS = {
-  brand: "FSU25 Grossit",
+  brand: "FSU25 Grossist",
   seller_name: "ReLoved",
   condition: "Nyskick",
 };

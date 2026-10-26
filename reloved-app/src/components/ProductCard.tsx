@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import type { Product } from "../types";
 import { useCurrency } from "../context/CurrencyContext";
+import ProductImage from "./ProductImage";
+import type { Product } from "../types";
 
 interface ProductCardProps {
   product: Product;
@@ -32,16 +33,12 @@ function ProductCard({ product }: ProductCardProps) {
     <article className="product-card" data-product-id={product.id}>
       <Link to={`/product/${product.id}`}>
         <div className="product-card__img-wrap">
-          <img
-            src={product.image_url ?? ""}
-            alt={product.alt_text ?? product.name}
-            className="product-card__image"
-          />
+          <ProductImage product={product} className="product-card__image" />
           <span className={`condition-badge ${condition.className}`}>
             <span className="ring"></span>
             {condition.label}
           </span>
-          <span className="unique-tag">1 av 1</span>
+          {product.stock === null && <span className="unique-tag">1 av 1</span>}
         </div>
       </Link>
 

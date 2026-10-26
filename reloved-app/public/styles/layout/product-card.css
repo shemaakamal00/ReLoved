@@ -133,6 +133,35 @@
   color: var(--clr-muted);
 }
 
+/* Platshållare när en produkt saknar bild (t.ex. importerade produkter) */
+.image-placeholder {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--clr-card-warm);
+  color: var(--clr-muted);
+}
+
+.image-placeholder__logo {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  color: #d9cfbd;
+}
+
+.image-placeholder__logo em {
+  font-style: italic;
+}
+
+.image-placeholder__text {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 900px) {
   .product-grid {
     columns: 2;
