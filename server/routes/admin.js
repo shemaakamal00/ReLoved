@@ -141,7 +141,7 @@ router.post(
       .select("sku")
       .in("sku", [...seenSkus]);
     if (existingError) {
-      console.err(`Import (${format}): ${existingError.message}`);
+      console.error(`Import (${format}): ${existingError.message}`);
       return res.status(500).json({
         error: "Importen avbröts: Kunde inte läsa databasen. Inget sparades.",
       });
@@ -166,6 +166,19 @@ router.post(
       .map((row) => ({ ...row, status: "approved" }));
 
     if (toUpdate.length > 0) {
+      const { error } = await supabase
+        .from("products")
+        .upsert(toUpdate, { onConflict: "sku" });
+      if (error) {
+        console.error(`Import (${format}), uppdatering: ${error.message}`);
+        return res.status(500).json({
+          error:
+            "Importen avbröts när befintliga produkter skulle uppdateras. Inget sparades.",
+        });
+      }
+    }
+
+    if (toCreate.length > 0) {
       const { error } = await supabase
         .from("products")
         .upsert(toCreate, { onConflict: "sku" });
