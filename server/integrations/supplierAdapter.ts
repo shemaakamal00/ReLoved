@@ -1,7 +1,7 @@
 import { parse } from "csv-parse/sync";
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
-import { fetchWithRetry } from "../lib/fetchjson.ts";
+import { fetchWithRetry } from "../lib/fetchJson.ts";
 
 const BASE_URL =
   process.env.SUPPLIER_API_URL ?? "https://leverantor-api.vercel.app/v1";
