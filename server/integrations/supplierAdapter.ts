@@ -9,7 +9,7 @@ const API_KEY = process.env.SUPPLIER_API_KEY ?? "";
 const TIMEOUT_MS = Number(process.env.SUPPLIER_API_TIMEOUT_MS ?? 10000);
 const BRANSCH = process.env.SUPPLIER_BRANSCH ?? "klader";
 
-const CSV_ENCODING = "windoes-1252";
+const CSV_ENCODING = "windows-1252"; 
 const XML_ENCODING = "utf-8";
 
 export type CatalogFormat = "csv" | "xml";

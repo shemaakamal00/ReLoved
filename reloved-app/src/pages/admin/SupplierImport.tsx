@@ -42,7 +42,7 @@ function SupplierImport({ onImported }: SupplierImportProps) {
       </summary>
 
       <p>
-        Hämtar leverantörens katalog. Nya artikelnummer skapas, befintliga
+        Här hämtar du leverantörens katalog. Nya artikelnummer skapas, befintliga
         uppdateras och trasiga produkter hoppas över.
       </p>
 

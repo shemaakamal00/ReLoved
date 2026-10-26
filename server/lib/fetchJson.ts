@@ -28,7 +28,7 @@ export async function fetchWithRetry(
     }
 
     if (response.ok) {
-      return response.json();
+      return response;
     }
 
     if (!RETRYABLE.has(response.status) || attempt === MAX_ATTEMPTS) {
