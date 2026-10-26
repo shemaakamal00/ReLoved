@@ -46,7 +46,7 @@ function SupplierImport({ onImported }: SupplierImportProps) {
         uppdateras och trasiga produkter hoppas över.
       </p>
 
-      <div className="import_action">
+      <div className="import-action">
         {(["csv", "xml"] as const).map((format) => (
           <button
             key={format}
