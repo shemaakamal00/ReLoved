@@ -2,6 +2,7 @@ import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
 import { upload } from "../lib/upload.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import { syncProductsToSearch, removeFromSearch } from "../lib/searchSync.js";
 
 const router = Router();
 
@@ -127,7 +128,8 @@ router.post(
       return res.status(500).json({ error: error.message });
     }
 
-    res.status(201).json(data);
+    const searchIndexed = await syncProductsToSearch([data.id]);
+    res.status(201).json({ ...data, searchIndexed });
   },
 );
 
@@ -262,7 +264,8 @@ router.patch(
       .single();
 
     if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
+    const searchIndexed = await syncProductsToSearch([data.id]);
+    res.json({ ...data, searchIndexed });
   },
 );
 
@@ -340,7 +343,8 @@ router.patch(
       .single();
 
     if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
+    const searchIndexed = await syncProductsToSearch([data.id]);
+    res.json({ ...data, searchIndexed });
   },
 );
 
@@ -371,7 +375,8 @@ router.patch("/:id/status", requireAuth, requireAdmin, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
-  res.json(data);
+  const searchIndexed = await syncProductsToSearch([data.id]);
+  res.json({ ...data, searchIndexed });
 });
 
 // --- Ta bort produkter säljare ---
@@ -401,7 +406,8 @@ router.delete("/:id/mine", requireAuth, async (req, res) => {
 
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true });
+  const searchIndexed = await removeFromSearch([existing]);
+  res.json({ success: true, searchIndexed });
 });
 
 // --- Ta bort produkt (admin) ---
@@ -411,7 +417,7 @@ router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
 
   const { data: existing, error: fetchError } = await supabase
     .from("products")
-    .select("id")
+    .select("id, sku")
     .eq("id", id)
     .single();
 
@@ -421,7 +427,8 @@ router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
 
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true });
+  const searchIndexed = await removeFromSearch([existing]);
+  res.json({ success: true, searchIndexed });
 });
 
 export default router;

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { createOrder, fetchMyProfile } from "../api/client";
+import ProductImage from "../components/ProductImage";
 
 function Checkout() {
   const { items, clearCart } = useCart();
@@ -194,9 +195,9 @@ function Checkout() {
 
               {items.map((item) => (
                 <div className="checkout-product" key={item.product_id}>
-                  <img
-                    src={item.product.image_url ?? ""}
-                    alt={item.product.alt_text ?? item.product.name}
+                  <ProductImage
+                    product={item.product}
+                    className="checkout-product__image"
                   />
                   <div>
                     <h3>{item.product.name}</h3>

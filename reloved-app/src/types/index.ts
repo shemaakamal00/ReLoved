@@ -120,3 +120,23 @@ export interface ImportReport {
   updated: number;
   skipped: { sku: string | null; name: string; reason: string }[];
 }
+
+export interface ImportReport {
+  format: ImportFormat;
+  total: number;
+  created: number;
+  updated: number;
+  skipped: { sku: string | null; name: string; reason: string }[];
+  searchIndexed: boolean;
+}
+
+export type WithSearchStatus<T> = T & { searchIndexed?: boolean };
+export type SearchProduct = Omit<
+  Product,
+  "seller_id" | "status" | "rejection_reason" | "ean"
+> & { category: string | null };
+
+export interface SearchResult {
+  data: SearchProduct[];
+  meta: { page: number; pageSize: number; total: number; totalPages: number };
+}

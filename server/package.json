@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",
+    "algoliasearch": "^5.60.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "csv-parse": "^7.0.3",

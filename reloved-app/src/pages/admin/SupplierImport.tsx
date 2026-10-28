@@ -42,8 +42,8 @@ function SupplierImport({ onImported }: SupplierImportProps) {
       </summary>
 
       <p>
-        Här hämtar du leverantörens katalog. Nya artikelnummer skapas, befintliga
-        uppdateras och trasiga produkter hoppas över.
+        Här hämtar du leverantörens katalog. Nya artikelnummer skapas,
+        befintliga uppdateras och trasiga produkter hoppas över.
       </p>
 
       <div className="import-actions">
@@ -69,6 +69,13 @@ function SupplierImport({ onImported }: SupplierImportProps) {
           <p className="import-report__summary">
             {report.format.toUpperCase()}: {report.total} produkter i filen
           </p>
+
+          {!report.searchIndexed && (
+            <p className="form-error">
+              Produkterna sparades, men sökningen kunde inte uppdateras. Bygg om
+              sökindexet nedan.
+            </p>
+          )}
 
           <div className="admin-stats">
             <article className="admin-stat-card">

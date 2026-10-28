@@ -7,6 +7,7 @@ import {
   fetchCategories,
 } from "../../api/client";
 import type { Category, Product } from "../../types";
+import { SEARCH_INDEX_WARNING } from "../../utils/searchIndex";
 
 interface ProductFormProps {
   editingProduct?: Product | null;
@@ -37,14 +38,18 @@ function ProductForm({ editingProduct, onSaved }: ProductFormProps) {
     const formData = new FormData(form);
 
     try {
-      if (editingProduct) {
-        await updateProduct(editingProduct.id, formData, token);
-        showToast("Produkten är uppdaterad!");
+      const saved = editingProduct
+        ? await updateProduct(editingProduct.id, formData, token)
+        : await createProduct(formData, token);
+
+      if (saved.searchIndexed === false) {
+        showToast(SEARCH_INDEX_WARNING, "error");
       } else {
-        await createProduct(formData, token);
-        showToast("Produkten är sparad!");
-        form.reset();
+        showToast(
+          editingProduct ? "Produkten är uppdaterad!" : "Produkten är sparad!",
+        );
       }
+      if (!editingProduct) form.reset();
       onSaved?.();
     } catch (err) {
       console.error(err);

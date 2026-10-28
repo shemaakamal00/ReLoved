@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "../../context/ToastContext";
 import type { Product } from "../../types";
+import { SEARCH_INDEX_WARNING } from "../../utils/searchIndex";
 
 const STATUS_LABELS: Record<string, { text: string; className: string }> = {
   pending: { text: "Väntar", className: "status-badge--pending" },
@@ -32,8 +33,13 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
     if (!confirmed) return;
     setDeletingId(product.id);
     try {
-      await deleteProduct(product.id, token);
-      showToast("Produkten togs bort.");
+      const result = await deleteProduct(product.id, token);
+      showToast(
+        result.searchIndexed === false
+          ? SEARCH_INDEX_WARNING
+          : "Produkten togs bort.",
+        result.searchIndexed === false ? "error" : "success",
+      );
       load();
     } catch (err) {
       console.error(err);

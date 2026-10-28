@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
+import ProductImage from "../components/ProductImage";
 
 function Cart() {
   const { items, loading, removeFromCart } = useCart();
@@ -47,9 +48,9 @@ function Cart() {
                       key={item.product_id}
                       data-product-id={item.product_id}
                     >
-                      <img
-                        src={item.product.image_url ?? ""}
-                        alt={item.product.alt_text ?? item.product.name}
+                      <ProductImage
+                        product={item.product}
+                        className="cart-item__image"
                       />
 
                       <div className="cart-item__info">

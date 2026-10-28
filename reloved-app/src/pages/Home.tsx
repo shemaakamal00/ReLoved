@@ -26,7 +26,7 @@ function Home() {
 
   return (
     <main>
-      <Hero featured={products} />
+      <Hero featured={products.filter((p) => p.image_url)} />
 
       <section className="featured-products section">
         <div className="container">

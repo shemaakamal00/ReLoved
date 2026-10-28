@@ -32,7 +32,7 @@ function Header() {
     const formData = new FormData(event.currentTarget);
     const query = (formData.get("search") as string)?.trim();
     if (query) {
-      navigate(`/products?search=${encodeURIComponent(query)}`);
+      navigate(`/search?q=${encodeURIComponent(query)}`);
     }
   }
 

@@ -2,16 +2,17 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
-import productsRouter from "./routes/products.js";
-import ordersRouter from "./routes/orders.js";
-import cartRouter from "./routes/cart.js";
-import favoritesRouter from "./routes/favorites.js";
-import authRouter from "./routes/auth.js";
-import usersRouter from "./routes/users.js";
-import categoriesRouter from "./routes/categories.js";
 import adminRouter from "./routes/admin.js";
-import sellerRouter from "./routes/seller.js";
+import authRouter from "./routes/auth.js";
+import cartRouter from "./routes/cart.js";
+import categoriesRouter from "./routes/categories.js";
 import currencyRouter from "./routes/currency.js";
+import favoritesRouter from "./routes/favorites.js";
+import ordersRouter from "./routes/orders.js";
+import productsRouter from "./routes/products.js";
+import searchRouter from "./routes/search.js";
+import sellerRouter from "./routes/seller.js";
+import usersRouter from "./routes/users.js";
 
 const app = express();
 
@@ -48,6 +49,8 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/seller", sellerRouter);
 app.use("/api/currency", currencyRouter);
+app.use("/api/currency", currencyRouter);
+app.use("/api/search", searchRouter);
 
 app.use((err, req, res, next) => {
   const message = err instanceof Error ? err.message : String(err);

@@ -1,0 +1,37 @@
+@charset "UTF-8";
+
+.search-page__form {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 640px;
+  margin: 0 auto 2rem;
+}
+
+.search-page__form input {
+  flex: 1;
+  border-radius: var(--radius-pill);
+  background: var(--clr-card-warm);
+  padding: 0.8rem 1.2rem;
+}
+
+.search-page__form button {
+  border-radius: var(--radius-pill);
+}
+
+.search-page__status {
+  text-align: center;
+  color: var(--clr-muted);
+  margin-bottom: 1.5rem;
+}
+
+.search-page .pagination {
+  margin-top: 2.5rem;
+  color: var(--clr-muted-strong);
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .search-page__form {
+    flex-direction: column;
+  }
+}

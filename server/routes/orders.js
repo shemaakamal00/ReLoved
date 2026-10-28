@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import { syncProductsToSearch } from "../lib/searchSync.js";
 
 const router = Router();
 
@@ -161,6 +162,7 @@ router.post("/", async (req, res) => {
     .update({ status: "sold" })
     .in("id", productsIds);
 
+  await syncProductsToSearch(productsIds);
   res.status(201).json(order);
 });
 

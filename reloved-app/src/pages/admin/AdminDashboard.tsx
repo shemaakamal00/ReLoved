@@ -8,6 +8,7 @@ import PendingListings from "./PendingListings";
 import ProductForm from "./ProductForm";
 import SupplierImport from "./SupplierImport";
 import type { AdminStats, Product } from "../../types";
+import SearchIndexPanel from "./SearchIndexPanel";
 
 function AdminDashboard() {
   const { token } = useAuth();
@@ -57,6 +58,7 @@ function AdminDashboard() {
         </div>
 
         <SupplierImport onImported={() => setRefreshKey((k) => k + 1)} />
+        <SearchIndexPanel />
         <PendingListings />
         <ProductForm editingProduct={editingProduct} onSaved={handleSaved} />
         <AdminProductsList onEdit={setEditingProduct} refreshKey={refreshKey} />

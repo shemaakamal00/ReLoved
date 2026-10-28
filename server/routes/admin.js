@@ -3,6 +3,7 @@ import { requireAuth, requireAdmin } from "../middleware/auth.js";
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
 import { z } from "zod";
+import { syncProductsToSearch, reindexAllProducts } from "../lib/searchSync.js";
 
 const router = Router();
 
@@ -197,6 +198,23 @@ router.post(
       `Import (${format}): ${toCreate.length} nya, ${toUpdate.length} uppdaterade, ${skipped.length} överhoppade`,
     );
 
+    const { data: saved } = await supabase
+      .from("products")
+      .select("id")
+      .in("sku", [...seenSkus]);
+    const searchIndexed = await syncProductsToSearch(
+      (saved ?? []).map((row) => row.id),
+    );
+
+    res.json({
+      format,
+      total: candidates.length,
+      created: toCreate.length,
+      updated: toUpdate.length,
+      skipped,
+      searchIndexed,
+    });
+
     res.json({
       format,
       total: candidates.length,
@@ -206,4 +224,18 @@ router.post(
     });
   },
 );
+
+router.post("/search/reindex", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const indexed = await reindexAllProducts();
+    console.log(`Sökindexet byggdes om med ${indexed} produkter`);
+    res.json({ indexed });
+  } catch (err) {
+    console.error(`Kunde inte bygga om sökindexet: ${err.message}`);
+    res.status(502).json({
+      error: "Kunde inte uppdatera sökindexet. Försök igen om en stund.",
+    });
+  }
+});
+
 export default router;

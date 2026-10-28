@@ -28,6 +28,7 @@ import RequireAuth from "./components/RequireAuth";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import TermsOfService from "./pages/TermsOfService";
 import { CurrencyProvider } from "./context/CurrencyContext";
+import Search from "./pages/Search";
 
 function App() {
   return (
@@ -98,6 +99,8 @@ function App() {
                   />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="*" element={<NotFound />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/search" element={<Search />} />
                 </Routes>
 
                 <Footer />

@@ -162,6 +162,22 @@
   text-transform: uppercase;
 }
 
+.cart-item .image-placeholder,
+.checkout-product .image-placeholder {
+  width: 80px;
+  aspect-ratio: 3 / 4;
+}
+
+.cart-item .image-placeholder__logo,
+.checkout-product .image-placeholder__logo {
+  font-size: 0.9rem;
+}
+
+.cart-item .image-placeholder__text,
+.checkout-product .image-placeholder__text {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .product-grid {
     columns: 2;

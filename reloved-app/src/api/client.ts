@@ -11,6 +11,8 @@ import type {
   ExchangeRates,
   ImportFormat,
   ImportReport,
+  SearchResult,
+  WithSearchStatus,
 } from "../types";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -52,8 +54,8 @@ export function fetchCategories(): Promise<Category[]> {
 export function createProduct(
   formData: FormData,
   token: string,
-): Promise<Product> {
-  return apiFetch<Product>("/products", {
+): Promise<WithSearchStatus<Product>> {
+  return apiFetch<WithSearchStatus<Product>>("/products", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
@@ -94,8 +96,8 @@ export function updateProductStatus(
   status: string,
   token: string,
   reason?: string,
-): Promise<Product> {
-  return apiFetch<Product>(`/products/${id}/status`, {
+): Promise<WithSearchStatus<Product>> {
+  return apiFetch<WithSearchStatus<Product>>(`/products/${id}/status`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -279,8 +281,8 @@ export function updateProduct(
   id: number,
   formData: FormData,
   token: string,
-): Promise<Product> {
-  return apiFetch<Product>(`/products/${id}`, {
+): Promise<WithSearchStatus<Product>> {
+  return apiFetch<WithSearchStatus<Product>>(`/products/${id}`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
@@ -290,8 +292,8 @@ export function updateProduct(
 export function deleteProduct(
   id: number,
   token: string,
-): Promise<{ success: boolean }> {
-  return apiFetch<{ success: boolean }>(`/products/${id}`, {
+): Promise<WithSearchStatus<{ success: boolean }>> {
+  return apiFetch<WithSearchStatus<{ success: boolean }>>(`/products/${id}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -371,6 +373,27 @@ export function importSupplierCatalog(
   token: string,
 ): Promise<ImportReport> {
   return apiFetch<ImportReport>(`/admin/products/import/${format}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// Sök: går till vårt sök API
+export function searchProducts(
+  params: { q: string; page: number; pageSize: number },
+  signal?: AbortSignal,
+): Promise<SearchResult> {
+  const query = new URLSearchParams({
+    q: params.q,
+    page: String(params.page),
+    pageSize: String(params.pageSize),
+  });
+  return apiFetch<SearchResult>(`/search?${query}`, { signal });
+}
+
+// Admin: Bygger om hela sökindexet från databasen
+export function reindexSearch(token: string): Promise<{ indexed: number }> {
+  return apiFetch<{ indexed: number }>("/admin/search/reindex", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });

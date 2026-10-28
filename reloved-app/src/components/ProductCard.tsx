@@ -4,7 +4,19 @@ import ProductImage from "./ProductImage";
 import type { Product } from "../types";
 
 interface ProductCardProps {
-  product: Product;
+  product: Pick<
+    Product,
+    | "id"
+    | "name"
+    | "brand"
+    | "price"
+    | "size"
+    | "condition"
+    | "image_url"
+    | "alt_text"
+    | "seller_name"
+    | "stock"
+  >;
 }
 
 const CONDITION_STYLES: Record<string, { className: string; label: string }> = {

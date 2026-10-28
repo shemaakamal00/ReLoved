@@ -3,6 +3,8 @@ import { useAuth } from "../../context/AuthContext";
 import { fetchProducts, updateProductStatus } from "../../api/client";
 import type { Product } from "../../types";
 import { useToast } from "../../context/ToastContext";
+import { SEARCH_INDEX_WARNING } from "../../utils/searchIndex";
+import ProductImage from "../../components/ProductImage";
 
 function PendingListings() {
   const { token } = useAuth();
@@ -37,11 +39,15 @@ function PendingListings() {
     }
 
     try {
-      await updateProductStatus(id, status, token, reason);
+      const updated = await updateProductStatus(id, status, token, reason);
       await load();
-      showToast(
-        status === "approved" ? "Annonsen godkändes!" : "Annonsen nekades.",
-      );
+      if (updated.searchIndexed === false) {
+        showToast(SEARCH_INDEX_WARNING, "error");
+      } else {
+        showToast(
+          status === "approved" ? "Annonsen godkändes!" : "Annonsen nekades.",
+        );
+      }
     } catch (err) {
       console.error(err);
       showToast("Kunde inte uppdatera annonsen.", "error");
@@ -88,9 +94,9 @@ function PendingListings() {
               </summary>
 
               <div className="pending-row__detail">
-                <img
-                  src={product.image_url ?? ""}
-                  alt={product.alt_text ?? product.name}
+                <ProductImage
+                  product={product}
+                  className="pending-row__image"
                 />
 
                 <div className="pending-row__info">
