@@ -117,3 +117,22 @@ Båda parsrarna lämnar samma `ProductCandidate`, och samma Zod-schema används 
 | – | `brand` = "FSU25 Grossist", `condition` = "Nyskick", `seller_name` = "ReLoved" | Obligatoriska fält i vår modell som leverantören saknar. |
 
 **Validering:** varje produkt kontrolleras för sig. Artikelnummer måste finnas, EAN ska vara 13 siffror, priset ett tal större än 0 och lagersaldot ett heltal ≥ 0. En trasig produkt hoppas över med en orsak, t.ex. LEV-1037: `price: Priset är inte ett giltigt tal`. Ett ogiltigt pris ersätts aldrig med 0, eftersom produkten då skulle säljas gratis. Fel som gäller hela importen, som fel API-nyckel, trasig XML eller databasfel,
+
+### Labb 2 – Sök-API (Algolia)
+
+**Vad den gör:** kunden söker i sidhuvudet och kommer till `/search`, med stavfelstolerans ("hodie" hittar "Hoodie"), relevansordning och bläddring mellan sidor.
+
+- **Adapter:** `server/integrations/searchAdapter.ts`
+- **Synk:** `server/lib/searchSync.js`
+- **Route:** `GET /api/search?q=&page=&pageSize=` och `POST /api/admin/search/reindex`
+- **Variabler:** `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_INDEX`
+
+**Om tjänsten är nere:** sökningen visar "Sökningen kunde inte genomföras just nu". Resten av butiken fungerar. Ändringar på adminsidan sparas ändå i databasen, och admin får en varning om att sökindexet inte är uppdaterat. Knappen **Bygg om sökindex** synkar allt när Algolia fungerar igen.
+
+**Val och motiveringar:**
+- **Databasen är sanningen, Algolia är en kopia.** Varje ändring sparas först i databasen. Sedan läser `syncProductsToSearch` produkten därifrån och gör sökningen likadan: godkända produkter läggs till eller uppdateras, och väntande, nekade, sålda och arkiverade produkter tas bort.
+- **`objectID` = artikelnumret** (`LEV-1001`). Egna secondhand-plagg saknar artikelnummer och får `RL-<id>`. Samma produkt får alltid samma `objectID`, så en ny indexering uppdaterar i stället för att skapa dubbletter.
+- **Två nycklar.** Admin-nyckeln, som får skriva, används bara vid indexering. Söknyckeln får bara läsa. Båda finns enbart på servern, och React anropar bara `/api/search`.
+- **Validering.** `q` får vara högst 100 tecken, `page` ≥ 1 och `pageSize` 1–48. Ogiltiga värden ger 400 innan Algolia anropas. Algolias träffar valideras också med Zod innan de skickas vidare.
+- **Sökbara fält:** namn, märke, kategori, färg, material och beskrivning, i den prioritetsordningen. Pris och bild-URL går inte att söka i.
+- **Söktext och sida ligger i URL:en**, så att bakåtknappen fungerar och en sökning går att dela som länk.
