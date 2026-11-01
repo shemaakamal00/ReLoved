@@ -2,8 +2,14 @@ import { useState, useEffect, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { startCheckout, fetchMyProfile } from "../api/client";
+import {
+  startCheckout,
+  fetchMyProfile,
+  fetchShippingQuote,
+} from "../api/client";
 import ProductImage from "../components/ProductImage";
+import ShippingPicker from "../components/ShippingPicker";
+import type { ShippingMethod, ShippingQuote } from "../types";
 
 function Checkout() {
   const { items } = useCart();
@@ -33,9 +39,57 @@ function Checkout() {
       .catch(console.error);
   }, [token]);
 
-  const subtotal = items.reduce((sum, item) => sum + item.product.price, 0);
-  const shipping = subtotal > 0 ? 49 : 0;
-  const total = subtotal + shipping;
+  const [method, setMethod] = useState<ShippingMethod>("service_point");
+  const [servicePointId, setServicePointId] = useState("");
+  const [quote, setQuote] = useState<ShippingQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+
+  const cleanPostalCode = postalCode.replace(/\s/g, "");
+  const hasPostalCode = /^\d{5}$/.test(cleanPostalCode);
+  const cartKey = items.map((item) => item.product_id).join(",");
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setQuoteLoading(true);
+      try {
+        const result = await fetchShippingQuote(
+          {
+            postal_code: hasPostalCode ? cleanPostalCode : undefined,
+            items: items.map((item) => ({
+              product_id: item.product_id,
+              quantity: 1,
+            })),
+          },
+          controller.signal,
+        );
+        setQuote(result);
+        setServicePointId((current) =>
+          result.servicePoints?.some((p) => p.id === current) ? current : "",
+        );
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error("Kunde inte hämta frakt:", err);
+        setError(
+          err instanceof Error ? err.message : "Kunde inte hämta frakten.",
+        );
+      } finally {
+        if (!controller.signal.aborted) setQuoteLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [cleanPostalCode, cartKey]);
+
+  const subtotal =
+    quote?.subtotal ?? items.reduce((sum, item) => sum + item.product.price, 0);
+  const shipping =
+    quote?.options.find((option) => option.method === method)?.price ?? null;
+  const total = subtotal + (shipping ?? 0);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -43,6 +97,10 @@ function Checkout() {
 
     if (items.length === 0) {
       setError("Din varukorg är tom.");
+      return;
+    }
+    if (method === "service_point" && !servicePointId) {
+      setError("Välj ett ombud, eller välj hemleverans.");
       return;
     }
 
@@ -59,6 +117,9 @@ function Checkout() {
           product_id: item.product_id,
           quantity: 1,
         })),
+        shipping_method: method,
+        service_point_id:
+          method === "service_point" ? servicePointId : undefined,
       });
       window.location.assign(url);
     } catch (err) {
@@ -161,6 +222,19 @@ function Checkout() {
               </div>
 
               <div className="checkout-card">
+                <h2>Leverans</h2>
+                <ShippingPicker
+                  quote={quote}
+                  loading={quoteLoading}
+                  hasPostalCode={hasPostalCode}
+                  method={method}
+                  servicePointId={servicePointId}
+                  onMethodChange={setMethod}
+                  onServicePointChange={setServicePointId}
+                />
+              </div>
+
+              <div className="checkout-card">
                 <h2>Betalning</h2>
                 <p className="checkout-payment-note">
                   Du betalar säkert med kort hos Stripe. Ordern är betald först
@@ -193,7 +267,13 @@ function Checkout() {
               </div>
               <div className="summary-row">
                 <span>Frakt</span>
-                <span>{shipping} kr</span>
+                <span>
+                  {shipping === null
+                    ? "–"
+                    : shipping === 0
+                      ? "Gratis"
+                      : `${shipping} kr`}
+                </span>
               </div>
               <div className="summary-row summary-row--total">
                 <span>Totalt</span>

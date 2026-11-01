@@ -2,32 +2,40 @@ import { Router } from "express";
 import { z } from "zod";
 import { supabase } from "../lib/supabase.js";
 import { createCheckoutSession } from "../integrations/paymentAdapter.ts";
+import {
+  findServicePoints,
+  estimateDelivery,
+} from "../integrations/shippingAdapter.ts";
+import { CartItems, CartError, priceCart } from "../lib/cartPricing.js";
+import { PostalCode } from "../lib/postalCode.js";
+import {
+  SHIPPING_METHODS,
+  SHIPPING_OPTIONS,
+  shippingPrice,
+} from "../lib/shippingPrices.js";
 
 const router = Router();
 
-const SHIPPING = 49;
+const CheckoutRequest = z
+  .object({
+    email: z.email("Ange en giltig e-postadress"),
+    phone: z.string().trim().min(5, "Ange ett telefonnummer").max(30),
+    full_name: z.string().trim().min(2, "Ange ditt namn").max(200),
+    address: z.string().trim().min(2, "Ange en adress").max(255),
+    postal_code: PostalCode,
+    city: z.string().trim().min(1, "Ange en stad").max(100),
+    items: CartItems,
+    shipping_method: z.enum(SHIPPING_METHODS, "Välj ett fraktalternativ"),
+    service_point_id: z.string().trim().min(1).max(50).optional(),
+  })
+  .refine(
+    (body) => body.shipping_method !== "service_point" || body.service_point_id,
+    {
+      message: "Välj ett ombud",
+      path: ["service_point_id"],
+    },
+  );
 
-const CheckoutRequest = z.object({
-  email: z.email("Ange en giltig e-postadress"),
-  phone: z.string().trim().min(5, "Ange ett telefonnummer").max(30),
-  full_name: z.string().trim().min(2, "Ange ditt namn").max(200),
-  address: z.string().trim().min(2, "Ange en adress").max(255),
-  postal_code: z.string().trim().min(3, "Ange ett postnummer").max(20),
-  city: z.string().trim().min(1, "Ange en stad").max(100),
-  items: z
-    .array(
-      z.object({
-        product_id: z.number().int().positive("Ogiltig produkt"),
-        quantity: z
-          .number()
-          .int("Antalet måste vara ett heltal")
-          .min(1, "Antalet måste vara minst 1")
-          .max(10, "Högst 10 av samma produkt"),
-      }),
-    )
-    .min(1, "Varukorgen är tom")
-    .max(50, "För många produkter i varukorgen"),
-});
 router.post("/", async (req, res) => {
   const parsed = CheckoutRequest.safeParse(req.body);
   if (!parsed.success) {
@@ -37,64 +45,47 @@ router.post("/", async (req, res) => {
   }
   const customer = parsed.data;
 
-  const quantities = new Map();
-  for (const item of customer.items) {
-    quantities.set(
-      item.product_id,
-      (quantities.get(item.product_id) ?? 0) + item.quantity,
-    );
-  }
-  const productIds = [...quantities.keys()];
-
-  const { data: products, error: productsError } = await supabase
-    .from("products")
-    .select("id, name, brand, price, stock, status, seller_id")
-    .in("id", productIds);
-  if (productsError) {
-    console.error(
-      `Kassan: kunde inte läsa produkter: ${productsError.message}`,
-    );
-    return res.status(500).json({ error: "Något gick fel. Försök igen." });
+  let lines, subtotal;
+  try {
+    ({ lines, subtotal } = await priceCart(customer.items));
+  } catch (err) {
+    if (err instanceof CartError)
+      return res.status(err.status).json({ error: err.message });
+    throw err;
   }
 
-  for (const productId of productIds) {
-    const product = products.find((p) => p.id === productId);
-    const quantity = quantities.get(productId);
-
-    if (!product) {
-      return res
-        .status(400)
-        .json({ error: "En produkt i varukorgen finns inte längre." });
-    }
-    if (product.status !== "approved") {
-      return res
-        .status(409)
-        .json({ error: `${product.name} är tyvärr redan såld.` });
-    }
-    if (product.stock === null && quantity > 1) {
-      return res
-        .status(409)
-        .json({ error: `${product.name} finns bara i ett exemplar.` });
-    }
-    if (product.stock !== null && product.stock < quantity) {
-      return res.status(409).json({
+  let servicePoint = null;
+  if (customer.shipping_method === "service_point") {
+    let nearby;
+    try {
+      nearby = await findServicePoints(customer.postal_code);
+    } catch (err) {
+      console.error(`Kassan: ${err.message}`);
+      return res.status(502).json({
         error:
-          product.stock === 0
-            ? `${product.name} är slut i lager.`
-            : `Det finns bara ${product.stock} st av ${product.name} kvar.`,
+          "Vi kunde inte kontrollera ombudet hos PostNord. Försök igen, eller välj hemleverans.",
+      });
+    }
+    servicePoint =
+      nearby.find((point) => point.id === customer.service_point_id) ?? null;
+    if (!servicePoint) {
+      return res.status(400).json({
+        error:
+          "Ombudet finns inte bland ombuden för ditt postnummer. Välj ett ombud i listan.",
       });
     }
   }
 
-  const lines = productIds.map((productId) => {
-    const product = products.find((p) => p.id === productId);
-    const quantity = quantities.get(productId);
-    return { product, quantity, lineTotal: product.price * quantity };
-  });
-  const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
-  const total = subtotal + SHIPPING;
+  const shipping = shippingPrice(customer.shipping_method, subtotal);
+  const total = subtotal + shipping;
 
-  // 5. Spara ordern som OBETALD innan kunden skickas till Stripe
+  const estimatedDelivery = await estimateDelivery(customer.postal_code)
+    .then((dates) => dates[customer.shipping_method])
+    .catch((err) => {
+      console.error(`Kassan: ${err.message}`);
+      return null;
+    });
+
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -105,9 +96,14 @@ router.post("/", async (req, res) => {
       postal_code: customer.postal_code,
       city: customer.city,
       subtotal,
-      shipping: SHIPPING,
+      shipping,
       total,
       status: "pending",
+      shipping_method: customer.shipping_method,
+      service_point_id: servicePoint?.id ?? null,
+      service_point_name: servicePoint?.name ?? null,
+      service_point_address: servicePoint?.address ?? null,
+      estimated_delivery: estimatedDelivery,
     })
     .select()
     .single();
@@ -143,7 +139,10 @@ router.post("/", async (req, res) => {
     checkout = await createCheckoutSession({
       id: order.id,
       email: customer.email,
-      shipping: SHIPPING,
+      shipping,
+      shippingName: servicePoint
+        ? `${SHIPPING_OPTIONS.service_point.stripeName} (${servicePoint.name})`
+        : SHIPPING_OPTIONS[customer.shipping_method].stripeName,
       lines: lines.map(({ product, quantity }) => ({
         name: `${product.brand} – ${product.name}`,
         unitPrice: product.price,
@@ -172,7 +171,7 @@ router.post("/", async (req, res) => {
   }
 
   console.log(
-    `Kassan: order ${order.id} skapad (${total} kr), skickar kunden till Stripe`,
+    `Kassan: order ${order.id} skapad (${subtotal} kr + frakt ${shipping} kr = ${total} kr, ${customer.shipping_method}), skickar kunden till Stripe`,
   );
   res.status(201).json({ orderId: order.id, url: checkout.url });
 });
@@ -186,7 +185,7 @@ router.get("/order", async (req, res) => {
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, status, subtotal, shipping, total, created_at, full_name, order_items(product_name, product_brand, quantity, unit_price, line_total)",
+      "id, status, subtotal, shipping, total, created_at, full_name, shipping_method, service_point_name, service_point_address, estimated_delivery, order_items(product_name, product_brand, quantity, unit_price, line_total)",
     )
     .eq("stripe_session_id", sessionId)
     .maybeSingle();

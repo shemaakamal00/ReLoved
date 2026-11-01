@@ -22,6 +22,7 @@ export type CheckoutOrder = {
   email: string;
   lines: CheckoutLine[];
   shipping: number;
+  shippingName: string;
 };
 
 function toOre(kronor: number): number {
@@ -45,7 +46,7 @@ export async function createCheckoutSession(order: CheckoutOrder) {
       price_data: {
         currency: "sek",
         unit_amount: toOre(order.shipping),
-        product_data: { name: "Frakt" },
+        product_data: { name: order.shippingName },
       },
     });
   }

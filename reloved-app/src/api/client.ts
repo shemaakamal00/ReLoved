@@ -15,6 +15,7 @@ import type {
   WithSearchStatus,
   CheckoutPayload,
   OrderConfirmation,
+  ShippingQuote,
 } from "../types";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -395,7 +396,18 @@ export function startCheckout(
   });
 }
 
-// Bekräftelsesidan: läser orderns status.
+export function fetchShippingQuote(
+  payload: { postal_code?: string; items: { product_id: number; quantity: number }[] },
+  signal?: AbortSignal,
+): Promise<ShippingQuote> {
+  return apiFetch<ShippingQuote>("/shipping/quote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal,
+  });
+}
+
 export function fetchOrderConfirmation(
   sessionId: string,
   signal?: AbortSignal,

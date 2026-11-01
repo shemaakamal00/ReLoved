@@ -55,7 +55,7 @@ export type OrderStatus =
   | "refunded"
   | "cancelled";
 
-export interface Order {
+export interface Order extends OrderShipping {
   id: number;
   user_id: number | null;
   email: string;
@@ -151,9 +151,42 @@ export interface CheckoutPayload {
   postal_code: string;
   city: string;
   items: { product_id: number; quantity: number }[];
+  shipping_method: ShippingMethod;
+  service_point_id?: string;
 }
 
-export interface OrderConfirmation {
+export type ShippingMethod = "service_point" | "home";
+
+export interface ServicePoint {
+  id: string;
+  name: string;
+  address: string;
+  distanceMeters: number | null;
+}
+
+export interface ShippingOption {
+  method: ShippingMethod;
+  label: string;
+  price: number;
+  estimatedDelivery: string | null;
+}
+
+export interface ShippingQuote {
+  subtotal: number;
+  freeShippingFrom: number;
+  options: ShippingOption[];
+  servicePoints: ServicePoint[] | null;
+  servicePointsError: string | null;
+}
+
+export interface OrderShipping {
+  shipping_method: ShippingMethod | null;
+  service_point_name: string | null;
+  service_point_address: string | null;
+  estimated_delivery: string | null;
+}
+
+export interface OrderConfirmation extends OrderShipping {
   id: number;
   status: OrderStatus;
   subtotal: number;

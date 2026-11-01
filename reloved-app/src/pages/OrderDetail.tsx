@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { fetchOrderById } from "../api/client";
 import type { OrderWithItems } from "../types";
 import { ORDER_STATUS_LABELS } from "../utils/orderStatus";
+import { describeOrderShipping, formatDeliveryDate } from "../utils/shipping";
 
 function OrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -68,6 +69,26 @@ function OrderDetail() {
             {order.email} · {order.phone}
           </p>
         </div>
+
+        {describeOrderShipping(order) && (
+          <div className="order-card">
+            <h2>Frakt</h2>
+            <p>{describeOrderShipping(order)}</p>
+            {order.service_point_address && (
+              <p>{order.service_point_address}</p>
+            )}
+            <p>
+              Fraktpris:{" "}
+              {order.shipping === 0 ? "Gratis" : `${order.shipping} kr`}
+            </p>
+            {order.estimated_delivery && (
+              <p>
+                Beräknad leverans:{" "}
+                {formatDeliveryDate(order.estimated_delivery)}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="order-card">
           <h2>Produkter</h2>

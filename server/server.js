@@ -15,6 +15,7 @@ import sellerRouter from "./routes/seller.js";
 import usersRouter from "./routes/users.js";
 import checkoutRouter from "./routes/checkout.js";
 import webhookRouter from "./routes/webhook.js";
+import shippingRouter from "./routes/shipping.js";
 
 const app = express();
 
@@ -52,10 +53,10 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/seller", sellerRouter);
 app.use("/api/currency", currencyRouter);
-app.use("/api/currency", currencyRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/checkout", checkoutRouter);
+app.use("/api/shipping", shippingRouter);
 
 app.use((err, req, res, next) => {
   const message = err instanceof Error ? err.message : String(err);

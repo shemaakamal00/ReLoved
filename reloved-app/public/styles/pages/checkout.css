@@ -116,6 +116,92 @@
   display: none;
 }
 
+.shipping-picker,
+.checkout-card > .shipping-hint {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shipping-hint {
+  color: var(--clr-muted);
+  font-size: 0.9rem;
+}
+
+.shipping-hint--free {
+  color: var(--clr-status-success-text);
+  font-weight: 600;
+}
+
+.shipping-option,
+.service-point {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+  font-weight: 400;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.shipping-option.is-selected {
+  border-color: var(--clr-accent);
+  background: var(--clr-accent-light);
+}
+
+.shipping-option input,
+.service-point input {
+  width: auto;
+  flex: none;
+  margin: 0;
+  accent-color: var(--clr-accent);
+}
+
+.shipping-option__text,
+.service-point span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.shipping-option small,
+.service-point small {
+  color: var(--clr-muted);
+  font-size: 0.85rem;
+}
+
+.shipping-option__price {
+  font-weight: 600;
+}
+
+.service-points {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.service-points legend {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.service-point {
+  padding: 0.7rem 0.9rem;
+}
+
+.order-shipping {
+  color: var(--clr-muted-strong);
+  font-size: 0.9rem;
+}
+
 @media (max-width: 800px) {
   .checkout-layout {
     grid-template-columns: 1fr;

@@ -280,9 +280,63 @@ Begränsningar: bilderna skalas inte om eller komprimeras, så en bild på 4 MB 
 
 ### Labb 5 – Frakt
 
+Vad den gör: i kassan anger kunden sitt postnummer och ser fraktpriset för ombud och hemleverans, beräknad leverans för båda och de närmaste PostNord-ombuden. Kunden väljer ett ombud, servern kontrollerar valet, och frakten sparas på ordern och blir en egen rad i Stripe.
 
-## Reflektion
+Adapter: server/integrations/shippingAdapter.ts (ombud och leveranstid från PostNord)
+Egen prislista: server/lib/shippingPrices.js (inte en integration: PostNord har inget pris-API för Sverige)
+Routes: POST /api/shipping/quote i server/routes/shipping.js, och POST /api/checkout i server/routes/checkout.js
+Delad kod: server/lib/cartPricing.js (ordervärdet från databasen) och server/lib/postalCode.js (validering av postnummer)
+Databas: database/migrations/004_shipping.sql (shipping_method, service_point_id, service_point_name, service_point_address, estimated_delivery)
+Variabler: POSTNORD_API_KEY, POSTNORD_API_URL, POSTNORD_TIMEOUT_MS, POSTNORD_CUSTOMER_KEY, SHOP_POSTAL_CODE, SHOP_STREET, SHOP_CITY, SHOP_ORDER_CUTOFF, FREE_SHIPPING_FROM
+Fraktalternativ	Pris	Från 500 kr
+Hämta hos ombud (PostNord Service Point, 19)	59 kr	Gratis
+Hemleverans (PostNord Home, 17)	99 kr	Gratis
+Kassan → POST /api/shipping/quote { postal_code, items: [{ product_id, quantity }] }   (inget pris)
+  → ordervärdet från databasen → fraktpris från vår prislista
+  → samtidigt: PostNord Service Points v5 (GET)  +  PostNord Delivery Options v1 (POST)
+  ← { options: [{ method, price, estimatedDelivery }], servicePoints: [...] }
+Kunden väljer → POST /api/checkout { ..., shipping_method, service_point_id }
+  → servern frågar PostNord igen: finns ombudet bland ombuden för postnumret? Annars 400
+  → fraktpriset räknas igen → ordern sparas med frakt → Stripe: varor + fraktrad
 
+Om tjänsten är nere: priserna visas ändå (vår egen kod), och hemleverans går alltid att beställa. Ombudslistan ersätts av "Vi kunde inte hämta ombud från PostNord just nu. Du kan välja hemleverans.", och leveranstiden av "Leveranstiden kunde inte hämtas". Väljer kunden ombud när PostNord inte svarar blir svaret 502 med ett begripligt meddelande. Ett postnummer som inte finns (PostNord svarar 400) ger i stället "Kontrollera att postnumret stämmer".
+
+Val och motiveringar:
+
+Nyckeln finns bara på servern. PostNord tar nyckeln i adressen (?apikey=), så adaptern loggar aldrig adressen. fetchWithRetry från Labb 1 skriver ut adressen i sina felmeddelanden och används därför inte här. Vid fel loggas PostNords förklaring (max 300 tecken), som inte innehåller nyckeln.
+Priset räknas på servern. React skickar bara vilket alternativ och vilket ombud. Fri frakt beror på ordervärdet, som servern räknar ut med databasens priser (priceCart, samma kod som kassan använder).
+Ombudet kontrolleras igen. React kan skicka vilket id som helst, så kassan frågar PostNord på nytt och letar efter id:t bland ombuden för kundens postnummer.
+Validering. PostNords svar valideras med Zod innan de används, bara de fält vi använder. Ett oväntat svar blir ett tydligt fel i loggen i stället för undefined i React.
+Timeout på 5 s med AbortSignal.timeout. Ombud och leveranstid hämtas samtidigt med Promise.allSettled, så att det ena kan misslyckas utan att det andra gör det.
+Svensk tid. Render kör på UTC, så dagens datum och tidszonen (+01:00 eller +02:00) räknas ut för Europe/Stockholm.
+Hur AI användes
+
+Jag byggde frakten tillsammans med Claude (AI-assistent i webbläsaren). AI:n läste inte min .env, och nyckeln klistrades aldrig in i chatten: alla tester mot sandlådan körde jag själv i terminalen med $POSTNORD_API_KEY från .env, och klistrade bara in PostNords svar.
+
+Prompter:
+
+Jag klistrade in hela kravspecen för Labb 5 och beskrev shoppen: Express 5 med en adapter per tjänst i server/integrations/, Zod, Supabase och Stripe Checkout från Labb 3, React med TypeScript.
+"Förstår inte riktigt hur jag ska testa", och svaren från PostNord (utan nyckel) när något inte fungerade.
+PostNords OpenAPI-dokumentation för Delivery Options, kopierad från sandlådeportalen, med en begäran om att rätta koden efter den.
+
+Vad AI:n föreslog:
+
+En adapter med findServicePoints mot Service Points v5 och estimateDelivery mot Transit Time (GET /rest/transport/v1/transittime/getTransitTimeInformation.json med serviceCode 19 och 17), en egen prislista på servern, POST /api/shipping/quote och fraktraden i Stripe.
+En kontroll av ombudet i kassan och en migration för frakten på ordern.
+
+Vad som skilde sig från PostNords dokumentation, och hur jag kontrollerade det:
+
+	AI:ns förslag	Verkligheten (sandlådan och portalen)	Lösning
+Ombud	Svar i formen servicePointInformationResponse.servicePoints[]	Testat med curl: samma form (servicePointId, name, routeDistance, visitingAddress)	Zod-schemat behölls
+Leveranstid	Transit Time, GET .../transittime/getTransitTimeInformation.json	Sandlådan svarade 502 Bad Gateway (HTML, inget API-svar). I portalen finns i stället Delivery Options	Bytte till POST /rest/shipment/v1/deliveryoptions/bywarehouse med JSON-kropp och ett anrop för båda alternativen (filter.deliveryTypes)
+Svarets form	Gissat: TransitTimeResponse.transitTimes[].deliveryTime	warehouseToDeliveryOptions[].deliveryOptions[] med type och defaultOption.deliveryTime, som har antingen date.latest eller dayRange.days	Nytt Zod-schema som hanterar båda formerna. dayRange räknas om till ett datum med arbetsdagar
+Lagrets adress	Bara postnummer och stad (som i schemats required)	400 API-005: "Either street or both streetName and streetNumber must be provided."	Lade till SHOP_STREET
+Fel postnummer	Visades som "PostNord är nere"	PostNord svarar 400 för ett postnummer som inte finns	400 blir PostNordInputError, och kunden får "Kontrollera att postnumret stämmer"
+Loggning	Labb 1:s fetchWithRetry	Den skriver ut hela adressen, och därmed nyckeln, i felmeddelanden	Egen fetch i adaptern som aldrig loggar adressen
+
+Kontrollen gjordes i tre steg: anrop med curl mot sandlådan (atapi2.postnord.com), en jämförelse med OpenAPI-dokumentationen i portalen (atdeveloper.postnord.com), och ett test i kassan med riktiga postnummer (t.ex. 41101 Göteborg, där svaret var "deliveryTime":{"date":{"latest":"2026-11-03T13:00:00+01:00"}}, som visas som "Beräknad leverans: tisdag 3/11").
+
+Begränsningar: fraktpriset är fast och tar inte hänsyn till vikt eller avstånd. Leveranstiden räknas från ett tänkt lager (Vasagatan 10, Stockholm) med sista ordertid kl. 15. Ombudet sparas med namn och adress vid köpet; ändrar PostNord ombudet senare syns det inte på ordern. Bokning och fraktsedlar kräver avtal med PostNord och ingår inte.
 
 ## Licens
 

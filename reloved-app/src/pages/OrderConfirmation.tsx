@@ -4,6 +4,7 @@ import { fetchOrderConfirmation } from "../api/client";
 import { useCart } from "../context/CartContext";
 import { ORDER_STATUS_LABELS } from "../utils/orderStatus";
 import type { OrderConfirmation as Confirmation } from "../types";
+import { describeOrderShipping, formatDeliveryDate } from "../utils/shipping";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 15;
@@ -108,8 +109,19 @@ function OrderConfirmation() {
                 ))}
                 <div className="summary-row">
                   <span>Frakt</span>
-                  <span>{order.shipping} kr</span>
+                  <span>
+                    {order.shipping === 0 ? "Gratis" : `${order.shipping} kr`}
+                  </span>
                 </div>
+                {describeOrderShipping(order) && (
+                  <p className="order-shipping">
+                    {describeOrderShipping(order)}
+                    {order.service_point_address &&
+                      `, ${order.service_point_address}`}
+                    {order.estimated_delivery &&
+                      ` · Beräknad leverans: ${formatDeliveryDate(order.estimated_delivery)}`}
+                  </p>
+                )}
                 <div className="summary-row summary-row--total">
                   <span>Totalt</span>
                   <span>{order.total} kr</span>
