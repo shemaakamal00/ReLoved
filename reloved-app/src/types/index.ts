@@ -138,9 +138,25 @@ export type SearchProduct = Omit<
   "seller_id" | "status" | "rejection_reason" | "ean"
 > & { category: string | null };
 
+export type SearchSort = "relevance" | "price_asc" | "price_desc" | "newest";
+
+export interface SearchFilters {
+  sort: SearchSort;
+  category: string;
+  condition: string;
+  minPrice: string;
+  maxPrice: string;
+}
+
+export interface FacetValue {
+  value: string;
+  count: number;
+}
+
 export interface SearchResult {
   data: SearchProduct[];
   meta: { page: number; pageSize: number; total: number; totalPages: number };
+  facets: { category: FacetValue[]; condition: FacetValue[] };
 }
 
 export interface CheckoutPayload {

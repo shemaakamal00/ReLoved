@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { fetchShippingQuote } from "../api/client";
+import type { ShippingQuote } from "../types";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import ProductImage from "../components/ProductImage";
@@ -18,8 +21,36 @@ function Cart() {
     (sum, item) => sum + item.product.price,
     0,
   );
-  const shipping = subtotal > 0 ? 49 : 0;
-  const total = subtotal + shipping;
+  const [quote, setQuote] = useState<ShippingQuote | null>(null);
+  const cartKey = availableItems.map((item) => item.product_id).join(",");
+
+  useEffect(() => {
+    if (!cartKey) return;
+    const controller = new AbortController();
+    fetchShippingQuote(
+      {
+        items: cartKey
+          .split(",")
+          .map((id) => ({ product_id: Number(id), quantity: 1 })),
+      },
+      controller.signal,
+    )
+      .then(setQuote)
+      .catch((err) => {
+        if (!controller.signal.aborted)
+          console.error("Kunde inte hämta frakt:", err);
+      });
+    return () => controller.abort();
+  }, [cartKey]);
+
+  const currentQuote = cartKey ? quote : null;
+  const shipping = currentQuote
+    ? Math.min(...currentQuote.options.map((option) => option.price))
+    : null;
+  const total = subtotal + (shipping ?? 0);
+  const leftForFreeShipping = currentQuote
+    ? currentQuote.freeShippingFrom - currentQuote.subtotal
+    : null;
 
   if (loading) {
     return (
@@ -89,12 +120,27 @@ function Cart() {
               </div>
               <div className="summary-row">
                 <span>Frakt</span>
-                <span>{formatPrice(shipping)}</span>
+                <span>
+                  {shipping === null
+                    ? "Beräknas i kassan"
+                    : shipping === 0
+                      ? "Gratis"
+                      : `från ${formatPrice(shipping)}`}
+                </span>
               </div>
               <div className="summary-row summary-row--total">
                 <span>Totalt</span>
-                <span>{formatPrice(total)}</span>
+                <span>
+                  {shipping ? "från " : ""}
+                  {formatPrice(total)}
+                </span>
               </div>
+              {leftForFreeShipping !== null && leftForFreeShipping > 0 && (
+                <p className="cart-summary__note">
+                  Handla för {formatPrice(leftForFreeShipping)} till så får du
+                  fri frakt.
+                </p>
+              )}
 
               {currency !== "SEK" && (
                 <p className="cart-summary__note">

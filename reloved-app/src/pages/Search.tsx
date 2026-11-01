@@ -2,9 +2,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { searchProducts } from "../api/client";
 import ProductCard from "../components/ProductCard";
-import type { SearchResult } from "../types";
+import SearchFilterBar from "../components/SearchFilterBar";
+import type { SearchFilters, SearchResult, SearchSort } from "../types";
 
 const PAGE_SIZE = 12;
+const SORTS: SearchSort[] = ["relevance", "price_asc", "price_desc", "newest"];
 
 type SearchState = {
   key: string;
@@ -16,7 +18,15 @@ function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get("q") ?? "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const key = `${q}|${page}`;
+  const sortParam = searchParams.get("sort") as SearchSort;
+  const filters: SearchFilters = {
+    sort: SORTS.includes(sortParam) ? sortParam : "relevance",
+    category: searchParams.get("category") ?? "",
+    condition: searchParams.get("condition") ?? "",
+    minPrice: searchParams.get("minPrice") ?? "",
+    maxPrice: searchParams.get("maxPrice") ?? "",
+  };
+  const key = searchParams.toString();
 
   const [state, setState] = useState<SearchState>({
     key: "",
@@ -28,7 +38,10 @@ function Search() {
   useEffect(() => {
     const controller = new AbortController();
 
-    searchProducts({ q, page, pageSize: PAGE_SIZE }, controller.signal)
+    searchProducts(
+      { q, page, pageSize: PAGE_SIZE, ...filters },
+      controller.signal,
+    )
       .then((result) => setState({ key, result, error: null }))
       .catch((err) => {
         if (controller.signal.aborted) return;
@@ -37,25 +50,46 @@ function Search() {
           key,
           result: null,
           error:
-            "Sökningen kunde inte genomföras just nu. Försök igen om en stund.",
+            err instanceof Error && err.message !== "Något gick fel"
+              ? err.message
+              : "Sökningen kunde inte genomföras just nu. Försök igen om en stund.",
         });
       });
     return () => controller.abort();
-  }, [q, page, key]);
+  }, [key]);
+
+  function updateParams(changes: Record<string, string>) {
+    const next = new URLSearchParams(searchParams);
+    for (const [name, value] of Object.entries(changes)) {
+      if (value) next.set(name, value);
+      else next.delete(name);
+    }
+    if (!("page" in changes)) next.delete("page");
+    if (next.get("sort") === "relevance") next.delete("sort");
+    setSearchParams(next);
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = String(
       new FormData(event.currentTarget).get("q") ?? "",
     ).trim();
-    setSearchParams(text ? { q: text } : {});
+    updateParams({ q: text });
   }
 
   function goToPage(newPage: number) {
-    setSearchParams({ ...(q ? { q } : {}), page: String(newPage) });
+    updateParams({ page: String(newPage) });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
   const result = state.result;
   const meta = result?.meta;
+  const hasFilters = Boolean(
+    filters.category ||
+    filters.condition ||
+    filters.minPrice ||
+    filters.maxPrice,
+  );
 
   return (
     <main>
@@ -81,6 +115,22 @@ function Search() {
               Sök
             </button>
           </form>
+
+          <SearchFilterBar
+            filters={filters}
+            facets={result?.facets ?? null}
+            onChange={updateParams}
+            onClear={() =>
+              updateParams({
+                category: "",
+                condition: "",
+                minPrice: "",
+                maxPrice: "",
+                sort: "",
+              })
+            }
+          />
+
           {loading && <p className="search-page__status">Söker...</p>}
 
           {!loading && state.error && (
@@ -90,7 +140,7 @@ function Search() {
           {!loading && meta && (
             <p className="search-page__status">
               {meta.total === 0
-                ? `Inga produkter matchade ${q ? `”${q}”` : "sökningen"}. Kontrollera stavningen eller prova ett annat ord.`
+                ? `Inga produkter matchade ${q ? `”${q}”` : "sökningen"}${hasFilters ? " med de här filtren" : ""}. Kontrollera stavningen eller prova ett annat ord.`
                 : `${meta.total} ${meta.total === 1 ? "träff" : "träffar"} · sida ${meta.page} av ${Math.max(meta.totalPages, 1)}`}
             </p>
           )}

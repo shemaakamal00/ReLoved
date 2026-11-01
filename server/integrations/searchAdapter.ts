@@ -53,12 +53,58 @@ export type SearchProduct = {
   created_at: string;
 };
 
-export type SearchParams = { q: string; page: number; pageSize: number };
+export type SearchSort = "relevance" | "price_asc" | "price_desc" | "newest";
+
+export type SearchParams = {
+  q: string;
+  page: number;
+  pageSize: number;
+  sort: SearchSort;
+  category?: string;
+  condition?: string;
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+export type FacetValue = { value: string; count: number };
 
 export type SearchResult = {
   data: SearchProduct[];
   meta: { page: number; pageSize: number; total: number; totalPages: number };
+  facets: { category: FacetValue[]; condition: FacetValue[] };
 };
+
+const SORT_INDEX: Record<SearchSort, string> = {
+  relevance: INDEX_NAME,
+  price_asc: `${INDEX_NAME}_price_asc`,
+  price_desc: `${INDEX_NAME}_price_desc`,
+  newest: `${INDEX_NAME}_newest`,
+};
+
+const SORT_RANKING: Record<Exclude<SearchSort, "relevance">, string> = {
+  price_asc: "asc(price)",
+  price_desc: "desc(price)",
+  newest: "desc(id)",
+};
+const DEFAULT_RANKING = [
+  "typo",
+  "geo",
+  "words",
+  "filters",
+  "proximity",
+  "attribute",
+  "exact",
+  "custom",
+];
+const SEARCHABLE = [
+  "name",
+  "brand",
+  "category",
+  "color",
+  "material",
+  "description",
+];
+const FACETS = ["category", "condition"];
 
 export function toObjectId(product: {
   id: number;
@@ -120,20 +166,58 @@ export async function replaceAllProducts(
     indexName: INDEX_NAME,
     objects: products.map(toRecord),
   });
-  await adminClient.setSettings({
+  await configureIndex();
+  return products.length;
+}
+
+export async function configureIndex(): Promise<void> {
+  const { taskID } = await adminClient.setSettings({
     indexName: INDEX_NAME,
     indexSettings: {
-      searchableAttributes: [
-        "name",
-        "brand",
-        "category",
-        "color",
-        "material",
-        "description",
-      ],
+      searchableAttributes: SEARCHABLE,
+      attributesForFaceting: FACETS,
+      replicas: Object.keys(SORT_RANKING).map(
+        (sort) => SORT_INDEX[sort as SearchSort],
+      ),
     },
   });
-  return products.length;
+  await adminClient.waitForTask({ indexName: INDEX_NAME, taskID });
+
+  for (const [sort, ranking] of Object.entries(SORT_RANKING)) {
+    const indexName = SORT_INDEX[sort as SearchSort];
+    const task = await adminClient.setSettings({
+      indexName,
+      indexSettings: {
+        searchableAttributes: SEARCHABLE,
+        attributesForFaceting: FACETS,
+        ranking: [ranking, ...DEFAULT_RANKING],
+      },
+    });
+    await adminClient.waitForTask({ indexName, taskID: task.taskID });
+  }
+}
+
+function quoted(value: string): string {
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+export function buildFilters(params: SearchParams): string {
+  const filters: string[] = [];
+  if (params.category) filters.push(`category:${quoted(params.category)}`);
+  if (params.condition) filters.push(`condition:${quoted(params.condition)}`);
+  if (params.minPrice !== undefined)
+    filters.push(`price >= ${params.minPrice}`);
+  if (params.maxPrice !== undefined)
+    filters.push(`price <= ${params.maxPrice}`);
+  return filters.join(" AND ");
+}
+
+const FacetCounts = z.record(z.string(), z.number().int()).default({});
+
+function toFacetValues(counts: Record<string, number>): FacetValue[] {
+  return Object.entries(counts)
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => a.value.localeCompare(b.value, "sv"));
 }
 
 const AlgoliaHit = z.object({
@@ -162,11 +246,13 @@ export async function searchProducts(
   params: SearchParams,
 ): Promise<SearchResult> {
   const response = await searchClient.searchSingleIndex({
-    indexName: INDEX_NAME,
+    indexName: SORT_INDEX[params.sort],
     searchParams: {
       query: params.q,
       page: params.page - 1,
       hitsPerPage: params.pageSize,
+      filters: buildFilters(params),
+      facets: ["category", "condition"],
     },
   });
 
@@ -183,6 +269,7 @@ export async function searchProducts(
     data.push(product);
   }
   const total = response.nbHits ?? 0;
+  const facets = response.facets ?? {};
   return {
     data,
     meta: {
@@ -190,6 +277,14 @@ export async function searchProducts(
       pageSize: params.pageSize,
       total,
       totalPages: Math.ceil(total / params.pageSize),
+    },
+    facets: {
+      category: toFacetValues(
+        FacetCounts.safeParse(facets.category).data ?? {},
+      ),
+      condition: toFacetValues(
+        FacetCounts.safeParse(facets.condition).data ?? {},
+      ),
     },
   };
 }

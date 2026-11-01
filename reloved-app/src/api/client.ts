@@ -12,6 +12,7 @@ import type {
   ImportFormat,
   ImportReport,
   SearchResult,
+  SearchFilters,
   WithSearchStatus,
   CheckoutPayload,
   OrderConfirmation,
@@ -366,14 +367,19 @@ export function importSupplierCatalog(
 
 // Sök: går till vårt sök API
 export function searchProducts(
-  params: { q: string; page: number; pageSize: number },
+  params: { q: string; page: number; pageSize: number } & SearchFilters,
   signal?: AbortSignal,
 ): Promise<SearchResult> {
   const query = new URLSearchParams({
     q: params.q,
     page: String(params.page),
     pageSize: String(params.pageSize),
+    sort: params.sort,
   });
+  if (params.category) query.set("category", params.category);
+  if (params.condition) query.set("condition", params.condition);
+  if (params.minPrice) query.set("minPrice", params.minPrice);
+  if (params.maxPrice) query.set("maxPrice", params.maxPrice);
   return apiFetch<SearchResult>(`/search?${query}`, { signal });
 }
 
@@ -397,7 +403,10 @@ export function startCheckout(
 }
 
 export function fetchShippingQuote(
-  payload: { postal_code?: string; items: { product_id: number; quantity: number }[] },
+  payload: {
+    postal_code?: string;
+    items: { product_id: number; quantity: number }[];
+  },
   signal?: AbortSignal,
 ): Promise<ShippingQuote> {
   return apiFetch<ShippingQuote>("/shipping/quote", {
