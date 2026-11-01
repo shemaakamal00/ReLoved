@@ -8,6 +8,11 @@ import {
 } from "../../api/client";
 import type { Category, Product } from "../../types";
 import { SEARCH_INDEX_WARNING } from "../../utils/searchIndex";
+import {
+  IMAGE_ACCEPT,
+  MAX_IMAGE_MB,
+  imageFileProblem,
+} from "../../utils/imageFile";
 
 interface ProductFormProps {
   editingProduct?: Product | null;
@@ -26,7 +31,15 @@ function ProductForm({ editingProduct, onSaved }: ProductFormProps) {
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) showToast(`Bild vald: ${file.name}`);
+    if (!file) return;
+
+    const problem = imageFileProblem(file);
+    if (problem) {
+      showToast(problem, "error");
+      event.target.value = "";
+      return;
+    }
+    showToast(`Bild vald: ${file.name}`);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -53,7 +66,9 @@ function ProductForm({ editingProduct, onSaved }: ProductFormProps) {
       onSaved?.();
     } catch (err) {
       console.error(err);
-      showToast("Kunde inte spara produkten.", "error");
+      const message =
+        err instanceof Error ? err.message : "Kunde inte spara produkten.";
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -176,10 +191,11 @@ function ProductForm({ editingProduct, onSaved }: ProductFormProps) {
         <label className="admin-form__full">
           Produktbild{" "}
           {editingProduct && "(lämna tom för att behålla nuvarande bild)"}
+          <small>JPEG eller PNG, max {MAX_IMAGE_MB} MB</small>
           <input
             name="image"
             type="file"
-            accept="image/*"
+            accept={IMAGE_ACCEPT}
             onChange={handleImageChange}
           />
         </label>

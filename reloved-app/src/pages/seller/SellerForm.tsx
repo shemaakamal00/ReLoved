@@ -13,6 +13,11 @@ import {
   fetchCategories,
 } from "../../api/client";
 import type { Category, Product } from "../../types";
+import {
+  IMAGE_ACCEPT,
+  MAX_IMAGE_MB,
+  imageFileProblem,
+} from "../../utils/imageFile";
 
 interface SellerFormProps {
   editingProduct?: Product | null;
@@ -38,7 +43,15 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) showToast(`Bild vald: ${file.name}`);
+    if (!file) return;
+
+    const problem = imageFileProblem(file);
+    if (problem) {
+      showToast(problem, "error");
+      event.target.value = "";
+      return;
+    }
+    showToast(`Bild vald: ${file.name}`);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -72,7 +85,9 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
       onSaved?.();
     } catch (err) {
       console.error(err);
-      showToast("Kunde inte spara annonsen.", "error");
+      const message =
+        err instanceof Error ? err.message : "Kunde inte spara produkten.";
+      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -208,7 +223,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
           <input
             name="image"
             type="file"
-            accept="image/*"
+            accept={IMAGE_ACCEPT}
             onChange={handleImageChange}
             hidden
           />
@@ -218,7 +233,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
               ? "Byt produktbild (valfritt)"
               : "Ladda upp produktbild (obligatoriskt)"}
           </strong>
-          <p>JPG, PNG eller WEBP</p>
+          <p>JPEG eller PNG, max {MAX_IMAGE_MB} MB</p>
         </label>
 
         <label className="seller-form__full">

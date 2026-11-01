@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
-import { upload } from "../lib/upload.js";
+import { receiveImage, validateImage } from "../lib/upload.js";
+import { uploadImage, discardImage, currentImagePath } from "../lib/productImages.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 import { syncProductsToSearch, removeFromSearch } from "../lib/searchSync.js";
 
@@ -66,7 +67,7 @@ router.post(
   "/",
   requireAuth,
   requireAdmin,
-  upload.single("image"),
+  receiveImage,
   async (req, res) => {
     const {
       title,
@@ -86,23 +87,16 @@ router.post(
         .json({ error: "Fyll i produktnamn, varumärke, pris och skick" });
     }
 
-    let imageUrl = null;
+    // 1. Är filen en riktig JPEG/PNG? Annars 400, innan något laddas upp.
+    const { image, error: imageError } = validateImage(req.file);
+    if (imageError) return res.status(400).json({ error: imageError });
 
-    if (req.file) {
-      const fileName = `${Date.now()}-${req.file.originalname}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-
-      if (uploadError) {
-        return res.status(500).json({ error: uploadError.message });
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(fileName);
-      imageUrl = publicUrlData.publicUrl;
+    // 2. Ladda upp till Supabase Storage. Svarar inte tjänsten → 502, ingen produkt skapas.
+    let stored = null;
+    if (image) {
+      const upload = await uploadImage(image);
+      if (upload.error) return res.status(502).json({ error: upload.error });
+      stored = upload.stored;
     }
 
     const { data, error } = await supabase
@@ -117,14 +111,17 @@ router.post(
         color,
         material,
         description,
-        image_url: imageUrl,
+        image_path: stored?.path ?? null,
+        image_url: stored?.url ?? null,
         alt_text: title,
         status: "approved",
       })
       .select()
       .single();
 
+    // 3. Gick det inte att spara produkten? Då används bilden inte, så ta bort den igen.
     if (error) {
+      await discardImage(stored?.path);
       return res.status(500).json({ error: error.message });
     }
 
@@ -136,7 +133,7 @@ router.post(
 router.post(
   "/submit",
   requireAuth,
-  upload.single("image"),
+  receiveImage,
   async (req, res) => {
     const {
       title,
@@ -162,21 +159,14 @@ router.post(
       .eq("id", req.user.userId)
       .single();
 
-    let imageUrl = null;
+    const { image, error: imageError } = validateImage(req.file);
+    if (imageError) return res.status(400).json({ error: imageError });
 
-    if (req.file) {
-      const fileName = `${Date.now()}-${req.file.originalname}`;
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-
-      if (uploadError)
-        return res.status(500).json({ error: uploadError.message });
-
-      const { data: publicUrlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(fileName);
-      imageUrl = publicUrlData.publicUrl;
+    let stored = null;
+    if (image) {
+      const upload = await uploadImage(image);
+      if (upload.error) return res.status(502).json({ error: upload.error });
+      stored = upload.stored;
     }
 
     const { data, error } = await supabase
@@ -195,14 +185,18 @@ router.post(
         color,
         material,
         description,
-        image_url: imageUrl,
+        image_path: stored?.path ?? null,
+        image_url: stored?.url ?? null,
         alt_text: title,
         status: "pending",
       })
       .select()
       .single();
 
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) {
+      await discardImage(stored?.path);
+      return res.status(500).json({ error: error.message });
+    }
     res.status(201).json(data);
   },
 );
@@ -213,7 +207,7 @@ router.patch(
   "/:id",
   requireAuth,
   requireAdmin,
-  upload.single("image"),
+  receiveImage,
   async (req, res) => {
     const { id } = req.params;
     const {
@@ -228,6 +222,19 @@ router.patch(
       description,
     } = req.body;
 
+    // Hämta produkten först: vi behöver veta var den gamla bilden ligger
+    const { data: existing, error: fetchError } = await supabase
+      .from("products")
+      .select("id, image_path, image_url")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) return res.status(500).json({ error: fetchError.message });
+    if (!existing) {
+      return res.status(404).json({ error: "Produkten hittades inte" });
+    }
+    const oldImagePath = currentImagePath(existing);
+
     const updates = {
       name: title,
       brand,
@@ -240,19 +247,18 @@ router.patch(
       description,
     };
 
-    if (req.file) {
-      const fileName = `${Date.now()}-${req.file.originalname}`;
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+    // Byte av bild: 1. validera  2. ladda upp den nya  3. spara  4. ta bort den gamla.
+    // Misslyckas 1–3 ligger den gamla bilden kvar, orörd.
+    const { image, error: imageError } = validateImage(req.file);
+    if (imageError) return res.status(400).json({ error: imageError });
 
-      if (uploadError)
-        return res.status(500).json({ error: uploadError.message });
-
-      const { data: publicUrlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(fileName);
-      updates.image_url = publicUrlData.publicUrl;
+    let stored = null;
+    if (image) {
+      const upload = await uploadImage(image);
+      if (upload.error) return res.status(502).json({ error: upload.error });
+      stored = upload.stored;
+      updates.image_path = stored.path;
+      updates.image_url = stored.url;
       updates.alt_text = title;
     }
 
@@ -263,7 +269,13 @@ router.patch(
       .select()
       .single();
 
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) {
+      await discardImage(stored?.path); // den nya bilden används inte
+      return res.status(500).json({ error: error.message });
+    }
+
+    // Den nya bilden är sparad på produkten. Först NU tas den gamla bort.
+    if (stored) await discardImage(oldImagePath);
     const searchIndexed = await syncProductsToSearch([data.id]);
     res.json({ ...data, searchIndexed });
   },
@@ -272,7 +284,7 @@ router.patch(
 router.patch(
   "/:id/mine",
   requireAuth,
-  upload.single("image"),
+  receiveImage,
   async (req, res) => {
     const { id } = req.params;
     const {
@@ -306,6 +318,7 @@ router.patch(
         .status(409)
         .json({ error: "Du kan inte redigera en redan såld produkt" });
     }
+    const oldImagePath = currentImagePath(existing);
 
     const updates = {
       name: title,
@@ -319,19 +332,18 @@ router.patch(
       description,
     };
 
-    if (req.file) {
-      const fileName = `${Date.now()}-${req.file.originalname}`;
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+    // Byte av bild: 1. validera  2. ladda upp den nya  3. spara  4. ta bort den gamla.
+    // Misslyckas 1–3 ligger den gamla bilden kvar, orörd.
+    const { image, error: imageError } = validateImage(req.file);
+    if (imageError) return res.status(400).json({ error: imageError });
 
-      if (uploadError)
-        return res.status(500).json({ error: uploadError.message });
-
-      const { data: publicUrlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(fileName);
-      updates.image_url = publicUrlData.publicUrl;
+    let stored = null;
+    if (image) {
+      const upload = await uploadImage(image);
+      if (upload.error) return res.status(502).json({ error: upload.error });
+      stored = upload.stored;
+      updates.image_path = stored.path;
+      updates.image_url = stored.url;
       updates.alt_text = title;
     }
 
@@ -342,7 +354,13 @@ router.patch(
       .select()
       .single();
 
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) {
+      await discardImage(stored?.path); // den nya bilden används inte
+      return res.status(500).json({ error: error.message });
+    }
+
+    // Den nya bilden är sparad på produkten. Först nu tas den gamla bort.
+    if (stored) await discardImage(oldImagePath);
     const searchIndexed = await syncProductsToSearch([data.id]);
     res.json({ ...data, searchIndexed });
   },
@@ -406,6 +424,7 @@ router.delete("/:id/mine", requireAuth, async (req, res) => {
 
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) return res.status(500).json({ error: error.message });
+  await discardImage(currentImagePath(existing)); // produkten är borta, då behövs inte bilden
   const searchIndexed = await removeFromSearch([existing]);
   res.json({ success: true, searchIndexed });
 });
@@ -417,7 +436,7 @@ router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
 
   const { data: existing, error: fetchError } = await supabase
     .from("products")
-    .select("id, sku")
+    .select("id, sku, image_path, image_url")
     .eq("id", id)
     .single();
 
@@ -427,6 +446,7 @@ router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
 
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) return res.status(500).json({ error: error.message });
+  await discardImage(currentImagePath(existing)); // produkten är borta, då behövs inte bilden
   const searchIndexed = await removeFromSearch([existing]);
   res.json({ success: true, searchIndexed });
 });

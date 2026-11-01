@@ -110,4 +110,7 @@ ALTER TABLE products
   ADD COLUMN IF NOT EXISTS sku VARCHAR(50) UNIQUE,
   ADD COLUMN IF NOT EXISTS ean VARCHAR(13),
   ADD COLUMN IF NOT EXISTS stock INTEGER CHECK (stock >= 0),
-  ADD COLUMN IF NOT EXISTS variants TEXT[] NOT NULL DEFAULT '{}'; 
+  ADD COLUMN IF NOT EXISTS variants TEXT[] NOT NULL DEFAULT '{}';
+
+-- Labb 4: var produktens bild ligger i Supabase Storage.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_path TEXT; 

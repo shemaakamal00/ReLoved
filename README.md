@@ -60,6 +60,7 @@ Skapa ett gratis Supabase-projekt och kör följande i SQL Editor:
 1. [`database/schema.sql`](database/schema.sql) tabeller, exempeldata och kolumnerna för leverantörsimporten (`sku`, `ean`, `stock`, `variants`).
 2. [`database/migrations/002_payments.sql`](database/migrations/002_payments.sql) – orderstatus `pending`/`paid`, koppling till Stripe och funktionen `mark_order_paid`.
 3. Skapa en Storage bucket som heter `products` för produktbilder.
+4. Skapa en publik Storage-bucket som heter products för produktbilder.
 
 ### 2. Backend (API)
 
@@ -247,6 +248,35 @@ Kunden → /order-confirmation → läser orderns status (ändrar den aldrig)
 
 ### Labb 4 – Produktbilder i molnlagring
 
+Vad den gör: admin (och säljare) laddar upp en produktbild via vår egen server. Bilden sparas i en publik bucket i Supabase Storage, och butiken visar den med bildens publika URL.
+
+Adapter: server/integrations/storageAdapter.ts
+Validering och hjälpfunktioner: server/lib/upload.js (multer, maxstorlek, filtyp) och server/lib/productImages.js (uppladdning, borttagning)
+Routes: POST /api/products, PATCH /api/products/:id (admin), POST /api/products/submit, PATCH /api/products/:id/mine (säljare) i server/routes/products.js
+Databas: database/migrations/003_product_images.sql (kolumnen image_path)
+Variabler: SUPABASE_URL, SUPABASE_SERVICE_KEY (finns redan). Valfritt: SUPABASE_BUCKET (standard products) och SUPABASE_STORAGE_TIMEOUT_MS (standard 10 000)
+Supabase: bucketen products måste vara publik
+Admin väljer bild → POST/PATCH /api/products (multipart/form-data, fältet "image")
+  → multer: max 4 MB, annars 400
+  → kontroll av filtyp: bara JPEG/PNG (mimetyp + filens första bytes), annars 400
+  → ladda upp till Supabase Storage som <uuid>.jpg/.png (upsert: false) → { path, url }
+  → spara image_path + image_url på produkten
+  → vid byte: ta bort den gamla filen FÖRST NU
+Butiken visar image_url → https://<projekt>.supabase.co/storage/v1/object/public/products/<uuid>.png
+
+Om tjänsten är nere: admin får "Bildtjänsten svarar inte just nu. Ingenting har ändrats, försök igen om en stund." (502). Inget sparas i databasen, och produkten behåller sin gamla bild. Resten av butiken fungerar, och bilder som redan finns visas som vanligt.
+
+Val och motiveringar:
+
+Uppladdning via vår server, inte direkt från React. Den hemliga nyckeln (SUPABASE_SERVICE_KEY) finns bara på servern. Webbläsaren skickar bilden till /api/products och vet inte ens vilken lagringstjänst vi använder.
+Validering på servern. Max 4 MB (multer stoppar större filer innan de läses in helt) och bara JPEG eller PNG. Vi kontrollerar både mimetypen och filens första bytes ("magiska bytes"), så en PDF som döpts om till .png avvisas också. Felen blir 400 med ett begripligt meddelande som visas i formuläret. React gör samma kontroll när filen väljs, men bara för att ge besked direkt: servern bestämmer.
+Ny unik sökväg för varje bild. Filen får namnet <uuid>.<filändelse>. Adminens filnamn används aldrig (inga konstiga tecken, inga krockar), och upsert: false gör att en fil aldrig skrivs över.
+Sökväg och URL sparas på produkten. image_url visas i butiken. image_path behövs för att kunna ta bort rätt fil senare. För äldre produkter som bara har en URL räknas sökvägen ut ur URL:en, men bara om bilden ligger i vår bucket.
+Ordning vid byte: ny först, gammal sist. Validera → ladda upp den nya → spara i databasen → ta bort den gamla. Misslyckas något av de tre första stegen finns den gamla bilden kvar, orörd. Misslyckas databasen tas den nyuppladdade filen bort igen. Misslyckas borttagningen av den gamla loggas det bara: en kvarglömd fil är bättre än en produkt utan bild.
+Timeout. Adaptern har en egen Supabase-klient med AbortSignal.timeout (10 s) på varje anrop, så att admin får ett svar även om Supabase hänger sig.
+Borttagning. När en produkt tas bort tas även dess bild bort ur bucketen.
+
+Begränsningar: bilderna skalas inte om eller komprimeras, så en bild på 4 MB laddas ner i full storlek. Om borttagningen av en gammal bild misslyckas ligger filen kvar i bucketen tills någon tar bort den manuellt. Bucketen är publik: den som har en bildadress kan öppna bilden, vilket är okej för produktbilder men inte för privata filer.
 
 ### Labb 5 – Frakt
 
