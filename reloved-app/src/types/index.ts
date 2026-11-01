@@ -46,6 +46,8 @@ export interface AuthResponse {
 }
 
 export type OrderStatus =
+  | "pending"
+  | "paid"
   | "ordered"
   | "processing"
   | "shipped"
@@ -139,4 +141,31 @@ export type SearchProduct = Omit<
 export interface SearchResult {
   data: SearchProduct[];
   meta: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
+export interface CheckoutPayload {
+  email: string;
+  phone: string;
+  full_name: string;
+  address: string;
+  postal_code: string;
+  city: string;
+  items: { product_id: number; quantity: number }[];
+}
+
+export interface OrderConfirmation {
+  id: number;
+  status: OrderStatus;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  created_at: string;
+  first_name: string;
+  items: {
+    product_name: string;
+    product_brand: string;
+    quantity: number;
+    unit_price: number;
+    line_total: number;
+  }[];
 }

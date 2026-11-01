@@ -13,6 +13,8 @@ import type {
   ImportReport,
   SearchResult,
   WithSearchStatus,
+  CheckoutPayload,
+  OrderConfirmation,
 } from "../types";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -108,23 +110,6 @@ export function updateProductStatus(
 }
 
 // Ordrar
-interface CreateOrderPayload {
-  email: string;
-  phone: string;
-  full_name: string;
-  address: string;
-  postal_code: string;
-  city: string;
-  items: { product_id: number }[];
-}
-
-export function createOrder(orderData: CreateOrderPayload): Promise<Order> {
-  return apiFetch<Order>("/orders", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(orderData),
-  });
-}
 
 export function fetchOrders(token: string): Promise<Order[]> {
   return apiFetch<Order[]>("/orders", {
@@ -397,4 +382,24 @@ export function reindexSearch(token: string): Promise<{ indexed: number }> {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
+}
+
+// Kassan: sparar en obetald order och svarar med Stripes betal-URL.
+export function startCheckout(
+  payload: CheckoutPayload,
+): Promise<{ orderId: number; url: string }> {
+  return apiFetch<{ orderId: number; url: string }>("/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+// Bekräftelsesidan: läser orderns status.
+export function fetchOrderConfirmation(
+  sessionId: string,
+  signal?: AbortSignal,
+): Promise<OrderConfirmation> {
+  const query = new URLSearchParams({ session_id: sessionId });
+  return apiFetch<OrderConfirmation>(`/checkout/order?${query}`, { signal });
 }

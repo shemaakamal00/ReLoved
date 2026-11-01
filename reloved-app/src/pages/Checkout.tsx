@@ -1,14 +1,15 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { createOrder, fetchMyProfile } from "../api/client";
+import { startCheckout, fetchMyProfile } from "../api/client";
 import ProductImage from "../components/ProductImage";
 
 function Checkout() {
-  const { items, clearCart } = useCart();
+  const { items } = useCart();
   const { user, token } = useAuth();
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const cancelled = searchParams.get("cancelled") === "1";
 
   const [email, setEmail] = useState(user?.email ?? "");
   const [phone, setPhone] = useState("");
@@ -18,7 +19,6 @@ function Checkout() {
   const [address, setAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
-  const [payment, setPayment] = useState("card");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,23 +48,23 @@ function Checkout() {
 
     setSubmitting(true);
     try {
-      const order = await createOrder({
+      const { url } = await startCheckout({
         email,
         phone,
         full_name: fullName,
         address,
         postal_code: postalCode,
         city,
-        items: items.map((item) => ({ product_id: item.product_id })),
+        items: items.map((item) => ({
+          product_id: item.product_id,
+          quantity: 1,
+        })),
       });
-
-      await clearCart();
-      navigate("/orders", { state: { justOrderedId: order.id } });
+      window.location.assign(url);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Något gick fel, försök igen.",
       );
-    } finally {
       setSubmitting(false);
     }
   }
@@ -82,6 +82,13 @@ function Checkout() {
 
         <section className="checkout-page">
           <h1>Kassan</h1>
+
+          {cancelled && (
+            <p className="form-error">
+              Betalningen avbröts. Ingenting har dragits och din varukorg finns
+              kvar.
+            </p>
+          )}
 
           <div className="checkout-layout">
             <form
@@ -154,37 +161,11 @@ function Checkout() {
               </div>
 
               <div className="checkout-card">
-                <h2>Betalsätt</h2>
-                <label className="radio-option">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="card"
-                    checked={payment === "card"}
-                    onChange={(e) => setPayment(e.target.value)}
-                  />
-                  Kort
-                </label>
-                <label className="radio-option">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="swish"
-                    checked={payment === "swish"}
-                    onChange={(e) => setPayment(e.target.value)}
-                  />
-                  Swish
-                </label>
-                <label className="radio-option">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="klarna"
-                    checked={payment === "klarna"}
-                    onChange={(e) => setPayment(e.target.value)}
-                  />
-                  Klarna
-                </label>
+                <h2>Betalning</h2>
+                <p className="checkout-payment-note">
+                  Du betalar säkert med kort hos Stripe. Ordern är betald först
+                  när Stripe har bekräftat betalningen.
+                </p>
               </div>
 
               {error && <p className="form-error">{error}</p>}
@@ -225,7 +206,9 @@ function Checkout() {
                 className="button button-primary"
                 disabled={submitting}
               >
-                {submitting ? "Skapar order..." : "Slutför köp"}
+                {submitting
+                  ? "Skickar dig till betalning..."
+                  : "Gå till betalning"}
               </button>
             </aside>
           </div>

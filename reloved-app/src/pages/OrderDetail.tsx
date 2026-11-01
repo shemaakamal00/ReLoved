@@ -2,17 +2,8 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { fetchOrderById } from "../api/client";
-import type { OrderWithItems, OrderStatus } from "../types";
-
-const STATUS_LABELS: Record<OrderStatus, { text: string; className: string }> =
-  {
-    ordered: { text: "Beställd", className: "status-badge--pending" },
-    processing: { text: "Behandlas", className: "status-badge--pending" },
-    shipped: { text: "Skickad", className: "status-badge--shipped" },
-    delivered: { text: "Levererad", className: "status-badge--paid" },
-    refunded: { text: "Återbetald", className: "status-badge--refunded" },
-    cancelled: { text: "Avbruten", className: "status-badge--refunded" },
-  };
+import type { OrderWithItems } from "../types";
+import { ORDER_STATUS_LABELS } from "../utils/orderStatus";
 
 function OrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -46,7 +37,7 @@ function OrderDetail() {
       </main>
     );
 
-  const status = STATUS_LABELS[order.status];
+  const status = ORDER_STATUS_LABELS[order.status];
 
   return (
     <main>

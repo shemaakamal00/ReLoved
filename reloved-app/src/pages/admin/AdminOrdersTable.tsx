@@ -5,8 +5,14 @@ import type { Order, OrderStatus } from "../../types";
 import { useToast } from "../../context/ToastContext";
 import { Link } from "react-router-dom";
 
-const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
-  { value: "ordered", label: "Beställd" },
+const STATUS_OPTIONS: {
+  value: OrderStatus;
+  label: string;
+  disabled?: boolean;
+}[] = [
+  { value: "pending", label: "Väntar på betalning", disabled: true },
+  { value: "paid", label: "Betald", disabled: true },
+  { value: "ordered", label: "Beställd", disabled: true },
   { value: "processing", label: "Behandlas" },
   { value: "shipped", label: "Skickad" },
   { value: "delivered", label: "Levererad" },
@@ -28,13 +34,22 @@ function OrderRow({ order, saving, onSave }: OrderRowProps) {
       <span>#{order.id}</span>
       <span>{order.full_name}</span>
       <span>{order.total} kr</span>
-      <select value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)}>
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value as OrderStatus)}
+      >
         {STATUS_OPTIONS.map((opt) => (
-          <option value={opt.value} key={opt.value}>{opt.label}</option>
+          <option value={opt.value} key={opt.value} disabled={opt.disabled}>
+            {opt.label}
+          </option>
         ))}
       </select>
       <div className="admin-actions">
-        <button type="button" onClick={() => onSave(order.id, status)} disabled={saving}>
+        <button
+          type="button"
+          onClick={() => onSave(order.id, status)}
+          disabled={saving}
+        >
           {saving ? "Sparar..." : "Spara"}
         </button>
         <Link to={`/orders/${order.id}`}>Visa</Link>

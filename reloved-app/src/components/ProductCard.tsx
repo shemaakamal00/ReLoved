@@ -50,7 +50,11 @@ function ProductCard({ product }: ProductCardProps) {
             <span className="ring"></span>
             {condition.label}
           </span>
-          {product.stock === null && <span className="unique-tag">1 av 1</span>}
+          {product.stock === 0 ? (
+            <span className="unique-tag sold-out">Slut i lager</span>
+          ) : (
+            product.stock === null && <span className="unique-tag">1 av 1</span>
+          )}
         </div>
       </Link>
 

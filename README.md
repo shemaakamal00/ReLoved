@@ -1,13 +1,68 @@
+# ReLoved
+
+En fullstack e-handelsplattform för second hand kläder och accessoarer. Byggd som ett skolprojekt (Full Stack Developer, inriktning E-handel).
+
+> ReLoved är ett utbildningsprojekt utvecklat i studiesyfte.
+
+## Om projektet
+
+Administratörer kan lägga till och redigera produkter, samt godkänna eller neka annonser som användare laddat upp. Kunder kan bläddra bland produkter, spara favoriter, lägga produkter i en varukorg, gå igenom kassan och skapa en order. Administratörer kan se inkommande ordrar och uppdatera deras status.
+
+## Live
+
+- **Frontend:** https://re-loved.vercel.app
+- **API:** https://reloved.onrender.com/api (Render)
+
+## Tech-stack
+
+| Lager    | Teknik                                           |
+| -------- | ------------------------------------------------ |
+| Frontend | React + TypeScript, Vite, React Router           |
+| Backend  | Node.js + Express (REST API)                     |
+| Databas  | PostgreSQL (Supabase)                            |
+| Auth     | JWT + bcrypt, roller (customer / seller / admin) |
+| Filer    | Supabase Storage (produktbilder via multer)      |
+| Deploy   | Vercel (frontend) + Node-host (API)              |
+
+## Projektstruktur
+
+```
+ReLoved/
+├── docs/                     # ER-diagram, sitemap, användarflöde, tidsplan, API-plan
+├── database/
+│   ├── schema.sql            # Tabeller och seed-data
+│   └── migrations/           # Ändringar för labbarna (t.ex. 002_payments.sql)
+├── server/                   # Express-API
+│   ├── integrations/         # En adapter per extern tjänst (valuta, leverantör, sök, betalning)
+│   ├── lib/                  # Supabase-klient, filuppladdning, fetchJson (timeout + retries), searchSync
+│   ├── middleware/           # requireAuth / requireAdmin
+│   ├── routes/               # products, orders, cart, favorites, auth, users, categories, admin, seller,
+│   │                         # currency, search, checkout, webhook
+│   └── server.js
+└── reloved-app/              # React + TypeScript-frontend
+    ├── src/
+    │   ├── api/              # API-klient (fetch)
+    │   ├── components/       # Header, Footer, RequireAuth, RequireAdmin ...
+    │   ├── context/          # Auth, Cart, Favorites, Toast, Currency
+    │   ├── pages/            # Publika sidor + admin/ + seller/
+    │   └── types/            # TypeScript-typer
+    └── ...
+```
+
 ## Kom igång lokalt
+
 Projektet består av två delar som körs samtidigt: API:et (`server/`) och frontend (`reloved-app/`). Kräver Node 22.6 eller senare, eftersom adaptrarna är skrivna i TypeScript och körs direkt av Node.
 
 ### 1. Databas
+
 Skapa ett gratis Supabase-projekt och kör följande i SQL Editor:
 
-1. [`database/schema.sql`](database/schema.sql) – tabeller, exempeldata och kolumnerna för leverantörsimporten (`sku`, `ean`, `stock`, `variants`).
-2. Skapa en Storage-bucket som heter `products` för produktbilder.
+1. [`database/schema.sql`](database/schema.sql) tabeller, exempeldata och kolumnerna för leverantörsimporten (`sku`, `ean`, `stock`, `variants`).
+2. [`database/migrations/002_payments.sql`](database/migrations/002_payments.sql) – orderstatus `pending`/`paid`, koppling till Stripe och funktionen `mark_order_paid`.
+3. Skapa en Storage bucket som heter `products` för produktbilder.
 
 ### 2. Backend (API)
+
 ```bash
 cd server
 npm install
@@ -23,6 +78,10 @@ Fyll i `server/.env`. Alla variabler finns i [`server/.env.example`](server/.env
 | `CURRENCY_API_URL`, `CURRENCY_API_TIMEOUT_MS`, `CURRENCY_CACHE_SECONDS` | Valutaomvandling | Färdiga värden i `.env.example`, ingen nyckel behövs |
 | `SUPPLIER_API_KEY` | Produktimport | Kursens testnyckel för leverantörs-API:et |
 | `SUPPLIER_API_URL`, `SUPPLIER_API_TIMEOUT_MS`, `SUPPLIER_BRANSCH` | Produktimport | Färdiga värden i `.env.example` |
+| `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_INDEX` | Sökning | Algolia → Settings → API Keys (gratiskonto). Utan `ALGOLIA_APP_ID` startar inte servern. |
+| `STRIPE_SECRET_KEY` | Betalning | Stripe (testläge) → Developers → API keys, börjar med `sk_test_` |
+| `STRIPE_WEBHOOK_SECRET` | Betalning | Lokalt: `whsec_...` från `stripe listen`. Deployat: från webhook-endpointen i Stripe Dashboard |
+| `CLIENT_URL`, `CHECKOUT_EXPIRES_MINUTES` | Betalning | Dit Stripe skickar kunden tillbaka, och hur länge en betalning får pågå (30 min) |
 
 Starta:
 
@@ -32,7 +91,16 @@ npm run dev
 
 API:et körs på `http://localhost:3001`.
 
+**Testa betalningar lokalt:** installera [Stripe CLI](https://docs.stripe.com/stripe-cli), kör `stripe login` och låt den här stå igång i en egen terminal:
+
+```bash
+stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.expired --forward-to localhost:3001/api/stripe/webhook
+```
+
+Betala med testkortet `4242 4242 4242 4242`, ett datum i framtiden och valfri CVC.
+
 ### 3. Frontend
+
 ```bash
 cd reloved-app
 npm install
@@ -53,13 +121,17 @@ npm run dev
 Appen körs på `http://localhost:5173`.
 
 ### Deploy
+
 - **Frontend:** Vercel, med `VITE_API_URL` satt till API:ets adress.
-- **Backend:** Render, startkommando `node server.js`. Samma variabler som i `server/.env` ligger under Environment i Render.
+- **Backend:** Render, startkommando `node server.js`. Samma variabler som i `server/.env` ligger under Environment i Render, med `CLIENT_URL=https://re-loved.vercel.app`.
+- **Stripe:** en webhook-endpoint i Stripe Dashboard pekar på `https://reloved.onrender.com/api/stripe/webhook` med händelserna `checkout.session.completed`, `checkout.session.async_payment_succeeded` och `checkout.session.expired`.
 
 ## Integrationer
+
 Alla externa tjänster anropas från Express, aldrig direkt från React. Varje tjänst har en egen adapter i `server/integrations/`. Adaptern är det enda stället som känner till tjänstens URL, nycklar och format, och den returnerar ReLoveds egen modell. Gemensamma anrop går via `server/lib/fetchJson.ts`, som har timeout och upp till tre försök vid tillfälliga fel (408, 429, 500, 502, 503 och 504).
 
 ### Valutaomvandling (Frankfurter)
+
 **Vad den gör:** kunden väljer valuta (SEK, EUR, USD, GBP) i navbaren, och alla produktpriser räknas om från SEK.
 
 - **Adapter:** `server/integrations/currencyAdapter.ts`
@@ -75,6 +147,7 @@ Alla externa tjänster anropas från Express, aldrig direkt från React. Varje t
 - **Hela belopp:** omräknade priser visas avrundade, t.ex. `$15` och `€14`, eftersom de ändå är ungefärliga. Kassan och ordrarna visar SEK, som är det kunden betalar.
 
 ### Labb 1 – Import av produktdata (CSV och XML)
+
 **Vad den gör:** admin importerar leverantörens katalog (bransch `klader`) med knapparna **Importera CSV** och **Importera XML** på adminsidan. Rapporten visar antal nya, uppdaterade och överhoppade produkter, med orsaken till varje överhoppad produkt.
 
 - **Adapter:** `server/integrations/supplierAdapter.ts` – hämtar, avkodar, parsar och mappar.
@@ -116,7 +189,11 @@ Båda parsrarna lämnar samma `ProductCandidate`, och samma Zod-schema används 
 | `uppdaterad` | hoppas över | CSV har bara datum, XML har datum och tid. `updated_at` sätts i stället till tidpunkten för importen. |
 | – | `brand` = "FSU25 Grossist", `condition` = "Nyskick", `seller_name` = "ReLoved" | Obligatoriska fält i vår modell som leverantören saknar. |
 
-**Validering:** varje produkt kontrolleras för sig. Artikelnummer måste finnas, EAN ska vara 13 siffror, priset ett tal större än 0 och lagersaldot ett heltal ≥ 0. En trasig produkt hoppas över med en orsak, t.ex. LEV-1037: `price: Priset är inte ett giltigt tal`. Ett ogiltigt pris ersätts aldrig med 0, eftersom produkten då skulle säljas gratis. Fel som gäller hela importen, som fel API-nyckel, trasig XML eller databasfel,
+**Validering:** varje produkt kontrolleras för sig. Artikelnummer måste finnas, EAN ska vara 13 siffror, priset ett tal större än 0 och lagersaldot ett heltal ≥ 0. En trasig produkt hoppas över med en orsak, t.ex. LEV-1037: `price: Priset är inte ett giltigt tal`. Ett ogiltigt pris ersätts aldrig med 0, eftersom produkten då skulle säljas gratis. Fel som gäller hela importen, som fel API-nyckel, trasig XML eller databasfel, avbryter importen med ett felmeddelande.
+
+**Upsert och rapport:** importen hämtar först vilka artikelnummer som redan finns i databasen. De räknas som *uppdaterade*, och övriga som *nya*. "Uppdaterad" betyder att raden skrevs om med leverantörens värden, även om inget faktiskt ändrades. Nya produkter får status `approved` och syns direkt. Befintliga behåller sin status, så en produkt som admin har arkiverat blir inte aktiv igen av en ny import. En andra import, i samma eller det andra formatet, skapar inga nya produkter.
+
+**Lagerstatus i butiken:** produkter med `stock = 0` visas som "Slut i lager" och kan inte läggas i varukorgen. Servern kontrollerar ändå lagret i kassan.
 
 ### Labb 2 – Sök-API (Algolia)
 
@@ -136,3 +213,47 @@ Båda parsrarna lämnar samma `ProductCandidate`, och samma Zod-schema används 
 - **Validering.** `q` får vara högst 100 tecken, `page` ≥ 1 och `pageSize` 1–48. Ogiltiga värden ger 400 innan Algolia anropas. Algolias träffar valideras också med Zod innan de skickas vidare.
 - **Sökbara fält:** namn, märke, kategori, färg, material och beskrivning, i den prioritetsordningen. Pris och bild-URL går inte att söka i.
 - **Söktext och sida ligger i URL:en**, så att bakåtknappen fungerar och en sökning går att dela som länk.
+
+### Labb 3 – Betalning (Stripe)
+
+**Vad den gör:** kunden betalar en order med Stripe Checkout (hosted, på Stripes egen sida). Ordern blir betald först när Stripes signerade webhook bekräftar betalningen, och då minskar lagret.
+
+- **Adapter:** `server/integrations/paymentAdapter.ts`
+- **Routes:** `POST /api/checkout` och `GET /api/checkout/order?session_id=` i `server/routes/checkout.js`, `POST /api/stripe/webhook` i `server/routes/webhook.js`
+- **Databas:** `database/migrations/002_payments.sql`
+- **Variabler:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `CLIENT_URL`, `CHECKOUT_EXPIRES_MINUTES`
+
+```
+Kassan → POST /api/checkout { kunduppgifter, items: [{ product_id, quantity }] }   (inget pris)
+  → validera, hämta priser från databasen, kontrollera lager
+  → spara ordern som "pending" → skapa Stripe-session → spara stripe_session_id
+Kunden betalar hos Stripe
+Stripe → POST /api/stripe/webhook (signerad) → mark_order_paid: "paid" + lagret minskar, en gång
+Kunden → /order-confirmation → läser orderns status (ändrar den aldrig)
+```
+
+**Om tjänsten är nere:** kunden får "Betaltjänsten svarar inte just nu. Ingenting har dragits." och ordern förblir obetald. Resten av butiken fungerar.
+
+**Val och motiveringar:**
+- **Hosted Checkout.** Kunden betalar på Stripes sida, så kortuppgifter passerar aldrig vår server och React behöver ingen Stripe-nyckel alls. Den hemliga nyckeln finns bara på servern.
+- **Priset räknas på servern.** React skickar bara `product_id` och antal. Servern hämtar namn, pris och lager från databasen, så beloppet i Stripe stämmer även om någon ändrar priset i webbläsaren. Orderraderna sparar priset vid köpet.
+- **Ordern sparas som obetald först**, och orderns id följer med betalningen som `client_reference_id`. Webhooken hittar ordern med det.
+- **Bara webhooken gör en order betald.** Signaturen verifieras med `express.raw` och `STRIPE_WEBHOOK_SECRET`. Utan giltig signatur blir svaret 400 och ingen order ändras. Webhooken kontrollerar också att session, belopp och valuta stämmer med ordern. Bekräftelsesidan visar bara status, och admin kan inte välja "Betald".
+- **En gång per order.** Databasfunktionen `mark_order_paid` gör en villkorad uppdatering (`WHERE status = 'pending'`) och minskar lagret i samma transaktion. Kommer samma händelse flera gånger, även samtidigt, blir ordern betald och lagret minskat exakt en gång.
+- **Lager.** Servern kontrollerar lagret när ordern skapas. Vid betalning minskar leverantörens varor med köpt antal, och unika secondhand-plagg (`stock = NULL`) och slutsålda varor markeras som sålda. Sökindexet uppdateras efteråt.
+- **Övergivna ordrar.** Sessionen löper ut efter 30 minuter. `checkout.session.expired` markerar ordern som avbruten, men bara om den fortfarande är obetald. En betald order ändras aldrig.
+
+**Begränsning:** lagret reserveras inte medan kunden betalar. Två kunder kan i teorin hinna betala för den sista varan samtidigt. Saldot kan då inte bli negativt, men varan är översåld och måste hanteras manuellt.
+
+### Labb 4 – Produktbilder i molnlagring
+
+
+### Labb 5 – Frakt
+
+
+## Reflektion
+
+
+## Licens
+
+Utbildningsprojekt — ej för kommersiellt bruk.

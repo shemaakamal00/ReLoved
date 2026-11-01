@@ -178,6 +178,16 @@
   display: none;
 }
 
+.unique-tag.sold-out {
+  background: var(--clr-muted-strong);
+}
+
+.product-stock {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--clr-condition-new);
+}
+
 @media (max-width: 900px) {
   .product-grid {
     columns: 2;

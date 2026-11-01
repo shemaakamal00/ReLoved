@@ -60,6 +60,8 @@ function ProductDetail() {
   };
 
   const isAvailable = product.status === "approved";
+  const isUnique = product.stock === null;
+  const isSoldOut = product.stock === 0;
   const alreadyInCart = items.some((item) => item.product_id === product.id);
 
   return (
@@ -80,9 +82,14 @@ function ProductDetail() {
               <span className="ring"></span>
               {condition.label}
             </span>
-            <span className={`unique-tag ${alreadyInCart ? "reserved" : ""}`}>
-              {alreadyInCart ? "Reserverad" : "1 av 1"}
-            </span>
+            {isSoldOut && (
+              <span className="unique-tag sold-out">Slut i lager</span>
+            )}
+            {isUnique && (
+              <span className={`unique-tag ${alreadyInCart ? "reserved" : ""}`}>
+                {alreadyInCart ? "Reserverad" : "1 av 1"}
+              </span>
+            )}
           </div>
 
           <div className="product-info">
@@ -110,7 +117,15 @@ function ProductDetail() {
               </div>
             </div>
 
-            {isAvailable ? (
+            {!isAvailable ? (
+              <p className="form-error">
+                Den här produkten är inte längre tillgänglig.
+              </p>
+            ) : isSoldOut ? (
+              <button type="button" className="button button-primary" disabled>
+                Slut i lager
+              </button>
+            ) : (
               <button
                 type="button"
                 className="button button-primary"
@@ -119,10 +134,6 @@ function ProductDetail() {
               >
                 {alreadyInCart ? "Redan i varukorgen" : "Lägg i varukorg"}
               </button>
-            ) : (
-              <p className="form-error">
-                Den här produkten är inte längre tillgänglig.
-              </p>
             )}
 
             <button

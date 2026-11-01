@@ -13,6 +13,8 @@ import productsRouter from "./routes/products.js";
 import searchRouter from "./routes/search.js";
 import sellerRouter from "./routes/seller.js";
 import usersRouter from "./routes/users.js";
+import checkoutRouter from "./routes/checkout.js";
+import webhookRouter from "./routes/webhook.js";
 
 const app = express();
 
@@ -36,6 +38,7 @@ app.use(
     },
   }),
 );
+app.use("/api/stripe/webhook", webhookRouter);
 
 app.use(express.json());
 
@@ -51,6 +54,8 @@ app.use("/api/seller", sellerRouter);
 app.use("/api/currency", currencyRouter);
 app.use("/api/currency", currencyRouter);
 app.use("/api/search", searchRouter);
+app.use("/api/search", searchRouter);
+app.use("/api/checkout", checkoutRouter);
 
 app.use((err, req, res, next) => {
   const message = err instanceof Error ? err.message : String(err);

@@ -29,6 +29,7 @@ import SellerDashboard from "./pages/seller/SellerDashboard";
 import TermsOfService from "./pages/TermsOfService";
 import { CurrencyProvider } from "./context/CurrencyContext";
 import Search from "./pages/Search";
+import OrderConfirmation from "./pages/OrderConfirmation";
 
 function App() {
   return (
@@ -101,6 +102,11 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/search" element={<Search />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route
+                    path="/order-confirmation"
+                    element={<OrderConfirmation />}
+                  />
                 </Routes>
 
                 <Footer />

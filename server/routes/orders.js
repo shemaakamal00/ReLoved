@@ -79,93 +79,6 @@ router.get("/", requireAuth, async (req, res) => {
   res.json(data);
 });
 
-router.post("/", async (req, res) => {
-  const { email, phone, full_name, address, postal_code, city, items } =
-    req.body;
-
-  if (!items || items.length === 0) {
-    return res.status(400).json({ error: "Varukorgen är tom" });
-  }
-
-  const productsIds = items.map((item) => item.product_id);
-  const { data: dbProducts, error: productsError } = await supabase
-    .from("products")
-    .select("*")
-    .in("id", productsIds);
-
-  if (productsError) {
-    return res.status(500).json({ error: productsError.message });
-  }
-
-  const unavailable = dbProducts.filter((p) => p.status !== "approved");
-  if (unavailable.length > 0) {
-    return res.status(409).json({
-      error: `Tyvärr, ${unavailable.map((p) => p.name).join(", ")} har redan sålts.`,
-    });
-  }
-
-  let subtotal = 0;
-  const orderItems = items.map((item) => {
-    const product = dbProducts.find((p) => p.id === item.product_id);
-    const lineTotal = product.price;
-    subtotal += lineTotal;
-    return {
-      product_id: product.id,
-      seller_id: product.seller_id,
-      product_name: product.name,
-      product_brand: product.brand,
-      quantity: 1,
-      unit_price: product.price,
-      line_total: lineTotal,
-    };
-  });
-
-  const shipping = 49;
-  const total = subtotal + shipping;
-
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      email,
-      phone,
-      full_name,
-      address,
-      postal_code,
-      city,
-      subtotal,
-      shipping,
-      total,
-      status: "ordered",
-    })
-    .select()
-    .single();
-
-  if (orderError) {
-    return res.status(500).json({ error: orderError.message });
-  }
-
-  const itemsWithOrderId = orderItems.map((item) => ({
-    ...item,
-    order_id: order.id,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .insert(itemsWithOrderId);
-
-  if (itemsError) {
-    return res.status(500).json({ error: itemsError.message });
-  }
-
-  await supabase
-    .from("products")
-    .update({ status: "sold" })
-    .in("id", productsIds);
-
-  await syncProductsToSearch(productsIds);
-  res.status(201).json(order);
-});
-
 router.patch("/:id/status", requireAuth, requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -180,6 +93,21 @@ router.patch("/:id/status", requireAuth, requireAdmin, async (req, res) => {
   ];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ error: "Ogiltig status" });
+  }
+
+  const { data: current, error: currentError } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", id)
+    .single();
+  if (currentError || !current) {
+    return res.status(404).json({ error: "Ordern hittades inte" });
+  }
+
+  if (current.status === "pending" && status !== "cancelled") {
+    return res
+      .status(409)
+      .json({ error: "Ordern är inte betald. Den kan bara avbrytas." });
   }
 
   const { data, error } = await supabase
@@ -208,6 +136,7 @@ router.patch("/:id/status", requireAuth, requireAdmin, async (req, res) => {
         .from("products")
         .update({ status: "approved" })
         .in("id", productIds);
+      await syncProductsToSearch(productIds);
     }
   }
 
