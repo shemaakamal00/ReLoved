@@ -1,0 +1,223 @@
+# Integrationer
+
+Den här filen beskriver varje extern tjänst i ReLoved: vad den gör, vilka filer som hör till den, hur flödet ser ut, vad som händer när tjänsten är nere och varför den är byggd som den är. Integrationerna byggdes som fem labbar i kursen *Integration med 3-partssystem* (FSU25D); labbnumret står i rubriken.
+
+**Innehåll:** [Valuta](#valutaomvandling-frankfurter) · [Produktimport](#labb-1--import-av-produktdata-csv-och-xml) · [Sök](#labb-2--sök-api-algolia) · [Betalning](#labb-3--betalning-stripe) · [Produktbilder](#labb-4--produktbilder-i-molnlagring) · [Frakt](#labb-5--frakt-med-postnord-ai-labb)
+
+
+Alla externa tjänster anropas från Express, aldrig direkt från React. Varje tjänst har en egen adapter i `server/integrations/`. Adaptern är det enda stället som känner till tjänstens URL, nycklar och format, och den returnerar ReLoveds egen modell. Gemensamma anrop går via `server/lib/fetchJson.ts`, som har timeout och upp till tre försök vid tillfälliga fel (408, 429, 500, 502, 503 och 504).
+
+## Valutaomvandling (Frankfurter)
+
+**Vad den gör:** kunden väljer valuta (SEK, EUR, USD, GBP) i navbaren, och alla produktpriser räknas om från SEK.
+
+- **Adapter:** `server/integrations/currencyAdapter.ts`
+- **Route:** `GET /api/currency/rates`
+- **Variabler:** `CURRENCY_API_URL`, `CURRENCY_API_TIMEOUT_MS`, `CURRENCY_CACHE_SECONDS`
+
+**Om tjänsten är nere:** priserna visas i SEK och valutaväljaren inaktiveras. Butiken fungerar som vanligt.
+
+**Val och motiveringar:**
+- **Zod-validering:** svaret valideras med Zod. Varje kurs måste vara ett positivt tal, och alla valutor vi bad om måste finnas med. En TypeScript-typ ensam skyddar inte mot felaktig data från ett externt API.
+- **Cache i en timme:** kurserna cachas i minnet i en timme. ECB publicerar nya kurser en gång per bankdag, så tätare anrop ger samma svar. Svaret har headern `X-Cache: HIT/MISS`.
+- **Räkning från originalpriset:** priserna räknas alltid från originalpriset i SEK, aldrig från ett redan omräknat pris, så att avrundningsfel inte byggs på.
+- **Hela belopp:** omräknade priser visas avrundade, t.ex. `$15` och `€14`, eftersom de ändå är ungefärliga. Kassan och ordrarna visar SEK, som är det kunden betalar.
+
+## Labb 1 – Import av produktdata (CSV och XML)
+
+**Vad den gör:** admin importerar leverantörens katalog (bransch `klader`) med knapparna **Importera CSV** och **Importera XML** på adminsidan. Rapporten visar antal nya, uppdaterade och överhoppade produkter, med orsaken till varje överhoppad produkt.
+
+- **Adapter:** `server/integrations/supplierAdapter.ts` – hämtar, avkodar, parsar och mappar.
+- **Route:** `POST /api/admin/products/import/:format` i `server/routes/admin.js` – validerar, sparar och rapporterar. Kräver admin.
+- **Variabler:** `SUPPLIER_API_URL`, `SUPPLIER_API_KEY`, `SUPPLIER_API_TIMEOUT_MS`, `SUPPLIER_BRANSCH`
+
+```
+Adminsidan → POST /api/admin/products/import/:format
+  → supplierAdapter.ts: hämta bytes → avkoda → parsa CSV/XML → mappa
+  → admin.js: validera med Zod → upsert på sku → rapport
+```
+
+**Om tjänsten är nere:** importen avbryts, och admin får meddelandet "Kunde inte hämta leverantörens katalog". Befintliga produkter påverkas inte, och butiken fungerar som vanligt. Importen körs bara när admin klickar, så kunderna märker inget.
+
+**Tolkning av filerna:**
+
+| Problem | CSV | XML |
+|---|---|---|
+| Teckenkodning | Windows-1252, avkodas med `TextDecoder("windows-1252")` | UTF-8 |
+| Decimaltecken | `599,00` (komma) | `599.00` (punkt) |
+| Artikelnummer | kolumnen `artNr` | attributet `artNr="…"` |
+| EAN | text, behåller inledande nolla | `parseTagValue: false`, behåller nollan |
+| Varianter | `S\|M\|L` delas på `\|` | upprepade `<variant>`, alltid en lista (`isArray`) |
+| Tomt lagersaldo | `;;` → 0 | `<lagersaldo/>` → 0 |
+
+Båda parsrarna lämnar samma `ProductCandidate`, och samma Zod-schema används för båda formaten.
+
+**Mappning till ReLoveds produktmodell:**
+
+| Leverantören | ReLoved | Motivering |
+|---|---|---|
+| `artNr` | `sku` (ny, UNIQUE) | Identitet vid upsert. Samma produkt får samma rad oavsett format. |
+| `ean` | `ean` (ny, text) | Sparas för framtida lager- och fraktintegrationer. Text, eftersom ett tal tappar den inledande nollan. |
+| `benamning` | `name` | |
+| `kategori` | `category_id` | Kopplas till en kategori med samma namn, t.ex. "Hoodies" under Herr. Saknas kategorin blir den `NULL`, och produkten syns ändå under Alla produkter. |
+| `pris` | `price` | Avrundas till hela kronor, eftersom `price` är `INTEGER` och resten av butiken (varukorg, ordrar) räknar i hela kronor. |
+| `lagersaldo` | `stock` (ny) | Tomt värde räknas som 0. Egna secondhand-plagg har `NULL` (alltid "1 av 1"). |
+| `varianter` | `variants` (ny, `TEXT[]`) och `size` | Listan sparas, och `size` får t.ex. "S, M, L, XL" eller "One size", så att produktkortet visar storlekar utan ändringar. |
+| `uppdaterad` | hoppas över | CSV har bara datum, XML har datum och tid. `updated_at` sätts i stället till tidpunkten för importen. |
+| – | `brand` = "FSU25 Grossist", `condition` = "Nyskick", `seller_name` = "ReLoved" | Obligatoriska fält i vår modell som leverantören saknar. |
+
+**Validering:** varje produkt kontrolleras för sig. Artikelnummer måste finnas, EAN ska vara 13 siffror, priset ett tal större än 0 och lagersaldot ett heltal ≥ 0. En trasig produkt hoppas över med en orsak, t.ex. LEV-1037: `price: Priset är inte ett giltigt tal`. Ett ogiltigt pris ersätts aldrig med 0, eftersom produkten då skulle säljas gratis. Fel som gäller hela importen, som fel API-nyckel, trasig XML eller databasfel, avbryter importen med ett felmeddelande.
+
+**Upsert och rapport:** importen hämtar först vilka artikelnummer som redan finns i databasen. De räknas som *uppdaterade*, och övriga som *nya*. "Uppdaterad" betyder att raden skrevs om med leverantörens värden, även om inget faktiskt ändrades. Nya produkter får status `approved` och syns direkt. Befintliga behåller sin status, så en produkt som admin har arkiverat blir inte aktiv igen av en ny import. En andra import, i samma eller det andra formatet, skapar inga nya produkter.
+
+**Lagerstatus i butiken:** produkter med `stock = 0` visas som "Slut i lager" och kan inte läggas i varukorgen. Servern kontrollerar ändå lagret i kassan.
+
+## Labb 2 – Sök-API (Algolia)
+
+**Vad den gör:** kunden söker i sidhuvudet och kommer till `/search`, med stavfelstolerans ("hodie" hittar "Hoodie"), filter (kategori, skick, pris), sortering (relevans, lägsta och högsta pris, nyast) och bläddring mellan sidor.
+
+- **Adapter:** `server/integrations/searchAdapter.ts`
+- **Synk:** `server/lib/searchSync.js`
+- **Route:** `GET /api/search?q=&page=&pageSize=&sort=&category=&condition=&minPrice=&maxPrice=` och `POST /api/admin/search/reindex`
+- **Variabler:** `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_INDEX`
+
+**Om tjänsten är nere:** sökningen visar "Sökningen kunde inte genomföras just nu". Resten av butiken fungerar. Ändringar på adminsidan sparas ändå i databasen, och admin får en varning om att sökindexet inte är uppdaterat. Knappen **Bygg om sökindex** synkar allt när Algolia fungerar igen.
+
+**Val och motiveringar:**
+- **Databasen är sanningen, Algolia är en kopia.** Varje ändring sparas först i databasen. Sedan läser `syncProductsToSearch` produkten därifrån och gör sökningen likadan: godkända produkter läggs till eller uppdateras, och väntande, nekade, sålda och arkiverade produkter tas bort.
+- **`objectID` = artikelnumret** (`LEV-1001`). Egna secondhand-plagg saknar artikelnummer och får `RL-<id>`. Samma produkt får alltid samma `objectID`, så en ny indexering uppdaterar i stället för att skapa dubbletter.
+- **Två nycklar.** Admin-nyckeln, som får skriva, används bara vid indexering. Söknyckeln får bara läsa. Båda finns enbart på servern, och React anropar bara `/api/search`.
+- **Validering.** `q` får vara högst 100 tecken, `page` ≥ 1 och `pageSize` 1–48. `sort` måste vara `relevance`, `price_asc`, `price_desc` eller `newest`. Priser är heltal ≥ 0, och lägsta pris får inte vara högre än högsta. Ogiltiga värden ger 400 med ett begripligt fel innan Algolia anropas. Algolias träffar valideras också med Zod innan de skickas vidare.
+- **Sökbara fält:** namn, märke, kategori, färg, material och beskrivning, i den prioritetsordningen. Pris och bild-URL går inte att söka i.
+- **Filter med facets.** `category` och `condition` är `attributesForFaceting`. Adaptern bygger Algolias filtersträng, t.ex. `category:"Dam" AND price >= 100 AND price <= 500`, och ber om antal träffar per värde, så att React visar t.ex. "Dam (13)".
+- **Sortering med replikor.** Algolia sorterar inte i efterhand, så varje sortering är en replika av indexet med egen rankning (`reloved_products_price_asc`, `_price_desc`, `_newest`). Vanliga replikor fungerar på gratisplanen. Replikorna och filterinställningarna skapas när admin bygger om sökindexet.
+- **Söktext, filter, sortering och sida ligger i URL:en**, så att bakåtknappen fungerar och en sökning går att dela som länk.
+
+## Labb 3 – Betalning (Stripe)
+
+**Vad den gör:** kunden betalar en order med Stripe Checkout (hosted, på Stripes egen sida). Ordern blir betald först när Stripes signerade webhook bekräftar betalningen, och då minskar lagret.
+
+- **Adapter:** `server/integrations/paymentAdapter.ts`
+- **Routes:** `POST /api/checkout` och `GET /api/checkout/order?session_id=` i `server/routes/checkout.js`, `POST /api/stripe/webhook` i `server/routes/webhook.js`
+- **Databas:** `database/migrations/002_payments.sql`
+- **Variabler:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `CLIENT_URL`, `CHECKOUT_EXPIRES_MINUTES`
+
+```
+Kassan → POST /api/checkout { kunduppgifter, items: [{ product_id, quantity }] }   (inget pris)
+  → validera, hämta priser från databasen, kontrollera lager
+  → spara ordern som "pending" → skapa Stripe-session → spara stripe_session_id
+Kunden betalar hos Stripe
+Stripe → POST /api/stripe/webhook (signerad) → mark_order_paid: "paid" + lagret minskar, en gång
+Kunden → /order-confirmation → läser orderns status (ändrar den aldrig)
+```
+
+**Om tjänsten är nere:** kunden får "Betaltjänsten svarar inte just nu. Ingenting har dragits." och ordern förblir obetald. Resten av butiken fungerar.
+
+**Val och motiveringar:**
+- **Hosted Checkout.** Kunden betalar på Stripes sida, så kortuppgifter passerar aldrig vår server och React behöver ingen Stripe-nyckel alls. Den hemliga nyckeln finns bara på servern.
+- **Priset räknas på servern.** React skickar bara `product_id` och antal. Servern hämtar namn, pris och lager från databasen, så beloppet i Stripe stämmer även om någon ändrar priset i webbläsaren. Orderraderna sparar priset vid köpet.
+- **Ordern sparas som obetald först**, och orderns id följer med betalningen som `client_reference_id`. Webhooken hittar ordern med det.
+- **Bara webhooken gör en order betald.** Signaturen verifieras med `express.raw` och `STRIPE_WEBHOOK_SECRET`. Utan giltig signatur blir svaret 400 och ingen order ändras. Webhooken kontrollerar också att session, belopp och valuta stämmer med ordern. Bekräftelsesidan visar bara status, och admin kan inte välja "Betald".
+- **En gång per order.** Databasfunktionen `mark_order_paid` gör en villkorad uppdatering (`WHERE status = 'pending'`) och minskar lagret i samma transaktion. Kommer samma händelse flera gånger, även samtidigt, blir ordern betald och lagret minskat exakt en gång.
+- **Lager.** Servern kontrollerar lagret när ordern skapas. Vid betalning minskar leverantörens varor med köpt antal, och unika secondhand-plagg (`stock = NULL`) och slutsålda varor markeras som sålda. Sökindexet uppdateras efteråt.
+- **Övergivna ordrar.** Sessionen löper ut efter 30 minuter. `checkout.session.expired` markerar ordern som avbruten, men bara om den fortfarande är obetald. En betald order ändras aldrig.
+
+**Begränsning:** lagret reserveras inte medan kunden betalar. Två kunder kan i teorin hinna betala för den sista varan samtidigt. Saldot kan då inte bli negativt, men varan är översåld och måste hanteras manuellt.
+
+## Labb 4 – Produktbilder i molnlagring
+
+**Vad den gör:** admin (och säljare) laddar upp en produktbild via vår egen server. Bilden sparas i en publik bucket i Supabase Storage, och butiken visar den med bildens publika URL.
+
+- **Adapter:** `server/integrations/storageAdapter.ts`
+- **Validering och hjälpfunktioner:** `server/lib/upload.js` (multer, maxstorlek, filtyp) och `server/lib/productImages.js` (uppladdning, borttagning)
+- **Routes:** `POST /api/products`, `PATCH /api/products/:id` (admin), `POST /api/products/submit`, `PATCH /api/products/:id/mine` (säljare) i `server/routes/products.js`
+- **Databas:** `database/migrations/003_product_images.sql` (kolumnen `image_path`)
+- **Variabler:** `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (finns redan). Valfritt: `SUPABASE_BUCKET` (standard `products`) och `SUPABASE_STORAGE_TIMEOUT_MS` (standard 10 000)
+- **Supabase:** bucketen `products` måste vara **publik**
+
+```
+Admin väljer bild → POST/PATCH /api/products (multipart/form-data, fältet "image")
+  → multer: max 4 MB, annars 400
+  → kontroll av filtyp: bara JPEG/PNG (mimetyp + filens första bytes), annars 400
+  → ladda upp till Supabase Storage som <uuid>.jpg/.png (upsert: false) → { path, url }
+  → spara image_path + image_url på produkten
+  → vid byte: ta bort den gamla filen FÖRST NU
+Butiken visar image_url → https://<projekt>.supabase.co/storage/v1/object/public/products/<uuid>.png
+```
+
+**Om tjänsten är nere:** admin får "Bildtjänsten svarar inte just nu. Ingenting har ändrats, försök igen om en stund." (502). Inget sparas i databasen, och produkten behåller sin gamla bild. Resten av butiken fungerar, och bilder som redan finns visas som vanligt.
+
+**Val och motiveringar:**
+- **Uppladdning via vår server, inte direkt från React.** Den hemliga nyckeln (`SUPABASE_SERVICE_KEY`) finns bara på servern. Webbläsaren skickar bilden till `/api/products` och vet inte ens vilken lagringstjänst vi använder.
+- **Validering på servern.** Max 4 MB (multer stoppar större filer innan de läses in helt) och bara JPEG eller PNG. Vi kontrollerar både mimetypen och filens första bytes ("magiska bytes"), så en PDF som döpts om till `.png` avvisas också. Felen blir 400 med ett begripligt meddelande som visas i formuläret. React gör samma kontroll när filen väljs, men bara för att ge besked direkt: servern bestämmer.
+- **Ny unik sökväg för varje bild.** Filen får namnet `<uuid>.<filändelse>`. Adminens filnamn används aldrig (inga konstiga tecken, inga krockar), och `upsert: false` gör att en fil aldrig skrivs över.
+- **Sökväg och URL sparas på produkten.** `image_url` visas i butiken. `image_path` behövs för att kunna ta bort rätt fil senare. För äldre produkter som bara har en URL räknas sökvägen ut ur URL:en, men bara om bilden ligger i vår bucket.
+- **Ordning vid byte: ny först, gammal sist.** Validera → ladda upp den nya → spara i databasen → ta bort den gamla. Misslyckas något av de tre första stegen finns den gamla bilden kvar, orörd. Misslyckas databasen tas den nyuppladdade filen bort igen. Misslyckas borttagningen av den gamla loggas det bara: en kvarglömd fil är bättre än en produkt utan bild.
+- **Timeout.** Adaptern har en egen Supabase-klient med `AbortSignal.timeout` (10 s) på varje anrop, så att admin får ett svar även om Supabase hänger sig.
+- **Borttagning.** När en produkt tas bort tas även dess bild bort ur bucketen.
+
+**Begränsningar:** bilderna skalas inte om eller komprimeras, så en bild på 4 MB laddas ner i full storlek. Om borttagningen av en gammal bild misslyckas ligger filen kvar i bucketen tills någon tar bort den manuellt. Bucketen är publik: den som har en bildadress kan öppna bilden, vilket är okej för produktbilder men inte för privata filer.
+
+## Labb 5 – Frakt med PostNord (AI-labb)
+
+**Vad den gör:** i kassan anger kunden sitt postnummer och ser fraktpriset för ombud och hemleverans, beräknad leverans för båda och de närmaste PostNord-ombuden. Kunden väljer ett ombud, servern kontrollerar valet, och frakten sparas på ordern och blir en egen rad i Stripe.
+
+- **Adapter:** `server/integrations/shippingAdapter.ts` (ombud och leveranstid från PostNord)
+- **Egen prislista:** `server/lib/shippingPrices.js` (inte en integration: PostNord har inget pris-API för Sverige)
+- **Routes:** `POST /api/shipping/quote` i `server/routes/shipping.js`, och `POST /api/checkout` i `server/routes/checkout.js`
+- **Delad kod:** `server/lib/cartPricing.js` (ordervärdet från databasen) och `server/lib/postalCode.js` (validering av postnummer)
+- **Databas:** `database/migrations/004_shipping.sql` (`shipping_method`, `service_point_id`, `service_point_name`, `service_point_address`, `estimated_delivery`)
+- **Variabler:** `POSTNORD_API_KEY`, `POSTNORD_API_URL`, `POSTNORD_TIMEOUT_MS`, `POSTNORD_CUSTOMER_KEY`, `SHOP_POSTAL_CODE`, `SHOP_STREET`, `SHOP_CITY`, `SHOP_ORDER_CUTOFF`, `FREE_SHIPPING_FROM`
+
+| Fraktalternativ | Pris | Från 500 kr |
+|---|---|---|
+| Hämta hos ombud (PostNord Service Point, 19) | 59 kr | Gratis |
+| Hemleverans (PostNord Home, 17) | 99 kr | Gratis |
+
+```
+Kassan → POST /api/shipping/quote { postal_code, items: [{ product_id, quantity }] }   (inget pris)
+  → ordervärdet från databasen → fraktpris från vår prislista
+  → samtidigt: PostNord Service Points v5 (GET)  +  PostNord Delivery Options v1 (POST)
+  ← { options: [{ method, price, estimatedDelivery }], servicePoints: [...] }
+Kunden väljer → POST /api/checkout { ..., shipping_method, service_point_id }
+  → servern frågar PostNord igen: finns ombudet bland ombuden för postnumret? Annars 400
+  → fraktpriset räknas igen → ordern sparas med frakt → Stripe: varor + fraktrad
+```
+
+**Om tjänsten är nere:** priserna visas ändå (vår egen kod), och hemleverans går alltid att beställa. Ombudslistan ersätts av "Vi kunde inte hämta ombud från PostNord just nu. Du kan välja hemleverans.", och leveranstiden av "Leveranstiden kunde inte hämtas". Väljer kunden ombud när PostNord inte svarar blir svaret 502 med ett begripligt meddelande. Ett postnummer som inte finns (PostNord svarar 400) ger i stället "Kontrollera att postnumret stämmer".
+
+**Val och motiveringar:**
+- **Nyckeln finns bara på servern.** PostNord tar nyckeln i adressen (`?apikey=`), så adaptern loggar aldrig adressen. `fetchWithRetry` från Labb 1 skriver ut adressen i sina felmeddelanden och används därför inte här. Vid fel loggas PostNords förklaring (max 300 tecken), som inte innehåller nyckeln.
+- **Priset räknas på servern.** React skickar bara vilket alternativ och vilket ombud. Fri frakt beror på ordervärdet, som servern räknar ut med databasens priser (`priceCart`, samma kod som kassan använder).
+- **Ombudet kontrolleras igen.** React kan skicka vilket id som helst, så kassan frågar PostNord på nytt och letar efter id:t bland ombuden för kundens postnummer.
+- **Validering.** PostNords svar valideras med Zod innan de används, bara de fält vi använder. Ett oväntat svar blir ett tydligt fel i loggen i stället för `undefined` i React.
+- **Timeout** på 5 s med `AbortSignal.timeout`. Ombud och leveranstid hämtas samtidigt med `Promise.allSettled`, så att det ena kan misslyckas utan att det andra gör det.
+- **Svensk tid.** Render kör på UTC, så dagens datum och tidszonen (+01:00 eller +02:00) räknas ut för `Europe/Stockholm`.
+
+### Hur AI användes
+
+Jag byggde frakten tillsammans med Claude (AI-assistent i webbläsaren). AI:n läste inte min `.env`, och nyckeln klistrades aldrig in i chatten: alla tester mot sandlådan körde jag själv i terminalen med `$POSTNORD_API_KEY` från `.env`, och klistrade bara in PostNords svar.
+
+**Prompter:**
+1. Jag klistrade in hela kravspecen för Labb 5 och beskrev shoppen: Express 5 med en adapter per tjänst i `server/integrations/`, Zod, Supabase och Stripe Checkout från Labb 3, React med TypeScript.
+2. "Förstår inte riktigt hur jag ska testa", och svaren från PostNord (utan nyckel) när något inte fungerade.
+3. PostNords OpenAPI-dokumentation för Delivery Options, kopierad från sandlådeportalen, med en begäran om att rätta koden efter den.
+
+**Vad AI:n föreslog:**
+- En adapter med `findServicePoints` mot Service Points v5 och `estimateDelivery` mot Transit Time (`GET /rest/transport/v1/transittime/getTransitTimeInformation.json` med `serviceCode` 19 och 17), en egen prislista på servern, `POST /api/shipping/quote` och fraktraden i Stripe.
+- En kontroll av ombudet i kassan och en migration för frakten på ordern.
+
+**Vad som skilde sig från PostNords dokumentation, och hur jag kontrollerade det:**
+
+| | AI:ns förslag | Verkligheten (sandlådan och portalen) | Lösning |
+|---|---|---|---|
+| Ombud | Svar i formen `servicePointInformationResponse.servicePoints[]` | Testat med curl: samma form (`servicePointId`, `name`, `routeDistance`, `visitingAddress`) | Zod-schemat behölls |
+| Leveranstid | Transit Time, `GET .../transittime/getTransitTimeInformation.json` | Sandlådan svarade **502 Bad Gateway** (HTML, inget API-svar). I portalen finns i stället **Delivery Options** | Bytte till `POST /rest/shipment/v1/deliveryoptions/bywarehouse` med JSON-kropp och ett anrop för båda alternativen (`filter.deliveryTypes`) |
+| Svarets form | Gissat: `TransitTimeResponse.transitTimes[].deliveryTime` | `warehouseToDeliveryOptions[].deliveryOptions[]` med `type` och `defaultOption.deliveryTime`, som har antingen `date.latest` eller `dayRange.days` | Nytt Zod-schema som hanterar båda formerna. `dayRange` räknas om till ett datum med arbetsdagar |
+| Lagrets adress | Bara postnummer och stad (som i schemats `required`) | **400 API-005:** "Either street or both streetName and streetNumber must be provided." | Lade till `SHOP_STREET` |
+| Fel postnummer | Visades som "PostNord är nere" | PostNord svarar 400 för ett postnummer som inte finns | 400 blir `PostNordInputError`, och kunden får "Kontrollera att postnumret stämmer" |
+| Loggning | Labb 1:s `fetchWithRetry` | Den skriver ut hela adressen, och därmed nyckeln, i felmeddelanden | Egen fetch i adaptern som aldrig loggar adressen |
+
+Kontrollen gjordes i tre steg: anrop med curl mot sandlådan (`atapi2.postnord.com`), en jämförelse med OpenAPI-dokumentationen i portalen (`atdeveloper.postnord.com`), och ett test i kassan med riktiga postnummer (t.ex. 41101 Göteborg, där svaret var `"deliveryTime":{"date":{"latest":"2026-11-03T13:00:00+01:00"}}`, som visas som "Beräknad leverans: tisdag 3/11").
+
+**Begränsningar:** fraktpriset är fast och tar inte hänsyn till vikt eller avstånd. Leveranstiden räknas från ett tänkt lager (Vasagatan 10, Stockholm) med sista ordertid kl. 15. Ombudet sparas med namn och adress vid köpet; ändrar PostNord ombudet senare syns det inte på ordern. Bokning och fraktsedlar kräver avtal med PostNord och ingår inte.
