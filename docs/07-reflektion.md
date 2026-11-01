@@ -24,7 +24,7 @@ DEt handlar också om att kunna lita på datan. Om React räknade ut priset och 
 
 ## 3. Integrera eller bygga själv
 
-- **Stripe** hade varit svårast att bygga själv. Det skulle kräva avtal med banker och kortnätverk, PCI DSS certifiering, 3D Secure och begrägeriskydd, mycket kod och ännu mer säkerhet. 
+- **Stripe** hade varit svårast att bygga själv. Det skulle kräva avtal med banker och kortnätverk, PCI DSS certifiering, 3D Secure och begrägeriskydd, mycket kod och ännu mer säkerhet. I ReLoved räcker det i stället att servern skapar en betalsession och tar emot Stripes webhook, där databasfunktionen `mark_order_paid`gör ordern betalad och minskar lagret exakt en gång.
 
 - **Algolia**: en enkel sökning med `LIKE` i databasen går att bygga, men stavfeltolerans, relevansordning och snabba filter skulle kräva en egen sökmotor med dirft och underhåll.
 
