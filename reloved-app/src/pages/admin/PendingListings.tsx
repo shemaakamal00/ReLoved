@@ -4,7 +4,7 @@ import { fetchProducts, updateProductStatus } from "../../api/client";
 import type { Product } from "../../types";
 import { useToast } from "../../context/ToastContext";
 import { SEARCH_INDEX_WARNING } from "../../utils/searchIndex";
-import ProductImage from "../../components/ProductImage";
+import ProductImage from "../../components/product/ProductImage";
 
 function PendingListings() {
   const { token } = useAuth();

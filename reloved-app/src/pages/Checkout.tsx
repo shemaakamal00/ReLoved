@@ -7,8 +7,8 @@ import {
   fetchMyProfile,
   fetchShippingQuote,
 } from "../api/client";
-import ProductImage from "../components/ProductImage";
-import ShippingPicker from "../components/ShippingPicker";
+import ProductImage from "../components/product/ProductImage";
+import ShippingPicker from "../components/checkout/ShippingPicker";
 import type { ShippingMethod, ShippingQuote } from "../types";
 
 function Checkout() {

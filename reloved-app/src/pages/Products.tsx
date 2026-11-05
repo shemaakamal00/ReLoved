@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchProducts, fetchCategories } from "../api/client";
 import type { Product, Category } from "../types";
-import ProductCard from "../components/ProductCard";
+import ProductCard from "../components/product/ProductCard";
 
 function Products() {
   const [searchParams] = useSearchParams();

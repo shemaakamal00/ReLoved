@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { useState, useEffect } from "react";
-import ProductImage from "../components/ProductImage";
+import ProductImage from "../components/product/ProductImage";
 import type { Product } from "../types";
 
 const CONDITION_STYLES: Record<string, { className: string; label: string }> = {

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useFavorites } from "../context/FavoritesContext";
-import ProductCard from "../components/ProductCard";
+import ProductCard from "../components/product/ProductCard";
 
 function Favorites() {
   const { favorites, loading } = useFavorites();

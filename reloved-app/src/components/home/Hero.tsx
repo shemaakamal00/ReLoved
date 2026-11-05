@@ -1,20 +1,23 @@
 import { Link } from "react-router-dom";
-import type { Product } from "../types";
+import type { Product } from "../../types";
 
 interface HeroProps {
   featured?: Product[];
+  loading?: boolean;
 }
 
-function Hero({ featured = [] }: HeroProps) {
+function Hero({ featured = [], loading = false }: HeroProps) {
+  const centered = !loading && featured.length === 0;
+
   return (
     <section className="hero">
       <div
-        className={`container hero-grid ${featured.length === 0 ? "hero-grid--centered" : ""}`}
+        className={`container hero-grid ${centered ? "hero-grid--centered" : ""}`}
       >
         <div className="hero-copy">
           <p className="eyebrow">Älskat tidigare · älskat igen</p>
           <h1>
-            Varje plagg finns <em>bara en gång</em> — precis som du
+            Varje plagg finns <em>bara en gång</em>
           </h1>
           <p className="hero-lede">
             Ingen lagerhylla, inga dubbletter. Det du ser är det enda exemplaret
@@ -23,7 +26,7 @@ function Hero({ featured = [] }: HeroProps) {
 
           <div className="hero-actions">
             <Link className="button button-primary" to="/products">
-              Utforska garderoben →
+              Se alla plagg →
             </Link>
             <a className="button button-secondary" href="#how-it-works">
               Så fungerar det
@@ -31,7 +34,14 @@ function Hero({ featured = [] }: HeroProps) {
           </div>
         </div>
 
-        {featured.length > 0 && (
+        {loading && (
+          <div className="hero-visual" aria-hidden="true">
+            <div className="hero-visual__card hero-visual__card--0 skeleton" />
+            <div className="hero-visual__card hero-visual__card--1 skeleton" />
+          </div>
+        )}
+
+        {!loading && featured.length > 0 && (
           <div className="hero-visual">
             {featured.slice(0, 2).map((product, index) => (
               <div

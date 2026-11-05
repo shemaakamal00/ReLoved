@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { searchProducts } from "../api/client";
-import ProductCard from "../components/ProductCard";
-import SearchFilterBar from "../components/SearchFilterBar";
+import ProductCard from "../components/product/ProductCard";
+import SearchFilterBar from "../components/search/SearchFilterBar";
 import type { SearchFilters, SearchResult, SearchSort } from "../types";
 
 const PAGE_SIZE = 12;

@@ -1,3 +1,5 @@
+import Reveal from "../ui/Reveal";
+
 interface Benefit {
   icon: string;
   title: string;
@@ -36,12 +38,7 @@ function WhySell() {
     <section className="why-sell section">
       <div className="container">
         <div className="why-sell__header">
-          <p className="eyebrow">Därför ReLoved</p>
-          <h2>Varför sälja hos oss?</h2>
-          <p>
-            Gör plats i garderoben, tjäna pengar och ge dina plagg chansen att
-            bli älskade igen.
-          </p>
+          <h2>Det här får du som säljare</h2>
         </div>
 
         <div className="benefits-grid">

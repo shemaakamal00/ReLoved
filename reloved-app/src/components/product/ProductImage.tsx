@@ -1,4 +1,4 @@
-import type { Product } from "../types";
+import type { Product } from "../../types";
 
 interface ProductImageProps {
   product: Pick<Product, "name" | "image_url" | "alt_text">;

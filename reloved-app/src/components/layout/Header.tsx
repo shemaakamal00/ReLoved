@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
-import { useFavorites } from "../context/FavoritesContext";
-import { fetchCategories } from "../api/client";
-import type { Category } from "../types";
+import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
+import { useFavorites } from "../../context/FavoritesContext";
+import { fetchCategories } from "../../api/client";
+import type { Category } from "../../types";
 import CurrencySelect from "./CurrencySelect";
 
 function Header() {

@@ -2,7 +2,7 @@ import {
   CURRENCIES,
   useCurrency,
   type CurrencyCode,
-} from "../context/CurrencyContext";
+} from "../../context/CurrencyContext";
 
 function CurrencySelect() {
   const { currency, setCurrency, status, ratesDate } = useCurrency();

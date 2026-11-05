@@ -1,5 +1,5 @@
 import type { FormEvent } from "react";
-import type { FacetValue, SearchFilters } from "../types";
+import type { FacetValue, SearchFilters } from "../../types";
 
 interface SearchFilterBarProps {
   filters: SearchFilters;

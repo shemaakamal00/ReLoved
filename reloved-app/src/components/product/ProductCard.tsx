@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { useCurrency } from "../context/CurrencyContext";
+import { useCurrency } from "../../context/CurrencyContext";
 import ProductImage from "./ProductImage";
-import type { Product } from "../types";
+import type { Product } from "../../types";
 
 interface ProductCardProps {
   product: Pick<

@@ -1,5 +1,5 @@
-import type { ShippingMethod, ShippingQuote } from "../types";
-import { formatDeliveryDate } from "../utils/shipping";
+import type { ShippingMethod, ShippingQuote } from "../../types";
+import { formatDeliveryDate } from "../../utils/shipping";
 
 interface ShippingPickerProps {
   quote: ShippingQuote | null;

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { fetchProducts } from "../api/client";
 import type { Product } from "../types";
-import ProductCard from "../components/ProductCard";
-import Hero from "../components/Hero";
-import HowItWorks from "../components/HowItWorks";
-import WhySell from "../components/WhySell";
+import ProductCard from "../components/product/ProductCard";
+import Hero from "../components/home/Hero";
+import HowItWorks from "../components/home/HowItWorks";
+import WhySell from "../components/home/WhySell";
 
 function Home() {
   const [products, setProducts] = useState<Product[]>([]);
