@@ -1,0 +1,271 @@
+@charset "UTF-8";
+
+/* Logga in, skapa konto, glömt lösenord, 404, profil och ordrar. */
+
+/* Inloggningssida */
+.login-page {
+  display: grid;
+  place-items: center;
+  min-height: 70vh;
+  padding: clamp(2rem, 6vw, 5rem) var(--gutter);
+}
+
+.login-card {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  max-width: 460px;
+  padding: clamp(2rem, 5vw, 3.25rem);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-float);
+}
+
+.login-card .eyebrow {
+  margin-bottom: 0;
+}
+
+.login-card h1 {
+  font-size: clamp(2.2rem, 4vw, 2.8rem);
+}
+
+.login-form {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 0.75rem;
+}
+
+/* Glömt lösenord */
+.login-form > a {
+  justify-self: start;
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.login-form .button {
+  width: 100%;
+}
+
+.login-register {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-line);
+  font-size: var(--text-sm);
+}
+
+.login-register .button {
+  width: 100%;
+}
+
+/* 404-sida */
+.login-card .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+/* Sidhuvud för kontosidor */
+.profile-page,
+.orders-page:not(.section) {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--gutter) var(--section-space);
+}
+
+.profile-page {
+  padding-top: clamp(2rem, 5vw, 3.5rem);
+}
+
+.profile-header,
+.orders-header {
+  margin-bottom: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+/* Profil */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.profile-sidebar {
+  display: grid;
+  justify-items: start;
+  gap: 0.4rem;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  margin-bottom: 0.75rem;
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+
+.profile-sidebar h2 {
+  font-size: 1.5rem;
+}
+
+.profile-sidebar > p {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.profile-menu {
+  display: grid;
+  justify-items: start;
+  gap: 0.9rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.profile-menu a,
+.profile-menu button {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  font-stretch: var(--label-stretch);
+  letter-spacing: var(--label-spacing);
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.profile-menu a:hover,
+.profile-menu button:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.profile-menu button {
+  margin-top: 0.5rem;
+  color: var(--color-danger);
+}
+
+.profile-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-content > .button {
+  justify-self: start;
+}
+
+.profile-card {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.profile-card h2 {
+  font-size: 1.4rem;
+}
+
+.profile-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.profile-form__full {
+  grid-column: 1 / -1;
+}
+
+/* Ordrar */
+.orders-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.order-card {
+  display: grid;
+  gap: 0.6rem;
+  padding: clamp(1.4rem, 3vw, 1.75rem);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.order-card + .order-card {
+  margin-top: 0.75rem;
+}
+
+.orders-list .order-card + .order-card {
+  margin-top: 0;
+}
+
+.order-card h2 {
+  font-size: 1.4rem;
+}
+
+.order-card__top,
+.order-card__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.order-card__top .eyebrow {
+  margin-bottom: 0.3rem;
+}
+
+.order-card__bottom {
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-line);
+  font-size: var(--text-sm);
+}
+
+.order-card__bottom a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Orderdetaljer */
+.orders-page:not(.section) .orders-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.order-product {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr auto;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-line);
+  font-size: var(--text-sm);
+}
+
+.order-product span:last-child {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+@media (max-width: 800px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-form {
+    grid-template-columns: 1fr;
+  }
+}

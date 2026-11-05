@@ -1,35 +1,24 @@
 @charset "UTF-8";
-@import url("./base/reset.css");
-@import url("./base/variables.css");
-@import url("./base/typography.css");
-@import url("./base/utilities.css");
 
-@import url("./layout/buttons.css");
-@import url("./layout/forms.css");
-@import url("./layout/header.css");
-@import url("./layout/footer.css");
-@import url("./layout/product-card.css");
-@import url("./layout/page-header.css");
-@import url("./layout/cards.css");
-@import url("./layout/tables.css");
-@import url("./layout/badges.css");
-@import url("./layout/toast.css");
+/*
+ * ReLoved
+ *   base/        designsystemet (tokens), nollställning, typografi, rörelse
+ *   components/  delar som används på flera sidor
+ *   pages/       en fil per typ av sida
+ */
+
+@import url("./base/tokens.css");
+@import url("./base/base.css");
+@import url("./base/motion.css");
+
+@import url("./components/controls.css");
+@import url("./components/header-footer.css");
+@import url("./components/product.css");
+@import url("./components/panels.css");
 
 @import url("./pages/home.css");
-@import url("./pages/products.css");
+@import url("./pages/shop.css");
 @import url("./pages/product.css");
-@import url("./pages/cart.css");
 @import url("./pages/checkout.css");
-@import url("./pages/favorites.css");
-@import url("./pages/profile.css");
-@import url("./pages/seller.css");
-@import url("./pages/admin.css");
-@import url("./pages/orders.css");
-@import url("./pages/login.css");
-@import url("./pages/register.css");
-@import url("./pages/search.css");
-@import url("./pages/about.css");
-@import url("./pages/contact.css");
-@import url("./pages/faq.css");
-@import url("./pages/privacy-policy.css");
-@import url("./pages/forgot-password.css");
+@import url("./pages/account.css");
+@import url("./pages/info.css");

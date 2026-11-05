@@ -1,0 +1,384 @@
+@charset "UTF-8";
+
+/* Produktkort och allt som har med det att göra t.ex:
+* Rutnätet
+* Bilder
+* Skick
+* Favort hjärtat
+* Snabbknapparna 
+* Skeleton korten */
+
+/* Rutnät */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1.75rem, 3vw, 2.75rem) clamp(1rem, 2vw, 1.5rem);
+}
+
+@media (max-width: 1100px) {
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Kortet */
+.product-card {
+  position: relative;
+}
+
+.product-card__img-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xs);
+  background: var(--color-sand);
+}
+
+.product-card__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  transition: scale 0.9s var(--ease-out);
+}
+
+/* Inzooming i samband med hoover */
+.product-card:hover .product-card__image {
+  scale: 1.045;
+}
+
+.product-card-content {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.95rem;
+}
+
+.product-card__brand {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  font-stretch: var(--label-stretch);
+  letter-spacing: var(--label-spacing);
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.product-card__name {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--color-ink-soft);
+}
+
+.product-card__name:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.product-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.product-card__price {
+  margin-top: 0.35rem;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* Skick */
+.condition-dot,
+.condition-badge .ring {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-condition-good);
+}
+
+.cond-new,
+.cond-new .ring {
+  background: var(--color-condition-new);
+}
+
+.cond-used,
+.cond-used .ring {
+  background: var(--color-condition-used);
+}
+
+/* Brickan som används på produktsidan */
+.condition-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-pill);
+  background: rgba(251, 250, 247, 0.92);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.condition-badge.cond-new,
+.condition-badge.cond-good,
+.condition-badge.cond-used {
+  background: rgba(251, 250, 247, 0.92);
+}
+
+/* 1 av 1 / slut i lager */
+.unique-tag {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 1;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: rgba(251, 250, 247, 0.92);
+  font-size: 0.66rem;
+  font-weight: 500;
+  font-stretch: var(--label-stretch);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  transition: opacity var(--dur-fast) ease;
+}
+
+.unique-tag.sold-out,
+.unique-tag.reserved {
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+}
+
+/* Snabbknapparna */
+.product-card:hover .unique-tag,
+.product-card:focus-within .unique-tag {
+  opacity: 0;
+}
+
+/* Favorit hjärtat */
+.favorite-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  background: rgba(251, 250, 247, 0.92);
+  color: var(--color-ink);
+  transition: transform var(--dur-fast) ease;
+}
+
+.favorite-button:hover {
+  transform: scale(1.08);
+}
+
+.favorite-button svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  transition: fill var(--dur-fast) ease;
+}
+
+.favorite-button[aria-pressed="true"] {
+  color: var(--color-heart);
+}
+
+.favorite-button[aria-pressed="true"] svg {
+  fill: currentColor;
+}
+
+.product-card__favorite {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+}
+
+/* Snabbknapparna glider upp vid hover */
+.product-card__quick {
+  position: absolute;
+  inset: auto 0.75rem 0.75rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0;
+  translate: 0 10px;
+  transition:
+    opacity var(--dur-fast) ease,
+    translate var(--dur-base) var(--ease-out);
+}
+
+.product-card:hover .product-card__quick,
+.product-card:focus-within .product-card__quick {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.quick-add,
+.quick-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 2.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: background-color var(--dur-fast) ease;
+}
+
+.quick-add {
+  flex: 1;
+  padding: 0 1rem;
+}
+
+.quick-view {
+  flex-shrink: 0;
+  width: 2.6rem;
+  background: rgba(251, 250, 247, 0.92);
+  color: var(--color-ink);
+}
+
+.quick-add:hover {
+  background: #2c2a27;
+}
+
+.quick-view:hover {
+  background: var(--color-white);
+}
+
+.quick-add:disabled {
+  background: rgba(22, 21, 20, 0.55);
+  cursor: default;
+}
+
+.quick-add svg,
+.quick-view svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+/* Pekskärmar */
+@media (hover: none) {
+  .product-card__quick {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  .quick-add {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .quick-add svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .product-card .unique-tag {
+    display: none;
+  }
+}
+
+/* Platshåller när när bild saknas */
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  aspect-ratio: 4 / 5;
+  background: var(--color-sand);
+  color: var(--color-muted);
+}
+
+.image-placeholder__logo {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: #c9c1b4;
+}
+
+.image-placeholder__logo em {
+  font-style: italic;
+}
+
+.image-placeholder__text {
+  font-size: 0.62rem;
+  font-weight: 500;
+  font-stretch: var(--label-stretch);
+  letter-spacing: var(--label-spacing);
+  text-transform: uppercase;
+}
+
+/* Små bilder (varukort, kassa) */
+.cart-item .image-placeholder__text,
+.checkout-product .image-placeholder__text,
+.pending-row .image-placeholder__text {
+  display: none;
+}
+
+.cart-item .image-placeholder__logo,
+.checkout-product .image-placeholder__logo {
+  font-size: 0.85rem;
+}
+
+/* Skeleton korten */
+.product-card--skeleton .skeleton--image {
+  aspect-ratio: 4 / 5;
+}
+
+.product-card--skeleton .product-card-content {
+  gap: 0.55rem;
+}
+
+.product-card--skeleton .skeleton--line {
+  height: 0.7rem;
+}
+
+/* Säljarens produktsida */
+.seller-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.seller-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: var(--color-sand);
+  color: var(--color-ink);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.seller-avatar--large {
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: 1rem;
+}

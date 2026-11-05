@@ -1,0 +1,83 @@
+@charset "UTF-8";
+
+/* Designgrunden som innehåller:
+* Alla färger
+* Typsnitt
+* Mått
+* Skuggor */
+
+:root {
+  /* Färger */
+  --color-bg: #f5f3ee; /* sidans papper */
+  --color-surface: #fbfaf7; /* paneler, kort och fält */
+  --color-white: #ffffff;
+  --color-sand: #ece7df; /* platshållare, skeleton, lugna ytor */
+  --color-line: #e3ddd3; /* tunna linjer */
+  --color-line-strong: #cfc8bc;
+
+  --color-ink: #161514; /* text, primärknappar */
+  --color-ink-soft: #3b3834; /* brödtext */
+  --color-muted: #77726a; /* hjälptext, etiketter */
+  --color-on-ink: #f5f3ee; /* text på svart */
+
+  --color-heart: #c0565b;
+
+  /* Skick */
+  --color-condition-new: #4f7a5d;
+  --color-condition-good: #b08a45;
+  --color-condition-used: #9a5b40;
+
+  /* Status */
+  --color-success: #3f6a4c;
+  --color-success-bg: #e3ebe2;
+  --color-warning: #85621d;
+  --color-warning-bg: #f3ead6;
+  --color-danger: #9f4130;
+  --color-danger-bg: #f3e0da;
+  --color-neutral: #57534c;
+  --color-neutral-bg: #ebe6dd;
+
+  /* Typografi */
+  --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --font-body: "Archivo", system-ui, -apple-system, sans-serif;
+
+  --text-xs: 0.72rem;
+  --text-sm: 0.85rem;
+  --text-base: 0.98rem;
+  --text-lg: 1.12rem;
+
+  --heading-display: clamp(2.9rem, 6.2vw, 5.6rem);
+  --heading-1: clamp(2.2rem, 4vw, 3.3rem);
+  --heading-2: clamp(1.65rem, 2.6vw, 2.3rem);
+  --heading-3: 1.2rem;
+
+  /* Etiketter och meny */
+  --label-stretch: 125%;
+  --label-spacing: 0.16em;
+
+  /* Mått */
+  --container: 1240px;
+  --gutter: clamp(1.1rem, 4vw, 2.5rem);
+  --section-space: clamp(3.5rem, 8vw, 6.5rem);
+
+  --radius-xs: 3px; /* bilder */
+  --radius-md: 12px; /* fält och små kort */
+  --radius-lg: 20px; /* paneler */
+  --radius-xl: 32px; /* stora ytor som heron */
+  --radius-pill: 999px; /* knappar */
+
+  /* Skuggor */
+  --shadow-soft: 0 1px 2px rgba(22, 21, 20, 0.05);
+  --shadow-lift: 0 18px 40px -22px rgba(22, 21, 20, 0.35);
+  --shadow-float: 0 40px 80px -40px rgba(22, 21, 20, 0.35);
+
+  /* Rörelse */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 0.2s;
+  --dur-base: 0.35s;
+  --dur-slow: 0.8s;
+
+  /* Fokus */
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-ink);
+}
