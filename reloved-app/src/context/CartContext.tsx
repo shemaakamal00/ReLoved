@@ -1,8 +1,9 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useState,
   useEffect,
+  useState,
   type ReactNode,
 } from "react";
 import { useAuth } from "./AuthContext";
@@ -12,23 +13,19 @@ import {
   removeCartItem,
   clearCart as clearCartApi,
   fetchProducts,
-} from "../api/client";
+} from "../api";
 import type { Product } from "../types";
 
-interface CartLine {
+export interface CartLine {
   product_id: number;
   product: Product;
-}
-
-interface LocalCartLine {
-  id: number;
 }
 
 interface CartContextValue {
   items: CartLine[];
   loading: boolean;
   cartCount: number;
-  addToCart: (productId: number,) => Promise<void>;
+  addToCart: (productId: number) => Promise<void>;
   removeFromCart: (productId: number) => Promise<void>;
   clearCart: () => Promise<void>;
 }
@@ -36,112 +33,100 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 const LOCAL_CART_KEY = "reloved-cart";
 
-function loadLocalCart(): LocalCartLine[] {
-  const raw = localStorage.getItem(LOCAL_CART_KEY);
-  if (!raw) return [];
+function loadLocalIds(): number[] {
   try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(localStorage.getItem(LOCAL_CART_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.map((line) => line.id) : [];
   } catch {
     return [];
   }
 }
 
-function saveLocalCart(items: LocalCartLine[]) {
-  localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(items));
+function saveLocalIds(ids: number[]) {
+  localStorage.setItem(
+    LOCAL_CART_KEY,
+    JSON.stringify(ids.map((id) => ({ id }))),
+  );
+}
+
+async function loadLocalCart(): Promise<CartLine[]> {
+  const ids = loadLocalIds();
+  if (ids.length === 0) return [];
+
+  const products = await fetchProducts();
+  return ids
+    .map((id) => products.find((p) => p.id === id))
+    .filter((product): product is Product => Boolean(product))
+    .map((product) => ({ product_id: product.id, product }));
+}
+
+async function moveLocalCartToServer(token: string) {
+  const ids = loadLocalIds();
+  for (const id of ids) await addCartItem(token, id);
+  if (ids.length > 0) localStorage.removeItem(LOCAL_CART_KEY);
+}
+
+async function loadServerCart(token: string): Promise<CartLine[]> {
+  await moveLocalCartToServer(token);
+  const rows = await fetchCart(token);
+  return rows.map((row) => ({
+    product_id: row.product_id,
+    product: row.products,
+  }));
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const [items, setItems] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadCart(showLoading = true) {
-    if (showLoading) setLoading(true);
-
-    if (user && token) {
-      const local = loadLocalCart();
-      if (local.length > 0) {
-        for (const line of local) {
-          await addCartItem(token, line.id);
-        }
-        localStorage.removeItem(LOCAL_CART_KEY);
-      }
-
-      const data = await fetchCart(token);
-      setItems(
-        data.map((row) => ({
-          product_id: row.product_id,
-          product: row.products,
-        })),
-      );
-    } else {
-      const local = loadLocalCart();
-      if (local.length === 0) {
-        setItems([]);
-      } else {
-        const products = await fetchProducts();
-        const joined = local
-          .map((line) => {
-            const product = products.find((p) => p.id === line.id);
-            return product
-              ? { product_id: product.id, product }
-              : null;
-          })
-          .filter((line): line is CartLine => line !== null);
-        setItems(joined);
-      }
+  const reload = useCallback(async () => {
+    try {
+      setItems(token ? await loadServerCart(token) : await loadLocalCart());
+    } catch (err) {
+      console.error("Kunde inte läsa varukorgen:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  }
-
+  }, [token]);
   useEffect(() => {
-    loadCart();
-  }, [user]);
+    let cancelled = false;
+    const load = token ? loadServerCart(token) : loadLocalCart();
+    load
+      .then((lines) => !cancelled && setItems(lines))
+      .catch((err) => console.error("Kunde inte läsa varukorgen:", err))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   async function addToCart(productId: number) {
-    const alreadyInCart = items.some((item) => item.product_id === productId);
-    if (alreadyInCart) {
-      return;
-    }
+    if (items.some((item) => item.product_id === productId)) return;
 
-    if (user && token) {
-      await addCartItem(token, productId);
-    } else {
-      const local = loadLocalCart();
-      local.push({ id: productId});
-      saveLocalCart(local);
-    }
-    await loadCart(false);
+    if (token) await addCartItem(token, productId);
+    else saveLocalIds([...loadLocalIds(), productId]);
+    await reload();
   }
 
   async function removeFromCart(productId: number) {
-    if (user && token) {
-      await removeCartItem(token, productId);
-    } else {
-      saveLocalCart(loadLocalCart().filter((l) => l.id !== productId));
-    }
-    await loadCart(false);
+    if (token) await removeCartItem(token, productId);
+    else saveLocalIds(loadLocalIds().filter((id) => id !== productId));
+    await reload();
   }
 
   async function clearCart() {
-    if (user && token) {
-      await clearCartApi(token);
-    } else {
-      localStorage.removeItem(LOCAL_CART_KEY);
-    }
-    await loadCart(false);
+    if (token) await clearCartApi(token);
+    else localStorage.removeItem(LOCAL_CART_KEY);
+    await reload();
   }
-
-  const cartCount = items.length;
 
   return (
     <CartContext.Provider
       value={{
         items,
         loading,
-        cartCount,
+        cartCount: items.length,
         addToCart,
         removeFromCart,
         clearCart,

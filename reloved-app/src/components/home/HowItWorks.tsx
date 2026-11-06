@@ -1,9 +1,10 @@
+import Reveal from "../ui/Reveal";
+
 interface Step {
   id: string;
   number: string;
   title: string;
   description: string;
-  icon: string;
 }
 
 const steps: Step[] = [
@@ -12,21 +13,19 @@ const steps: Step[] = [
     number: "01",
     title: "Lägg upp annonsen",
     description: "En bild, märke, storlek, skick och ditt pris",
-    icon: "📷",
   },
   {
     id: "buyer",
     number: "02",
     title: "Vi granskar den",
     description: "Ser allt bra ut publiceras annonsen, oftast inom ett dygn.",
-    icon: "💬",
   },
   {
-    id: "home",
+    id: "sold",
     number: "03",
     title: "Någon köper den",
-    description: "Köperen betalar med kort och du ser försäljningen i säljarpanelen.",
-    icon: "📦",
+    description:
+      "Du skickar plagget till oss, och vi skickar det vidare till köparen med PostNord.",
   },
 ];
 
@@ -38,17 +37,20 @@ function HowItWorks() {
         <h2>Så säljer du ett plagg</h2>
 
         <div className="steps">
-          {steps.map((step) => (
-            <article className="step-card" data-step={step.id} key={step.id}>
+          {steps.map((step, index) => (
+            <Reveal
+              as="article"
+              className="step-card"
+              data-step={step.id}
+              index={index}
+              key={step.id}
+            >
               <div className="step-content">
                 <span className="step-number">{step.number}</span>
                 <h3>{step.title}</h3>
                 <p>{step.description}</p>
               </div>
-              <div className="step-visual" aria-hidden="true">
-                <span>{step.icon}</span>
-              </div>
-            </article>
+            </Reveal>
           ))}
         </div>
       </div>

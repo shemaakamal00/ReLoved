@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { loginUser, registerUser } from "../api/client";
+import { loginUser, registerUser } from "../api";
+import { AUTH_STORAGE_KEY as AUTH_KEY } from "../api/http";
 import type { User } from "../types";
 
 interface AuthContextValue {
@@ -16,8 +17,6 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-const AUTH_KEY = "reloved-auth";
 
 function loadStoredAuth(): { user: User; token: string } | null {
   const raw = localStorage.getItem(AUTH_KEY);

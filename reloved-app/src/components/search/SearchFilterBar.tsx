@@ -90,7 +90,6 @@ function SearchFilterBar({
         </select>
       </label>
 
-      {}
       <form
         className="search-filters__price"
         onSubmit={handlePriceSubmit}

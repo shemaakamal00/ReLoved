@@ -1,21 +1,17 @@
-import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useFavorites } from "../../context/FavoritesContext";
-import { fetchCategories } from "../../api/client";
-import type { Category } from "../../types";
+import { useCategories } from "../../hooks/useCategories";
 import CurrencySelect from "./CurrencySelect";
 
 function Header() {
   const { user } = useAuth();
   const { cartCount } = useCart();
   const { favorites } = useFavorites();
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    fetchCategories().then(setCategories).catch(console.error);
-  }, []);
+  const { categories } = useCategories();
+  const navigate = useNavigate();
 
   const topLevelCategories = categories
     .filter((c) => c.parent_id === null)
@@ -25,9 +21,7 @@ function Header() {
     return categories.filter((c) => c.parent_id === parentId);
   }
 
-  const navigate = useNavigate();
-
-  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const query = (formData.get("search") as string)?.trim();
@@ -52,7 +46,7 @@ function Header() {
             type="search"
             id="search"
             name="search"
-            placeholder="Sök plagg, märken..."
+            placeholder="Sök på plagg eller märke"
           />
           <button
             className="search-button"
@@ -78,12 +72,18 @@ function Header() {
             </svg>
           </Link>
 
-          <Link to="/cart" className="icon-button" aria-label="Varukorg">
+          <Link
+            to="/cart"
+            className="icon-button"
+            aria-label="Varukorg"
+            data-cart-target
+          >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 7h12l-1 9H7L6 7z"></path>
               <path d="M9 7a3 3 0 0 1 6 0"></path>
             </svg>
-            <span className="icon-badge" id="cartCount">
+            {/* key: siffran byggs om vid varje ändring, så att den studsar (motion.css) */}
+            <span className="icon-badge" id="cartCount" key={cartCount}>
               {cartCount}
             </span>
           </Link>
@@ -100,7 +100,7 @@ function Header() {
           </Link>
 
           <Link to="/seller" className="sell-button" id="sellButton">
-            Sälj nu
+            Sälj
           </Link>
 
           {user?.role === "admin" && (

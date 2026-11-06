@@ -11,8 +11,7 @@ function Footer() {
         <p className="footer-tagline">Älskat tidigare. Älskat igen.</p>
 
         <p className="footer-text">
-          Köp, sälj och ge plagg ett nytt liv. ReLoved gör second hand enkelt,
-          tryggt och hållbart.
+          Second hand där varje annons granskas innan den syns.
         </p>
 
         <nav className="footer-nav" aria-label="Sidfot">
@@ -23,19 +22,11 @@ function Footer() {
           <a href="/contact">Kontakta oss</a>
         </nav>
 
-        <div className="footer-socials">
-          <a href="#">Instagram</a>
-          <a href="#">TikTok</a>
-          <a href="#">Pinterest</a>
-        </div>
-
         <p className="footer-note">
-          ReLoved är ett utbildningsprojekt utvecklat i studiesyfte.
+          ReLoved är ett skolprojekt. Inga riktiga köp görs.
         </p>
 
-        <p className="footer-copy">
-          © 2026 ReLoved. Alla rättigheter förbehållna.
-        </p>
+        <p className="footer-copy">© 2026 ReLoved.</p>
       </div>
     </footer>
   );

@@ -15,22 +15,22 @@ function Hero({ featured = [], loading = false }: HeroProps) {
         className={`container hero-grid ${centered ? "hero-grid--centered" : ""}`}
       >
         <div className="hero-copy">
-          <p className="eyebrow">Älskat tidigare · älskat igen</p>
+          <p className="eyebrow">Second hand · ett exemplar av varje</p>
           <h1>
             Varje plagg finns <em>bara en gång</em>
           </h1>
           <p className="hero-lede">
-            Ingen lagerhylla, inga dubbletter. Det du ser är det enda exemplaret
-            som finns. Hittar du något du gillar, är det bäst att inte vänta.
+            Ser du något du gillar är det ditt, om ingen annan hinner före. Alla
+            annonser granskas innan de publiceras.
           </p>
 
           <div className="hero-actions">
             <Link className="button button-primary" to="/products">
               Se alla plagg →
             </Link>
-            <a className="button button-secondary" href="#how-it-works">
-              Så fungerar det
-            </a>
+            <Link className="button button-secondary" to="/seller">
+              Sälj ett plagg
+            </Link>
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import type { ShippingMethod, ShippingQuote } from "../../types";
+import { formatKr, formatShippingPrice } from "../../utils/format";
 import { formatDeliveryDate } from "../../utils/shipping";
 
 interface ShippingPickerProps {
@@ -34,12 +35,12 @@ function ShippingPicker({
     <div className="shipping-picker">
       {left > 0 ? (
         <p className="shipping-hint">
-          Fri frakt när du handlar för {quote.freeShippingFrom} kr. Du har{" "}
-          {left} kr kvar.
+          Fri frakt när du handlar för {formatKr(quote.freeShippingFrom)}. Du
+          har {formatKr(left)} kvar.
         </p>
       ) : (
         <p className="shipping-hint shipping-hint--free">
-          Du har fri frakt! 🎉
+          Fri frakt på den här ordern.
         </p>
       )}
 
@@ -66,7 +67,7 @@ function ShippingPicker({
             </small>
           </span>
           <span className="shipping-option__price">
-            {option.price === 0 ? "Gratis" : `${option.price} kr`}
+            {formatShippingPrice(option.price)}
           </span>
         </label>
       ))}
