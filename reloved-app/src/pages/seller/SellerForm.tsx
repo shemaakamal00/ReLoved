@@ -8,6 +8,8 @@ import { useImageCheck } from "../../hooks/useImageCheck";
 import { errorMessage } from "../../utils/messages";
 import PanelSection from "../../components/ui/PanelSection";
 import ProductFormFields from "../../components/product/ProductFormFields";
+import FormMessage from "../../components/ui/FormMessage";
+import Spinner from "../../components/ui/Spinner";
 
 interface SellerFormProps {
   editingProduct?: Product | null;
@@ -25,11 +27,14 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
   const { categories } = useCategories();
   const handleImageChange = useImageCheck();
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token) return;
 
+    setSuccess(null);
     const form = event.currentTarget;
     const formData = new FormData(form);
 
@@ -45,8 +50,10 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
         showToast("Sparat.");
       } else {
         await submitListing(token, formData);
-        showToast("Skickad. Vi granskar annonsen innan den syns.");
-        form.reset();
+        setSuccess(
+          "Annonsen är skickad! Vi granskar den, oftast inom ett dygn, och sedan syns den i butiken.",
+        );
+        setFormKey((key) => key + 1);
       }
       onSaved?.();
     } catch (err) {
@@ -68,7 +75,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
       <form
         className="seller-form"
         onSubmit={handleSubmit}
-        key={editingProduct?.id ?? "new"}
+        key={editingProduct?.id ?? `new-${formKey}`}
       >
         <ProductFormFields
           variant="seller"
@@ -77,17 +84,32 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
           onImageChange={handleImageChange}
         />
 
-        <button
-          className="button button-primary seller-form__full"
-          type="submit"
-          disabled={submitting}
-        >
-          {submitting
-            ? "Sparar..."
-            : editingProduct
-              ? "Spara ändringar"
-              : "Skicka för granskning"}
-        </button>
+        <div className="seller-form__full form-actions">
+          <FormMessage message={success} type="success" />
+          {/* Rörlig rand medan bilden laddas upp */}
+          {submitting && (
+            <div
+              className="upload-progress"
+              role="progressbar"
+              aria-label="Laddar upp"
+            >
+              <span />
+            </div>
+          )}
+          <button
+            className="button button-primary"
+            type="submit"
+            disabled={submitting}
+            aria-busy={submitting}
+          >
+            {submitting && <Spinner />}
+            {submitting
+              ? "Sparar..."
+              : editingProduct
+                ? "Spara ändringar"
+                : "Skicka för granskning"}
+          </button>
+        </div>
 
         {editingProduct && (
           <button

@@ -8,6 +8,7 @@ import { errorMessage } from "../../utils/messages";
 import { PRODUCT_STATUS_LABELS } from "../../utils/statusLabels";
 import PanelSection from "../../components/ui/PanelSection";
 import StatusBadge from "../../components/ui/StatusBadge";
+import TableSkeleton from "../../components/ui/TableSkeleton";
 
 interface MyListingsProps {
   onEdit: (product: Product) => void;
@@ -54,7 +55,7 @@ function MyListings({ onEdit, refreshKey }: MyListingsProps) {
         </div>
 
         {loading ? (
-          <p>Laddar dina annonser...</p>
+          <TableSkeleton label="Laddar dina annonser..." />
         ) : !listings || listings.length === 0 ? (
           <p>Inga annonser än. Den första tar ett par minuter.</p>
         ) : (

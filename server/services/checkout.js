@@ -8,6 +8,7 @@ import {
 } from "../integrations/shippingAdapter.ts";
 import { priceCart } from "./cartPricing.js";
 import { SHIPPING_OPTIONS, shippingPrice } from "./shipping.js";
+import { confirmPaymentWithStripe } from "./payments.js";
 
 const ORDER_FAILED = "Kunde inte skapa ordern. Försök igen.";
 
@@ -80,12 +81,13 @@ async function saveOrder(
     throw new HttpError(500, ORDER_FAILED);
   }
   const { error: itemsError } = await supabase.from("order_items").insert(
-    lines.map(({ product, quantity, lineTotal }) => ({
+    lines.map(({ product, size, quantity, lineTotal }) => ({
       order_id: order.id,
       product_id: product.id,
       seller_id: product.seller_id,
       product_name: product.name,
       product_brand: product.brand,
+      size: size || null,
       quantity,
       unit_price: product.price,
       line_total: lineTotal,
@@ -115,8 +117,8 @@ async function startPayment(
       shippingName: servicePoint
         ? `${SHIPPING_OPTIONS.service_point.stripeName} (${servicePoint.name})`
         : SHIPPING_OPTIONS[customer.shipping_method].stripeName,
-      lines: lines.map(({ product, quantity }) => ({
-        name: `${product.brand} – ${product.name}`,
+      lines: lines.map(({ product, size, quantity }) => ({
+        name: `${product.brand} – ${product.name}${size ? ` (stl ${size})` : ""}`,
         unitPrice: product.price,
         quantity,
       })),
@@ -165,12 +167,11 @@ export async function startCheckout(customer) {
   return { orderId: order.id, url };
 }
 
-// Orderbekräftelse som visas när kunden kommer tillbaka från Stripe
-export async function findOrderBySession(sessionId) {
+async function readOrderBySession(sessionId) {
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, status, subtotal, shipping, total, created_at, full_name, shipping_method, service_point_name, service_point_address, estimated_delivery, order_items(product_name, product_brand, quantity, unit_price, line_total)",
+      "id, status, subtotal, shipping, total, created_at, full_name, shipping_method, service_point_name, service_point_address, estimated_delivery, order_items(product_name, product_brand, size, quantity, unit_price, line_total)",
     )
     .eq("stripe_session_id", sessionId)
     .maybeSingle();
@@ -180,6 +181,20 @@ export async function findOrderBySession(sessionId) {
     throw new HttpError(500, "Kunde inte hämta ordern.");
   }
   if (!order) throw new HttpError(404, "Ordern hittades inte.");
+  return order;
+}
+
+// Orderbekräftelse som visas när kunden kommer tillbaka från Stripe
+export async function findOrderBySession(sessionId) {
+  let order = await readOrderBySession(sessionId);
+
+  // Webhooken har inte kommit än: fråga Stripe direkt
+  if (
+    order.status === "pending" &&
+    (await confirmPaymentWithStripe(sessionId))
+  ) {
+    order = await readOrderBySession(sessionId);
+  }
 
   const { order_items, full_name, ...rest } = order;
   return { ...rest, first_name: full_name.split(" ")[0], items: order_items };

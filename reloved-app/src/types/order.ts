@@ -40,6 +40,8 @@ export interface OrderItem {
   seller_id: number | null;
   product_name: string;
   product_brand: string;
+  size: string | null;
+  quantity: number;
   unit_price: number;
   line_total: number;
 }
@@ -48,7 +50,6 @@ export interface OrderWithItems extends Order {
   items: OrderItem[];
 }
 
-/** En såld produkt i säljarpanelen. */
 export interface SellerOrderItem extends OrderItem {
   orders: {
     id: number;
@@ -69,7 +70,6 @@ export interface CheckoutPayload {
   service_point_id?: string;
 }
 
-/** Det som visas på bekräftelsesidan efter Stripe. */
 export interface OrderConfirmation extends OrderShipping {
   id: number;
   status: OrderStatus;
@@ -81,6 +81,7 @@ export interface OrderConfirmation extends OrderShipping {
   items: {
     product_name: string;
     product_brand: string;
+    size: string | null;
     quantity: number;
     unit_price: number;
     line_total: number;

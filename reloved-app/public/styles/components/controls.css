@@ -21,11 +21,43 @@
     background-color var(--dur-fast) ease,
     border-color var(--dur-fast) ease,
     color var(--dur-fast) ease,
-    transform var(--dur-fast) ease;
+    box-shadow var(--dur-base) ease,
+    transform var(--dur-fast) var(--ease-out);
+}
+
+/* Primär- och sekundärknappar lyfts 2 px vid hover */
+.button-primary:hover:not(:disabled),
+.button-secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
 }
 
 .button:active:not(:disabled) {
   transform: translateY(1px);
+  box-shadow: none;
+  transition-duration: 0.05s;
+}
+
+/* Kvitto i knappar: "Tillagd!" och "Sparat" en kort stund */
+.button.button--added,
+.button.button--added:hover {
+  background: var(--color-success);
+  color: var(--color-white);
+  cursor: default;
+  animation: reloved-scale-pop 0.4s var(--ease-spring);
+}
+
+.button--added .checkmark {
+  color: inherit;
+}
+
+.button--added .checkmark circle {
+  fill: none;
+}
+
+/* Knapp som laddar: spinner + text */
+.button[aria-busy="true"] {
+  cursor: progress;
 }
 
 /* Svart pill */
@@ -35,7 +67,7 @@
 }
 
 .button-primary:hover {
-  background: #2c2a27;
+  background: var(--color-ink-hover);
 }
 
 /* Tunn kant som är genomskinlig */
@@ -76,12 +108,14 @@
   color: var(--color-ink);
   transition:
     background-color var(--dur-fast) ease,
-    color var(--dur-fast) ease;
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .sell-button:hover {
   background: var(--color-ink);
   color: var(--color-on-ink);
+  transform: translateY(-2px);
 }
 
 /* Formulär */
@@ -119,12 +153,13 @@ textarea {
   color: var(--color-ink);
   transition:
     border-color var(--dur-fast) ease,
-    background-color var(--dur-fast) ease;
+    background-color var(--dur-fast) ease,
+    box-shadow var(--dur-base) var(--ease-out);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #a59f95;
+  color: var(--color-faint);
 }
 
 input:hover,
@@ -133,13 +168,21 @@ textarea:hover {
   border-color: var(--color-line-strong);
 }
 
+/* Fokus: kanten blir svart och en mjuk ring växer fram */
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--color-ink);
   background: var(--color-white);
-  box-shadow: none;
+  box-shadow: 0 0 0 4px rgba(22, 21, 20, 0.08);
+}
+
+/* Fält som inte godkänts efter att man försökt skicka */
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+  border-color: var(--color-danger);
 }
 
 input:disabled {
@@ -192,6 +235,8 @@ input[type="file"] {
   font-size: var(--text-xs);
   font-weight: 500;
   white-space: nowrap;
+  /* Tonas in när statusen byts (StatusBadge har key={status}) */
+  animation: reloved-fade-in var(--dur-base) ease-out;
 }
 
 .status-badge--pending {
@@ -255,7 +300,25 @@ input[type="file"] {
   color: var(--color-on-ink);
   font-size: var(--text-sm);
   box-shadow: var(--shadow-lift);
-  animation: reloved-fade-up var(--dur-base) var(--ease-out);
+  animation: reloved-toast-in var(--dur-base) var(--ease-out);
+}
+
+.toast.is-leaving {
+  animation: reloved-toast-out var(--dur-base) ease-in forwards;
+}
+
+@keyframes reloved-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@keyframes reloved-toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
 }
 
 .toast--error {
@@ -275,4 +338,160 @@ input[type="file"] {
   .toast {
     max-width: none;
   }
+}
+
+/* Fel- och bekräftelsemeddelanden som växer fram (FormMessage) */
+.form-message {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) ease;
+}
+
+.form-message.is-visible {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.form-message__inner {
+  overflow: hidden;
+}
+
+/* Meddelandet och knappen ligger ihop i .form-actions, så att ett dolt
+   meddelande inte tar upp ett eget mellanrum i formulärets grid */
+.form-actions {
+  display: grid;
+}
+
+.form-actions .form-message__inner {
+  padding-bottom: 0.9rem;
+}
+
+/* Lösenordsfält med ögonknapp */
+.password-input {
+  position: relative;
+  display: block;
+}
+
+.password-input input {
+  padding-right: 3rem;
+}
+
+.password-input__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  color: var(--color-muted);
+  transform: translateY(-50%);
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+
+.password-input__toggle:hover,
+.password-input__toggle[aria-pressed="true"] {
+  color: var(--color-ink);
+  background: var(--color-sand);
+}
+
+.password-input__toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  animation: reloved-scale-pop 0.3s var(--ease-spring);
+}
+
+/* Dialogruta */
+.modal {
+  position: relative;
+  max-width: min(960px, 100%);
+  max-height: 100%;
+}
+
+.modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: rgba(251, 250, 247, 0.92);
+  color: var(--color-ink);
+  transition: transform var(--dur-fast) ease;
+}
+
+.modal__close:hover {
+  transform: rotate(90deg);
+}
+
+.modal__close svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+/* Tomt läge */
+.empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+  max-width: 520px;
+  padding: clamp(2rem, 5vw, 3rem);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 0.25rem;
+  border-radius: 50%;
+  background: var(--color-sand);
+}
+
+.empty-state__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.empty-state h2 {
+  font-size: 1.6rem;
+}
+
+.empty-state .button {
+  margin-top: 0.5rem;
+}
+
+/* Tabellskeleton */
+.table-skeleton__row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.table-skeleton .skeleton--line {
+  height: 0.75rem;
 }

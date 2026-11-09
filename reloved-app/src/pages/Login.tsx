@@ -1,10 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import FormMessage from "../components/ui/FormMessage";
+import PasswordInput from "../components/ui/PasswordInput";
+import Spinner from "../components/ui/Spinner";
 
 function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +22,7 @@ function Login() {
 
     try {
       await login(email, password);
+      showToast("Du är inloggad. Välkommen tillbaka!");
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kunde inte logga in");
@@ -46,8 +52,7 @@ function Login() {
 
             <label>
               Lösenord
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="********"
@@ -55,17 +60,20 @@ function Login() {
               />
             </label>
 
-            {error && <p className="form-error">{error}</p>}
-
             <Link to="/forgot-password">Glömt lösenord?</Link>
 
-            <button
-              className="button button-primary"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? "Loggar in..." : "Logga in"}
-            </button>
+            <div className="form-actions">
+              <FormMessage message={error} />
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={loading}
+                aria-busy={loading}
+              >
+                {loading && <Spinner />}
+                {loading ? "Loggar in..." : "Logga in"}
+              </button>
+            </div>
           </form>
 
           <div className="login-register">

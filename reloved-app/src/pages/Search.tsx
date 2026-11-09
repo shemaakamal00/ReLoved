@@ -4,7 +4,10 @@ import { searchProducts } from "../api";
 import { useApi } from "../hooks/useApi";
 import ProductCard from "../components/product/ProductCard";
 import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
-import SearchFilterBar from "../components/search/SearchFilterBar";
+import SearchFilterBar, {
+  SORT_LABELS,
+} from "../components/search/SearchFilterBar";
+import EmptyState from "../components/ui/EmptyState";
 import type { SearchFilters, SearchSort } from "../types";
 
 const PAGE_SIZE = 12;
@@ -59,9 +62,9 @@ function Search() {
   const meta = result?.meta;
   const hasFilters = Boolean(
     filters.category ||
-      filters.condition ||
-      filters.minPrice ||
-      filters.maxPrice,
+    filters.condition ||
+    filters.minPrice ||
+    filters.maxPrice,
   );
 
   return (
@@ -108,11 +111,20 @@ function Search() {
 
           {!loading && error && <p className="form-error">{error}</p>}
 
-          {!loading && meta && (
-            <p className="search-page__status">
-              {meta.total === 0
-                ? `Inga plagg matchade ${q ? `”${q}”` : "sökningen"}${hasFilters ? " med de här filtren" : ""}. Kontrollera stavningen eller prova ett annat ord.`
-                : `${meta.total} ${meta.total === 1 ? "träff" : "träffar"} · sida ${meta.page} av ${Math.max(meta.totalPages, 1)}`}
+          {!loading && meta && meta.total === 0 && (
+            <EmptyState icon="search" title="Inga träffar">
+              {`Inga plagg matchade ${q ? `”${q}”` : "sökningen"}${hasFilters ? " med de här filtren" : ""}. Kontrollera stavningen eller prova ett annat ord.`}
+            </EmptyState>
+          )}
+
+          {/* Statusraden tonas in efter varje ny sökning, och visar sorteringen
+              som ett kvitto när den ändrats */}
+          {!loading && meta && meta.total > 0 && (
+            <p className="search-page__status fade-in" role="status">
+              {meta.total} {meta.total === 1 ? "träff" : "träffar"}
+              {filters.sort !== "relevance" &&
+                ` · sorterat på ${SORT_LABELS[filters.sort].toLowerCase()}`}
+              {` · sida ${meta.page} av ${Math.max(meta.totalPages, 1)}`}
             </p>
           )}
 

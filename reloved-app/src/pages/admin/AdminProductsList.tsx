@@ -9,6 +9,7 @@ import { SEARCH_INDEX_WARNING } from "../../utils/messages";
 import { PRODUCT_STATUS_LABELS } from "../../utils/statusLabels";
 import PanelSection from "../../components/ui/PanelSection";
 import StatusBadge from "../../components/ui/StatusBadge";
+import TableSkeleton from "../../components/ui/TableSkeleton";
 
 interface AdminProductsListProps {
   onEdit: (product: Product) => void;
@@ -67,7 +68,7 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
         </div>
 
         {loading ? (
-          <p>Laddar produkter...</p>
+          <TableSkeleton label="Laddar produkter..." />
         ) : (
           (products ?? []).map((product) => (
             <div

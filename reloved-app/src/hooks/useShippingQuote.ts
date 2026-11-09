@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
 import { fetchShippingQuote } from "../api";
-import type { ShippingQuote } from "../types";
-import { toCartPayload } from "../utils/cart";
+import type { CartItemPayload, ShippingQuote } from "../types";
 import { errorMessage } from "../utils/messages";
 
 // Hämtar fraktalternativ för varukorgen
-
 export function useShippingQuote(
-  productIds: number[],
+  items: CartItemPayload[],
   postalCode?: string,
   { debounceMs = 0 } = {},
 ) {
-  const cartKey = productIds.join(",");
+  const cartKey = items.length > 0 ? JSON.stringify(items) : "";
   const key = `${cartKey}|${postalCode ?? ""}`;
   const [state, setState] = useState<{
     key: string | null;
@@ -23,10 +21,11 @@ export function useShippingQuote(
     if (!cartKey) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
-      const items = toCartPayload(
-        cartKey.split(",").map((id) => ({ product_id: Number(id) })),
-      );
-      fetchShippingQuote({ postal_code: postalCode, items }, controller.signal)
+      const payload = JSON.parse(cartKey) as CartItemPayload[];
+      fetchShippingQuote(
+        { postal_code: postalCode, items: payload },
+        controller.signal,
+      )
         .then((quote) => setState({ key, quote, error: null }))
         .catch((err) => {
           if (controller.signal.aborted) return;

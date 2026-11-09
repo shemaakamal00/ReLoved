@@ -5,12 +5,14 @@ import { useAuth } from "../context/AuthContext";
 import { useCart, type CartLine } from "../context/CartContext";
 import { useShippingQuote } from "../hooks/useShippingQuote";
 import type { ShippingMethod } from "../types";
-import { toCartPayload } from "../utils/cart";
+import { lineKey, toCartPayload } from "../utils/cart";
 import { formatKr, formatShippingPrice } from "../utils/format";
 import { errorMessage } from "../utils/messages";
 import Breadcrumbs from "../components/ui/Breadcrumbs";
 import ProductImage from "../components/product/ProductImage";
 import ShippingPicker from "../components/checkout/ShippingPicker";
+import FormMessage from "../components/ui/FormMessage";
+import Spinner from "../components/ui/Spinner";
 
 interface CustomerDetails {
   email: string;
@@ -67,7 +69,7 @@ function Checkout() {
   const cleanPostalCode = details.postalCode.replace(/\s/g, "");
   const hasPostalCode = /^\d{5}$/.test(cleanPostalCode);
   const shippingQuote = useShippingQuote(
-    items.map((item) => item.product_id),
+    toCartPayload(items),
     hasPostalCode ? cleanPostalCode : undefined,
     { debounceMs: 500 },
   );
@@ -80,7 +82,8 @@ function Checkout() {
     : "";
 
   const subtotal =
-    quote?.subtotal ?? items.reduce((sum, item) => sum + item.product.price, 0);
+    quote?.subtotal ??
+    items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const shipping =
     quote?.options.find((o) => o.method === method)?.price ?? null;
 
@@ -206,7 +209,8 @@ function Checkout() {
                 </p>
               </CheckoutCard>
 
-              {shownError && <p className="form-error">{shownError}</p>}
+              {/* Växer fram mjukt i stället för att knuffa layouten */}
+              <FormMessage message={shownError} />
             </form>
 
             <OrderSummary
@@ -276,38 +280,54 @@ function OrderSummary({
       <h2>Din order</h2>
 
       {items.map((item) => (
-        <div className="checkout-product" key={item.product_id}>
+        <div className="checkout-product" key={lineKey(item)}>
           <ProductImage
             product={item.product}
             className="checkout-product__image"
           />
           <div>
             <h3>{item.product.name}</h3>
-            <p>{formatKr(item.product.price)}</p>
+            <p>
+              {[
+                item.size && `Stl ${item.size}`,
+                item.quantity > 1 && `${item.quantity} st`,
+                formatKr(item.product.price * item.quantity),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           </div>
         </div>
       ))}
 
       <div className="summary-row">
         <span>Produkter</span>
-        <span>{formatKr(subtotal)}</span>
+        <span className="value-flash" key={subtotal}>
+          {formatKr(subtotal)}
+        </span>
       </div>
       <div className="summary-row">
         <span>Frakt</span>
-        <span>{shipping === null ? "–" : formatShippingPrice(shipping)}</span>
+        {/* key: frakten och totalen blinkar till när de räknas om */}
+        <span className="value-flash" key={String(shipping)}>
+          {shipping === null ? "–" : formatShippingPrice(shipping)}
+        </span>
       </div>
       <div className="summary-row summary-row--total">
         <span>Totalt</span>
-        <span>{formatKr(subtotal + (shipping ?? 0))}</span>
+        <span className="value-flash" key={subtotal + (shipping ?? 0)}>
+          {formatKr(subtotal + (shipping ?? 0))}
+        </span>
       </div>
 
-      {}
       <button
         type="submit"
         form="checkout-form"
         className="button button-primary"
         disabled={submitting}
+        aria-busy={submitting}
       >
+        {submitting && <Spinner />}
         {submitting ? "Skickar dig till betalning..." : "Gå till betalning"}
       </button>
     </aside>

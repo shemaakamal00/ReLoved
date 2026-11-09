@@ -31,9 +31,21 @@
   justify-content: center;
 }
 
-/* Text */
-.hero-copy {
+/* Text: rubrik, ingress och knappar tonas in nerifrån, en i taget */
+.hero-copy > * {
   animation: reloved-fade-up var(--dur-slow) var(--ease-out) both;
+}
+
+.hero-copy > :nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.hero-copy > :nth-child(3) {
+  animation-delay: 0.18s;
+}
+
+.hero-copy > :nth-child(4) {
+  animation-delay: 0.28s;
 }
 
 .hero h1 {
@@ -78,6 +90,7 @@
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
+  transition: scale 0.9s var(--ease-out);
 }
 
 /* Bakre bilden */
@@ -101,6 +114,10 @@
   z-index: 3;
   transform: translateY(-6px);
   box-shadow: var(--shadow-float);
+}
+
+.hero-visual__card:hover img {
+  scale: 1.04;
 }
 
 /* Tomma kort medan bilder laddas */
@@ -253,12 +270,13 @@
 
 .benefits-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
 .benefit-card {
   display: grid;
+  align-content: start;
   gap: 0.75rem;
   padding: clamp(1.75rem, 4vw, 2.75rem);
   border-radius: var(--radius-lg);
@@ -266,11 +284,24 @@
 }
 
 .benefit-card__icon {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-style: italic;
-  line-height: 1;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-sand);
   color: var(--color-ink);
+}
+
+.benefit-card__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .benefit-card h3 {

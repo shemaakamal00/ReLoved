@@ -17,7 +17,9 @@
 /* Sortering ovanför listan */
 .products-toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 1.75rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--color-line);
@@ -32,6 +34,24 @@
 
 .products-page > .container > p {
   color: var(--color-muted);
+}
+
+/* Kvitto när sorteringen ändras */
+.sort-feedback {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  animation: reloved-fade-in var(--dur-base) ease-out;
+}
+
+/* Korten glider till sina nya platser vid sortering (View Transitions).
+   Resten av sidan är inte med i övergången, så bara korten rör sig. */
+:root {
+  view-transition-name: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Sökning */
@@ -93,6 +113,52 @@
   text-underline-offset: 0.2em;
 }
 
+/* Aktiva filter */
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.35rem 0.3rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-size: var(--text-sm);
+  animation: reloved-scale-pop 0.3s var(--ease-spring);
+}
+
+.filter-chip.is-removing {
+  animation: reloved-leave 0.2s ease-in forwards;
+}
+
+.filter-chip button {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  color: inherit;
+  transition: background-color var(--dur-fast) ease;
+}
+
+.filter-chip button:hover {
+  background: rgba(245, 243, 238, 0.18);
+}
+
+.filter-chip svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
 .search-page__status {
   margin-bottom: 1.5rem;
   font-size: var(--text-sm);
@@ -117,22 +183,6 @@
 .pagination .button:hover:not(:disabled) {
   background: var(--color-ink);
   color: var(--color-on-ink);
-}
-
-/* Favoriter */
-
-.favorites-empty {
-  display: grid;
-  justify-items: start;
-  gap: 0.75rem;
-  max-width: 520px;
-  padding: clamp(2rem, 5vw, 3rem);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-}
-
-.favorites-empty .button {
-  margin-top: 0.75rem;
 }
 
 @media (max-width: 700px) {

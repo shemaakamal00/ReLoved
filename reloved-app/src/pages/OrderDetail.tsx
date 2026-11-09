@@ -60,7 +60,11 @@ function OrderDetail() {
           <h2>Produkter</h2>
           {order.items.map((item) => (
             <div className="order-product" key={item.id}>
-              <span>{item.product_name}</span>
+              <span>
+                {item.product_name}
+                {item.size && `, stl ${item.size}`}
+                {item.quantity > 1 && ` × ${item.quantity}`}
+              </span>
               <span>{item.product_brand}</span>
               <span>{formatKr(item.line_total)}</span>
             </div>

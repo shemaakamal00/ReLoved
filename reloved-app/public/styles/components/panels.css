@@ -379,3 +379,63 @@ details[open] > summary.seller-section__header::after {
     grid-template-columns: 1fr;
   }
 }
+
+/* Förhandsvisning av vald bild i uppladdningsrutan */
+.upload-box__preview {
+  width: 8rem;
+  aspect-ratio: 4 / 5;
+  margin-bottom: 0.4rem;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  box-shadow: var(--shadow-lift);
+  animation: reloved-scale-pop 0.45s var(--ease-spring);
+}
+
+.upload-box.has-preview {
+  border-style: solid;
+}
+
+/* Rörlig rand medan annonsen laddas upp */
+.upload-progress {
+  position: relative;
+  height: 3px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-sand);
+  animation: reloved-fade-in var(--dur-fast) ease-out;
+}
+
+.upload-progress span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--color-ink);
+  animation: reloved-progress 1.1s ease-in-out infinite;
+}
+
+@keyframes reloved-progress {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: 250% 0;
+  }
+}
+
+/* Raden blinkar till grönt när en orderstatus har sparats */
+.admin-table__row.is-saved {
+  animation: reloved-row-saved 1.8s ease-out;
+}
+
+@keyframes reloved-row-saved {
+  0%,
+  40% {
+    background: var(--color-success-bg);
+  }
+}
+
+.admin-actions button:disabled {
+  cursor: progress;
+}

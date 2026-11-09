@@ -14,10 +14,13 @@
   --color-sand: #ece7df; /* platshållare, skeleton, lugna ytor */
   --color-line: #e3ddd3; /* tunna linjer */
   --color-line-strong: #cfc8bc;
+  --color-sand-deep: #c9c1b4; /* logga på bildplatshållare */
 
   --color-ink: #161514; /* text, primärknappar */
+  --color-ink-hover: #2c2a27; /* svarta knappar vid hover */
   --color-ink-soft: #3b3834; /* brödtext */
   --color-muted: #77726a; /* hjälptext, etiketter */
+  --color-faint: #a59f95; /* placeholder-text */
   --color-on-ink: #f5f3ee; /* text på svart */
 
   --color-heart: #c0565b;
@@ -38,7 +41,7 @@
   --color-neutral-bg: #ebe6dd;
 
   /* Typografi */
-  --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
   --font-body: "Archivo", system-ui, -apple-system, sans-serif;
 
   --text-xs: 0.72rem;

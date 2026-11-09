@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import type { Category, Product } from "../../types";
 import { CONDITIONS } from "../../utils/conditions";
 import { IMAGE_ACCEPT, MAX_IMAGE_MB } from "../../utils/imageFile";
@@ -19,6 +19,12 @@ function ProductFormFields({
 }: ProductFormFieldsProps) {
   const isSeller = variant === "seller";
   const fullWidth = `${variant}-form__full`;
+  const preview = useImagePreview(product?.image_url ?? null);
+
+  function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+    onImageChange(event);
+    preview.show(event.target.files?.[0]);
+  }
   return (
     <>
       <label>
@@ -126,22 +132,33 @@ function ProductFormFields({
       </label>
 
       {isSeller ? (
-        <label className="upload-box">
+        <label className={`upload-box ${preview.url ? "has-preview" : ""}`}>
           <input
             name="image"
             type="file"
             accept={IMAGE_ACCEPT}
-            onChange={onImageChange}
+            onChange={handleImageChange}
             hidden
           />
-          <svg className="upload-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
-            <circle cx="12" cy="13" r="3.5" />
-          </svg>
+          {preview.url ? (
+            <img
+              className="upload-box__preview"
+              src={preview.url}
+              alt="Förhandsvisning av produktbilden"
+              key={preview.url}
+            />
+          ) : (
+            <svg className="upload-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+              <circle cx="12" cy="13" r="3.5" />
+            </svg>
+          )}
           <strong>
-            {product
-              ? "Byt produktbild (valfritt)"
-              : "Ladda upp produktbild (obligatoriskt)"}
+            {preview.url
+              ? "Byt bild"
+              : product
+                ? "Byt produktbild (valfritt)"
+                : "Ladda upp produktbild (obligatoriskt)"}
           </strong>
           <p>JPEG eller PNG, max {MAX_IMAGE_MB} MB</p>
         </label>
@@ -153,8 +170,16 @@ function ProductFormFields({
             name="image"
             type="file"
             accept={IMAGE_ACCEPT}
-            onChange={onImageChange}
+            onChange={handleImageChange}
           />
+          {preview.url && (
+            <img
+              className="upload-box__preview"
+              src={preview.url}
+              alt="Förhandsvisning av produktbilden"
+              key={preview.url}
+            />
+          )}
         </label>
       )}
 
@@ -169,6 +194,23 @@ function ProductFormFields({
       </label>
     </>
   );
+}
+
+function useImagePreview(currentUrl: string | null) {
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (fileUrl) URL.revokeObjectURL(fileUrl);
+    };
+  }, [fileUrl]);
+
+  return {
+    url: fileUrl ?? currentUrl,
+    show(file: File | undefined) {
+      setFileUrl(file ? URL.createObjectURL(file) : null);
+    },
+  };
 }
 
 export default ProductFormFields;

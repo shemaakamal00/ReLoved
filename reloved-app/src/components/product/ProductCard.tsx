@@ -4,10 +4,13 @@ import { useCart } from "../../context/CartContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useToast } from "../../context/ToastContext";
 import { useReveal } from "../../hooks/useReveal";
+import { useTemporaryFlag } from "../../hooks/useTemporaryFlag";
 import type { Product } from "../../types";
 import { conditionClass } from "../../utils/conditions";
+import { hasSizes, isStockItem } from "../../utils/cart";
 import { flyToCart } from "../../utils/flyToCart";
 import { errorMessage } from "../../utils/messages";
+import Checkmark from "../ui/Checkmark";
 import FavoriteButton from "./FavoriteButton";
 import ProductImage from "./ProductImage";
 
@@ -25,11 +28,12 @@ interface ProductCardProps {
     | "seller_name"
     | "stock"
   > &
-    Partial<Pick<Product, "status">>;
+    Partial<Pick<Product, "status" | "variants">>;
   index?: number;
+  className?: string;
 }
 
-function ProductCard({ product, index = 0 }: ProductCardProps) {
+function ProductCard({ product, index = 0, className = "" }: ProductCardProps) {
   const { formatPrice } = useCurrency();
   const revealProps = useReveal<HTMLElement>(index);
   const imageWrapRef = useRef<HTMLDivElement>(null);
@@ -37,9 +41,13 @@ function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   return (
     <article
-      className="product-card"
+      className={`product-card ${className}`}
       data-product-id={product.id}
       {...revealProps}
+      style={{
+        ...revealProps.style,
+        viewTransitionName: `product-${product.id}`,
+      }}
     >
       {/* Knapparna ligger bredvid länken, inte i den: knappar får inte ligga i en <a>. */}
       <div className="product-card__img-wrap" ref={imageWrapRef}>
@@ -101,15 +109,22 @@ interface QuickActionsProps {
 function QuickActions({ product, productUrl, getImage }: QuickActionsProps) {
   const { addToCart, items } = useCart();
   const { showToast } = useToast();
+  const [justAdded, markAdded] = useTemporaryFlag(1400);
 
-  const inCart = items.some((item) => item.product_id === product.id);
+  // Lagervaror kan läggas i flera gånger, second hand bara en gång
+  const inCart =
+    !isStockItem(product) &&
+    items.some((item) => item.product_id === product.id);
   const canBuy =
     product.stock !== 0 && (product.status ?? "approved") === "approved";
+  // Med storlekar måste man välja på produktsidan
+  const needsSize = hasSizes(product);
 
   async function handleAdd() {
     flyToCart(getImage());
     try {
       await addToCart(product.id);
+      markAdded();
     } catch (err) {
       showToast(errorMessage(err, "Kunde inte lägga i varukorgen."), "error");
     }
@@ -117,18 +132,37 @@ function QuickActions({ product, productUrl, getImage }: QuickActionsProps) {
 
   return (
     <div className="product-card__quick">
-      {canBuy && (
+      {canBuy && needsSize && (
+        <Link to={productUrl} className="quick-add">
+          <span className="quick-add__label">Välj storlek</span>
+        </Link>
+      )}
+      {canBuy && !needsSize && (
         <button
           type="button"
-          className="quick-add"
+          className={`quick-add ${justAdded ? "is-added" : ""}`}
           onClick={handleAdd}
           disabled={inCart}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 7h12l-1 9H7L6 7z" />
-            <path d="M9 7a3 3 0 0 1 6 0" />
-          </svg>
-          {inCart ? "I varukorgen" : "Lägg i varukorg"}
+          {/* key: texten tonas in på nytt när den byts */}
+          <span
+            className="quick-add__label"
+            key={justAdded ? "added" : String(inCart)}
+          >
+            {justAdded ? (
+              <Checkmark small />
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 7h12l-1 9H7L6 7z" />
+                <path d="M9 7a3 3 0 0 1 6 0" />
+              </svg>
+            )}
+            {justAdded
+              ? "Tillagd!"
+              : inCart
+                ? "I varukorgen"
+                : "Lägg i varukorg"}
+          </span>
         </button>
       )}
       <Link

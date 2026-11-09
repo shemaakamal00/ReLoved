@@ -59,8 +59,12 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (isFavorited(productId)) await removeFavorite(token, productId);
-    else await addFavorite(token, productId);
+    if (isFavorited(productId)) {
+      await removeFavorite(token, productId);
+    } else {
+      await addFavorite(token, productId);
+      showToast("Sparad i favoriter");
+    }
     await reload();
   }
 

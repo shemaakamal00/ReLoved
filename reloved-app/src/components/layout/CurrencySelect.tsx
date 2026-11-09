@@ -4,7 +4,8 @@ import {
   type CurrencyCode,
 } from "../../context/CurrencyContext";
 
-function CurrencySelect() {
+// id behövs eftersom väljaren finns både i kategoriraden och i mobilmenyn
+function CurrencySelect({ id = "currency" }: { id?: string }) {
   const { currency, setCurrency, status, ratesDate } = useCurrency();
   const title =
     status === "error"
@@ -15,11 +16,11 @@ function CurrencySelect() {
 
   return (
     <div className="currency-select">
-      <label className="sr-only" htmlFor="currency">
+      <label className="sr-only" htmlFor={id}>
         Valuta
       </label>
       <select
-        id="currency"
+        id={id}
         className="currency-select__input"
         value={currency}
         onChange={(event) => setCurrency(event.target.value as CurrencyCode)}

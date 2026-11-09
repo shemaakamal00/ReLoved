@@ -5,6 +5,7 @@ import { useApi } from "../hooks/useApi";
 import { formatDate, formatKr } from "../utils/format";
 import { ORDER_STATUS_LABELS } from "../utils/statusLabels";
 import StatusBadge from "../components/ui/StatusBadge";
+import TableSkeleton from "../components/ui/TableSkeleton";
 
 function Orders() {
   const { token } = useAuth();
@@ -25,7 +26,7 @@ function Orders() {
 
           <div className="orders-list">
             {loading ? (
-              <p>Laddar ordrar...</p>
+              <TableSkeleton label="Laddar ordrar..." />
             ) : !orders || orders.length === 0 ? (
               <p>
                 Inga köp än. <Link to="/products">Se alla plagg</Link>

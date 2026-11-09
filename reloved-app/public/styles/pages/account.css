@@ -19,6 +19,8 @@
   border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-float);
+  /* Formuläret tonas in nerifrån när sidan öppnas */
+  animation: reloved-fade-up var(--dur-slow) var(--ease-out) both;
 }
 
 .login-card .eyebrow {

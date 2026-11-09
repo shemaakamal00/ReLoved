@@ -1,10 +1,11 @@
-import type { FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useFavorites } from "../../context/FavoritesContext";
 import { useCategories } from "../../hooks/useCategories";
 import CurrencySelect from "./CurrencySelect";
+import MobileMenu from "./MobileMenu";
 
 function Header() {
   const { user } = useAuth();
@@ -12,6 +13,8 @@ function Header() {
   const { favorites } = useFavorites();
   const { categories } = useCategories();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const scrolled = useScrolled();
 
   const topLevelCategories = categories
     .filter((c) => c.parent_id === null)
@@ -31,8 +34,21 @@ function Header() {
   }
 
   return (
-    <header className="site-header">
+    <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
       <div className="header-shell">
+        <button
+          type="button"
+          className="icon-button menu-button"
+          aria-label="Öppna menyn"
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMenuOpen(true)}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h10" />
+          </svg>
+        </button>
+
         <Link to="/" className="logo">
           Re<span>Loved</span>
         </Link>
@@ -154,8 +170,29 @@ function Header() {
           <CurrencySelect />
         </div>
       </nav>
+
+      {menuOpen && (
+        <MobileMenu
+          categories={categories}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
     </header>
   );
+}
+
+// true när sidan har scrollats en bit, så att headern kan få en skugga
+function useScrolled(offset = 8) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > offset);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, [offset]);
+
+  return scrolled;
 }
 
 export default Header;

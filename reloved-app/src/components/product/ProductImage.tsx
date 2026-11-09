@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Product } from "../../types";
 
 interface ProductImageProps {
@@ -6,6 +7,9 @@ interface ProductImageProps {
 }
 
 function ProductImage({ product, className }: ProductImageProps) {
+  // Bilden tonas in när den har laddats klart (img-fade i motion.css)
+  const [loaded, setLoaded] = useState(false);
+
   if (!product.image_url) {
     return (
       <div
@@ -25,7 +29,9 @@ function ProductImage({ product, className }: ProductImageProps) {
     <img
       src={product.image_url}
       alt={product.alt_text ?? product.name}
-      className={className}
+      className={`${className} img-fade ${loaded ? "is-loaded" : ""}`}
+      onLoad={() => setLoaded(true)}
+      onError={() => setLoaded(true)}
     />
   );
 }

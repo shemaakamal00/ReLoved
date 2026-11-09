@@ -1,10 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import FormMessage from "../components/ui/FormMessage";
+import PasswordInput from "../components/ui/PasswordInput";
+import Spinner from "../components/ui/Spinner";
 
 function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,6 +30,7 @@ function Register() {
     setLoading(true);
     try {
       await register(firstName, lastName, email, password);
+      showToast(`Välkommen till ReLoved, ${firstName}!`);
       navigate("/");
     } catch (err) {
       setError(
@@ -82,8 +88,7 @@ function Register() {
 
             <label>
               Lösenord
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="********"
@@ -93,8 +98,7 @@ function Register() {
 
             <label>
               Bekräfta lösenord
-              <input
-                type="password"
+              <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="********"
@@ -102,15 +106,18 @@ function Register() {
               />
             </label>
 
-            {error && <p className="form-error">{error}</p>}
-
-            <button
-              type="submit"
-              className="button button-primary"
-              disabled={loading}
-            >
-              {loading ? "Skapar konto..." : "Skapa konto"}
-            </button>
+            <div className="form-actions">
+              <FormMessage message={error} />
+              <button
+                type="submit"
+                className="button button-primary"
+                disabled={loading}
+                aria-busy={loading}
+              >
+                {loading && <Spinner />}
+                {loading ? "Skapar konto..." : "Skapa konto"}
+              </button>
+            </div>
           </form>
 
           <div className="login-register">

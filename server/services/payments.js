@@ -1,5 +1,6 @@
 // Vad som händer när Stripe meddelar att en betalning är klar eller har gått ut
 import { supabase } from "../lib/supabase.js";
+import { fetchCheckoutPayment } from "../integrations/paymentAdapter.ts";
 import { productIdsInOrder } from "./orders.js";
 import { syncProductsToSearch } from "./searchSync.js";
 
@@ -60,6 +61,22 @@ export async function handlePaid(payment) {
   console.log(`[webhook] Order ${order.id} är betald, lagret är uppdaterat`);
   const productIds = await productIdsInOrder(order.id).catch(() => []);
   await syncProductsToSearch(productIds);
+}
+
+export async function confirmPaymentWithStripe(sessionId) {
+  let payment;
+  try {
+    payment = await fetchCheckoutPayment(sessionId);
+  } catch (err) {
+    console.error(
+      `[betalning] Kunde inte fråga Stripe om ${sessionId}: ${err.message}`,
+    );
+    return false;
+  }
+  if (payment.type !== "paid") return false;
+
+  await handlePaid(payment);
+  return true;
 }
 
 // Om ordern avröts så är ordern obetald

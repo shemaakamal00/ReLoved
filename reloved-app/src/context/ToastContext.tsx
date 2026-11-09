@@ -10,6 +10,7 @@ interface Toast {
   id: number;
   message: string;
   type: "success" | "error";
+  leaving?: boolean;
 }
 
 interface ToastContextValue {
@@ -19,6 +20,9 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 let idCounter = 0;
 
+const SHOW_MS = 3000;
+const LEAVE_MS = 350;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -27,9 +31,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const id = idCounter++;
       setToasts((prev) => [...prev, { id, message, type }]);
 
+      // Först glider den ut, sedan tas den bort
+      setTimeout(() => {
+        setToasts((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, leaving: true } : t)),
+        );
+      }, SHOW_MS - LEAVE_MS);
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 3000);
+      }, SHOW_MS);
     },
     [],
   );
@@ -37,10 +47,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div id="toast-container">
+      <div id="toast-container" aria-live="polite">
         {toasts.map((toast) => (
           <div
-            className={`toast toast--visible toast--${toast.type}`}
+            className={`toast toast--${toast.type} ${toast.leaving ? "is-leaving" : ""}`}
             key={toast.id}
           >
             {toast.message}

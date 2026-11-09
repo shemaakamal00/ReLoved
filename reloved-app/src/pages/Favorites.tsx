@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import { useFavorites } from "../context/FavoritesContext";
+import { useExitList } from "../hooks/useExitList";
 import ProductCard from "../components/product/ProductCard";
 import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
+import EmptyState from "../components/ui/EmptyState";
 
 function Favorites() {
   const { favorites, loading } = useFavorites();
+
+  const shown = useExitList(favorites, (product) => product.id);
 
   return (
     <main>
@@ -16,18 +20,27 @@ function Favorites() {
 
           {loading ? (
             <ProductGridSkeleton count={3} />
-          ) : favorites.length === 0 ? (
-            <div className="favorites-empty">
-              <h2>Inga favoriter än</h2>
-              <p>Tryck på hjärtat på ett plagg så hamnar det här.</p>
-              <Link to="/products" className="button button-primary">
-                Se alla plagg
-              </Link>
-            </div>
+          ) : shown.length === 0 ? (
+            <EmptyState
+              icon="heart"
+              title="Inga favoriter än"
+              action={
+                <Link to="/products" className="button button-primary">
+                  Se alla plagg
+                </Link>
+              }
+            >
+              Tryck på hjärtat på ett plagg så hamnar det här.
+            </EmptyState>
           ) : (
             <div className="product-grid">
-              {favorites.map((product, index) => (
-                <ProductCard key={product.id} product={product} index={index} />
+              {shown.map(({ item: product, leaving }, index) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                  className={leaving ? "is-leaving" : ""}
+                />
               ))}
             </div>
           )}

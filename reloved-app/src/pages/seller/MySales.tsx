@@ -5,6 +5,7 @@ import { formatKr } from "../../utils/format";
 import { ORDER_STATUS_LABELS } from "../../utils/statusLabels";
 import PanelSection from "../../components/ui/PanelSection";
 import StatusBadge from "../../components/ui/StatusBadge";
+import TableSkeleton from "../../components/ui/TableSkeleton";
 
 interface MySalesProps {
   refreshKey: number;
@@ -33,7 +34,7 @@ function MySales({ refreshKey }: MySalesProps) {
         </div>
 
         {loading ? (
-          <p>Laddar försäljningar...</p>
+          <TableSkeleton label="Laddar försäljningar..." />
         ) : !sales || sales.length === 0 ? (
           <p>Inga försäljningar än.</p>
         ) : (
@@ -44,7 +45,10 @@ function MySales({ refreshKey }: MySalesProps) {
               key={item.id}
             >
               <span>#{item.orders.id}</span>
-              <span>{item.product_name}</span>
+              <span>
+                {item.product_name}
+                {item.size && `, stl ${item.size}`}
+              </span>
               <span>{formatKr(item.line_total)}</span>
               <StatusBadge label={ORDER_STATUS_LABELS[item.orders.status]} />
             </div>

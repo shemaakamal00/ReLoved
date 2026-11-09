@@ -1,9 +1,15 @@
+import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useCart, type CartLine } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
+import { useToast } from "../context/ToastContext";
+import { useExitList } from "../hooks/useExitList";
+import { errorMessage } from "../utils/messages";
 import { useShippingQuote } from "../hooks/useShippingQuote";
-import PageMessage from "../components/ui/PageMessage";
+import { isStockItem, lineKey, toCartPayload } from "../utils/cart";
+import EmptyState from "../components/ui/EmptyState";
 import ProductImage from "../components/product/ProductImage";
+import QuantityStepper from "../components/product/QuantityStepper";
 
 function isAvailable(item: CartLine) {
   return item.product.status === "approved";
@@ -14,11 +20,34 @@ function Cart() {
 
   const availableItems = items.filter(isAvailable);
   const hasUnavailable = availableItems.length < items.length;
-  const { quote } = useShippingQuote(
-    availableItems.map((item) => item.product_id),
-  );
+  const { quote } = useShippingQuote(toCartPayload(availableItems));
+  const shown = useExitList(items, (item: CartLine) => lineKey(item));
 
-  if (loading) return <PageMessage>Laddar varukorg...</PageMessage>;
+  if (loading) return <CartSkeleton />;
+
+  if (shown.length === 0) {
+    return (
+      <main>
+        <section className="cart-page section">
+          <div className="container">
+            <h1>Varukorg</h1>
+            <EmptyState
+              icon="bag"
+              title="Varukorgen är tom"
+              action={
+                <Link to="/products" className="button button-primary">
+                  Se alla plagg
+                </Link>
+              }
+            >
+              Varje plagg finns bara en gång, så hittar du något du gillar är
+              det bäst att slå till.
+            </EmptyState>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -28,20 +57,19 @@ function Cart() {
 
           <div className="cart-layout">
             <div className="cart-items">
-              {items.length === 0 ? (
-                <p>
-                  Varukorgen är tom. <Link to="/products">Se alla plagg</Link>
-                </p>
-              ) : (
-                items.map((item) => (
-                  <CartRow item={item} key={item.product_id} />
-                ))
-              )}
+              {shown.map(({ item, leaving }, index) => (
+                <CartRow
+                  item={item}
+                  leaving={leaving}
+                  index={index}
+                  key={lineKey(item)}
+                />
+              ))}
             </div>
 
             <CartSummary
               subtotal={availableItems.reduce(
-                (sum, item) => sum + item.product.price,
+                (sum, item) => sum + item.product.price * item.quantity,
                 0,
               )}
               shipping={
@@ -59,30 +87,87 @@ function Cart() {
   );
 }
 
-function CartRow({ item }: { item: CartLine }) {
-  const { removeFromCart } = useCart();
+interface CartRowProps {
+  item: CartLine;
+  leaving: boolean;
+  index: number;
+}
+
+function CartRow({ item, leaving, index }: CartRowProps) {
+  const { removeFromCart, updateQuantity } = useCart();
   const { formatPrice } = useCurrency();
+  const { showToast } = useToast();
+  const [removing, setRemoving] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const available = isAvailable(item);
+  const stockItem = isStockItem(item.product);
+
+  async function handleRemove() {
+    setRemoving(true);
+    try {
+      await removeFromCart(item.product_id, item.size);
+    } catch (err) {
+      console.error(err);
+      setRemoving(false);
+    }
+  }
+
+  async function handleQuantity(quantity: number) {
+    setUpdating(true);
+    try {
+      await updateQuantity(item.product_id, item.size, quantity);
+    } catch (err) {
+      showToast(errorMessage(err, "Kunde inte ändra antalet."), "error");
+    } finally {
+      setUpdating(false);
+    }
+  }
 
   return (
-    <article className="cart-item" data-product-id={item.product_id}>
+    <article
+      className={`cart-item ${leaving ? "is-leaving-row" : ""}`}
+      data-product-id={item.product_id}
+      style={{ "--delay": `${Math.min(index, 5) * 60}ms` } as CSSProperties}
+    >
       <ProductImage product={item.product} className="cart-item__image" />
 
       <div className="cart-item__info">
         <h2>{item.product.name}</h2>
-        <p>{item.product.brand}</p>
+        <p>
+          {item.product.brand}
+          {item.size && ` · Stl ${item.size}`}
+        </p>
+
+        {stockItem && available && (
+          <QuantityStepper
+            value={item.quantity}
+            max={Math.min(10, item.product.stock ?? 1)}
+            onChange={handleQuantity}
+            disabled={updating || removing}
+          />
+        )}
 
         {!available && (
           <p className="form-error">Någon hann före. Plagget är sålt.</p>
         )}
 
-        <button type="button" onClick={() => removeFromCart(item.product_id)}>
-          Ta bort
+        <button type="button" onClick={handleRemove} disabled={removing}>
+          {removing ? "Tar bort..." : "Ta bort"}
         </button>
       </div>
 
       <p className="cart-item__price">
-        {available ? formatPrice(item.product.price) : "—"}
+        {available ? (
+          // key: radens pris blinkar till när antalet ändras
+          <span className="value-flash" key={item.quantity}>
+            {formatPrice(item.product.price * item.quantity)}
+          </span>
+        ) : (
+          "—"
+        )}
+        {available && item.quantity > 1 && (
+          <small>{formatPrice(item.product.price)} / st</small>
+        )}
       </p>
     </article>
   );
@@ -110,7 +195,10 @@ function CartSummary({
 
       <div className="summary-row">
         <span>Produkter</span>
-        <span>{formatPrice(subtotal)}</span>
+        {/* key: beloppet blinkar till när det ändras */}
+        <span className="value-flash" key={subtotal}>
+          {formatPrice(subtotal)}
+        </span>
       </div>
       <div className="summary-row">
         <span>Frakt</span>
@@ -124,7 +212,7 @@ function CartSummary({
       </div>
       <div className="summary-row summary-row--total">
         <span>Totalt</span>
-        <span>
+        <span className="value-flash" key={total}>
           {shipping ? "från " : ""}
           {formatPrice(total)}
         </span>
@@ -163,6 +251,39 @@ function CartSummary({
         Se fler plagg
       </Link>
     </aside>
+  );
+}
+
+function CartSkeleton() {
+  return (
+    <main>
+      <section className="cart-page section">
+        <div className="container" aria-busy="true">
+          <h1>Varukorg</h1>
+          <span className="sr-only">Laddar varukorg...</span>
+          <div className="cart-layout" aria-hidden="true">
+            <div className="cart-items">
+              {[0, 1].map((row) => (
+                <div className="cart-item" key={row}>
+                  <div className="skeleton cart-item__image" />
+                  <div className="cart-item__info">
+                    <div
+                      className="skeleton skeleton--line"
+                      style={{ width: "60%" }}
+                    />
+                    <div
+                      className="skeleton skeleton--line"
+                      style={{ width: "30%" }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="skeleton cart-summary cart-skeleton__summary" />
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
 

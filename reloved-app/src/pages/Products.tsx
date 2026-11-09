@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { fetchProducts } from "../api";
 import { useApi } from "../hooks/useApi";
@@ -6,8 +7,26 @@ import { useCategories } from "../hooks/useCategories";
 import type { Category, Product } from "../types";
 import ProductCard from "../components/product/ProductCard";
 import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
+import EmptyState from "../components/ui/EmptyState";
 
 type SortBy = "newest" | "price-asc" | "price-desc";
+
+const SORT_LABELS: Record<SortBy, string> = {
+  newest: "Nyast",
+  "price-asc": "Lägst pris",
+  "price-desc": "Högst pris",
+};
+
+function withViewTransition(update: () => void) {
+  if (
+    !document.startViewTransition ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    update();
+    return;
+  }
+  document.startViewTransition(() => flushSync(update));
+}
 
 function categoryWithChildren(
   categories: Category[],
@@ -39,6 +58,14 @@ function Products() {
   );
   const { categories } = useCategories();
   const [sortBy, setSortBy] = useState<SortBy>("newest");
+  const [sortChanged, setSortChanged] = useState(false);
+
+  function handleSortChange(value: SortBy) {
+    withViewTransition(() => {
+      setSortBy(value);
+      setSortChanged(true);
+    });
+  }
 
   const categoryIds = categoryWithChildren(categories, categoryId);
   const visibleProducts = sortProducts(
@@ -68,20 +95,33 @@ function Products() {
           </div>
 
           <div className="products-toolbar">
+            {/* Kvitto på sorteringen. key gör att texten tonas in vid varje byte. */}
+            <p className="sort-feedback" role="status" key={sortBy}>
+              {sortChanged &&
+                `Sorterat på ${SORT_LABELS[sortBy].toLowerCase()}`}
+            </p>
+            <label className="sr-only" htmlFor="products-sort">
+              Sortera
+            </label>
             <select
+              id="products-sort"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortBy)}
+              onChange={(e) => handleSortChange(e.target.value as SortBy)}
             >
-              <option value="newest">Nyast</option>
-              <option value="price-asc">Lägst pris</option>
-              <option value="price-desc">Högst pris</option>
+              {Object.entries(SORT_LABELS).map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
 
           {loading ? (
             <ProductGridSkeleton />
           ) : visibleProducts.length === 0 ? (
-            <p>Inget här just nu. Nya plagg kommer in hela tiden.</p>
+            <EmptyState title="Inget här just nu">
+              Nya plagg kommer in hela tiden. Titta in igen snart.
+            </EmptyState>
           ) : (
             <div className="product-grid">
               {visibleProducts.map((product, index) => (

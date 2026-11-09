@@ -4,9 +4,12 @@ import { fetchMyProfile, updateMyProfile } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useApi } from "../hooks/useApi";
+import { useTemporaryFlag } from "../hooks/useTemporaryFlag";
 import type { ProfileUpdate, User } from "../types";
 import { initials } from "../utils/format";
+import Checkmark from "../components/ui/Checkmark";
 import PageMessage from "../components/ui/PageMessage";
+import Spinner from "../components/ui/Spinner";
 
 function Profile() {
   const { user: authUser, token, logout } = useAuth();
@@ -64,6 +67,7 @@ function ProfileForm({ profile, onSaved }: ProfileFormProps) {
   const { token } = useAuth();
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [justSaved, markSaved] = useTemporaryFlag(2000);
   const [form, setForm] = useState<ProfileUpdate>({
     first_name: profile.first_name,
     last_name: profile.last_name,
@@ -87,6 +91,7 @@ function ProfileForm({ profile, onSaved }: ProfileFormProps) {
     setSaving(true);
     try {
       onSaved(await updateMyProfile(token, form));
+      markSaved();
       showToast("Sparat. Adressen fylls i automatiskt i kassan.");
     } catch (err) {
       console.error(err);
@@ -138,8 +143,15 @@ function ProfileForm({ profile, onSaved }: ProfileFormProps) {
         </div>
       </div>
 
-      <button className="button button-primary" type="submit" disabled={saving}>
-        {saving ? "Sparar..." : "Spara ändringar"}
+      <button
+        className={`button button-primary ${justSaved ? "button--added" : ""}`}
+        type="submit"
+        disabled={saving}
+        aria-busy={saving}
+      >
+        {saving && <Spinner />}
+        {justSaved && <Checkmark small />}
+        {saving ? "Sparar..." : justSaved ? "Sparat" : "Spara ändringar"}
       </button>
     </form>
   );

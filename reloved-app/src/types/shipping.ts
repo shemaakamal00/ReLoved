@@ -22,8 +22,8 @@ export interface ShippingQuote {
   servicePointsError: string | null;
 }
 
-/** Det som skickas till API:et: bara id och antal, aldrig pris. */
 export interface CartItemPayload {
   product_id: number;
+  size: string;
   quantity: number;
 }

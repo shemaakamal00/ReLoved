@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchOrderConfirmation } from "../api";
 import { useCart } from "../context/CartContext";
@@ -7,6 +7,8 @@ import { formatKr, formatShippingPrice } from "../utils/format";
 import { describeOrderShipping, formatDeliveryDate } from "../utils/shipping";
 import { ORDER_STATUS_LABELS } from "../utils/statusLabels";
 import StatusBadge from "../components/ui/StatusBadge";
+import Checkmark from "../components/ui/Checkmark";
+import Spinner from "../components/ui/Spinner";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 15;
@@ -74,11 +76,23 @@ function OrderConfirmation() {
         <div className="container">
           {error && <p className="form-error">{error}</p>}
 
-          {!error && !order && <p>Hämtar din order...</p>}
+          {!error && !order && (
+            <p className="confirmation-page__loading">
+              <Spinner /> Hämtar din order...
+            </p>
+          )}
 
           {order && (
             <>
-              <div className="confirmation-page__header">
+              <div className="confirmation-page__header slide-up">
+                {order.status !== "pending" && order.status !== "cancelled" && (
+                  <Checkmark key="confirmed" />
+                )}
+                {order.status === "pending" && (
+                  <span className="confirmation-page__pending">
+                    <Spinner />
+                  </span>
+                )}
                 <p className="eyebrow">Order #{order.id}</p>
                 <h1>
                   {order.status === "cancelled"
@@ -95,11 +109,15 @@ function OrderConfirmation() {
                 )}
               </div>
 
-              <div className="confirmation-page__summary">
+              <div
+                className="confirmation-page__summary slide-up"
+                style={{ "--delay": "150ms" } as CSSProperties}
+              >
                 {order.items.map((item, index) => (
                   <div className="summary-row" key={index}>
                     <span>
                       {item.product_brand} – {item.product_name}
+                      {item.size && `, stl ${item.size}`}
                       {item.quantity > 1 && ` × ${item.quantity}`}
                     </span>
                     <span>{formatKr(item.line_total)}</span>
