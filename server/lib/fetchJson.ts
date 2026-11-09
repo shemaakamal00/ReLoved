@@ -48,7 +48,7 @@ export async function fetchWithRetry(
 export async function fetchJson(
   url: string,
   options: FetchOptions = {},
-) : Promise<unknown> {
+): Promise<unknown> {
   const response = await fetchWithRetry(url, options);
   return response.json();
 }

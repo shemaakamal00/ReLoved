@@ -1,11 +1,9 @@
-import type { NumericFilters } from "algoliasearch";
 import Stripe from "stripe";
 
 const SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? "";
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 const EXPIRES_MINUTES = Number(process.env.CHECKOUT_EXPIRES_MINUTES ?? 30);
-
 const stripe = new Stripe(SECRET_KEY, {
   timeout: 10_000,
   maxNetworkRetries: 2,

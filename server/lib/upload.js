@@ -16,11 +16,9 @@ export function receiveImage(req, res, next) {
         .json({ error: `Bilden är för stor. Max ${MAX_IMAGE_MB} MB.` });
     }
     if (err) {
-      return res
-        .status(400)
-        .json({
-          error: "Kunde inte läsa filen. Skicka en bild i fältet image.",
-        });
+      return res.status(400).json({
+        error: "Kunde inte läsa filen. Skicka en bild i fältet image.",
+      });
     }
     next();
   });

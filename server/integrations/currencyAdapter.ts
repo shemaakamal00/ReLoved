@@ -1,6 +1,5 @@
-import { number, z } from "zod";
+import { z } from "zod";
 import { fetchJson } from "../lib/fetchJson.ts";
-import { fa } from "zod/locales";
 
 const BASE_URL =
   process.env.CURRENCY_API_URL ?? "https://api.frankfurter.dev/v1";

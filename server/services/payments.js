@@ -1,0 +1,85 @@
+// Vad som händer när Stripe meddelar att en betalning är klar eller har gått ut
+import { supabase } from "../lib/supabase.js";
+import { productIdsInOrder } from "./orders.js";
+import { syncProductsToSearch } from "./searchSync.js";
+
+//Stämmer betalningen med ordern vi sparade i kassan?
+function matchesOrder(order, payment) {
+  if (order.stripe_session_id !== payment.sessionId) {
+    console.warn(
+      `[webhook] Order ${order.id} hör inte till session ${payment.sessionId}`,
+    );
+    return false;
+  }
+  if (
+    payment.currency !== "sek" ||
+    Math.round(payment.amountTotal) !== order.total
+  ) {
+    console.error(
+      `[webhook] Beloppet stämmer inte för order ${order.id}: Stripe ${payment.amountTotal} ${payment.currency}, ordern ${order.total} sek`,
+    );
+    return false;
+  }
+  return true;
+}
+
+// När betalningen är klar så markeras ordern som betald och lagret minskas
+export async function handlePaid(payment) {
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select("id, status, total, stripe_session_id")
+    .eq("id", payment.orderId)
+    .maybeSingle();
+  if (error) {
+    throw new Error(
+      `Kunde inte läsa order ${payment.orderId}: ${error.message}`,
+    );
+  }
+  if (!order) {
+    console.warn(`[webhook] Order ${payment.orderId} finns inte`);
+    return;
+  }
+  if (!matchesOrder(order, payment)) return;
+
+  const { data: result, error: rpcError } = await supabase.rpc(
+    "mark_order_paid",
+    { p_order_id: order.id, p_session_id: payment.sessionId },
+  );
+  if (rpcError) {
+    throw new Error(
+      `Kunde inte markera order ${order.id} som betald: ${rpcError.message}`,
+    );
+  }
+
+  if (result !== "paid") {
+    console.log(
+      `[webhook] Order ${order.id} var redan hanterad (status: ${order.status})`,
+    );
+    return;
+  }
+  console.log(`[webhook] Order ${order.id} är betald, lagret är uppdaterat`);
+  const productIds = await productIdsInOrder(order.id).catch(() => []);
+  await syncProductsToSearch(productIds);
+}
+
+// Om ordern avröts så är ordern obetald
+export async function handleExpired(payment) {
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ status: "cancelled" })
+    .eq("id", payment.orderId)
+    .eq("stripe_session_id", payment.sessionId)
+    .eq("status", "pending")
+    .select("id");
+  if (error) {
+    throw new Error(
+      `Kunde inte avbryta order ${payment.orderId}: ${error.message}`,
+    );
+  }
+
+  console.log(
+    data.length === 0
+      ? `[webhook] Order ${payment.orderId} är inte obetald längre, ändras inte`
+      : `[webhook] Order ${payment.orderId} avbruten: betalningen löpte ut`,
+  );
+}
