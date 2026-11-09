@@ -1,62 +1,72 @@
 interface FaqEntry {
   question: string;
-  answer: React.ReactNode;
+  answer: string;
   open?: boolean;
 }
 
 const faqEntries: FaqEntry[] = [
   {
-    question: "Hur köper jag en produkt?",
+    question: "Hur köper jag ett plagg?",
     answer:
-      "Lägg produkten i varukorgen och gå vidare till kassan för att slutföra köpet.",
+      "Lägg plagget i varukorgen och gå till kassan. Du väljer ombud eller hemleverans och betalar med kort hos Stripe. Du behöver inget konto för att handla.",
     open: true,
   },
   {
-    question: "Hur säljer jag på ReLoved?",
+    question: "Vad kostar frakten?",
     answer:
-      "Skicka in de plagg du inte längre använder, så fotograferar och lägger vi upp dem åt dig. Du slipper fota, skriva beskrivningar och sätta pris själv.",
+      "59 kr till ett PostNord-ombud och 99 kr för hemleverans. Handlar du för 500 kr eller mer är frakten gratis.",
   },
   {
-    question: "Vem ansvarar för frakten?",
+    question: "Hur säljer jag?",
     answer:
-      "ReLoved sköter fotografering, prissättning och frakt av dina insända plagg — du behöver bara skicka in dem.",
+      "Klicka på Sälj, ladda upp en bild och fyll i märke, storlek, skick och pris. Vi granskar annonsen innan den publiceras, oftast inom ett dygn.",
   },
   {
-    question: "Kan jag spara produkter?",
+    question: "Hur skickar jag något jag har sålt?",
     answer:
-      "Ja! Klicka på hjärtikonen på en produkt så sparas den bland dina favoriter.",
+      "Du skickar plagget till oss, och vi skickar det vidare till köparen med PostNord. Så slipper du hålla koll på köparens adress och fraktsätt.",
   },
   {
-    question: "Kan jag returnera en vara?",
+    question: "Hur får jag betalt?",
     answer:
-      "Returer hanteras mellan köpare och säljare enligt plattformens regler.",
+      "Det du säljer syns i säljarpanelen. Utbetalningar är inte byggda än, men planen är en plånbok där pengarna samlas. Där väljer du själv om du vill handla för dem eller ta ut dem.",
   },
   {
-    question: "Är ReLoved en riktig e-handel?",
+    question: "Kan jag returnera ett plagg?",
     answer:
-      "Nej. ReLoved är ett skolprojekt som utvecklats för att visa en modern fullstack-lösning inom e-handel.",
+      "Nej. Second hand säljs i befintligt skick och kan inte returneras.",
+  },
+  {
+    question: "Kan jag spara plagg till senare?",
+    answer:
+      "Ja, tryck på hjärtat. Du behöver vara inloggad för att spara favoriter.",
+  },
+  {
+    question: "Är ReLoved en riktig butik?",
+    answer:
+      "Nej, det är ett skolprojekt. Betalningen körs i Stripes testläge, så inga riktiga pengar dras. Testa med kortnumret 4242 4242 4242 4242, ett framtida datum och valfri CVC.",
   },
 ];
 
 function Faq() {
-    return (
-        <main className="about-page">
-            <section className="about-hero">
-                <p className="eyebrow"> Hjälpcenter </p>
-                <h1> Vanliga frågor </h1>
-                <p> Här hittar du svar på de vanligaste frågorna om att köpa och sälja på ReLoved </p>
-            </section>
+  return (
+    <main className="about-page">
+      <section className="about-hero">
+        <p className="eyebrow">Hjälp</p>
+        <h1>Vanliga frågor</h1>
+        <p>Om att köpa, sälja och skicka på ReLoved.</p>
+      </section>
 
-            <section className="faq-list">
-                { faqEntries.map((entry) => (
-                    <details className="faq-item" open={entry.open} key={entry.question}>
-                        <summary> {entry.question} </summary>
-                        <p> {entry.answer} </p>
-                    </details>
-                ))}
-            </section>
-        </main>
-    );
+      <section className="faq-list">
+        {faqEntries.map((entry) => (
+          <details className="faq-item" open={entry.open} key={entry.question}>
+            <summary>{entry.question}</summary>
+            <p>{entry.answer}</p>
+          </details>
+        ))}
+      </section>
+    </main>
+  );
 }
 
 export default Faq;

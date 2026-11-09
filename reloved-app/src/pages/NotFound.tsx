@@ -5,22 +5,16 @@ function NotFound() {
     <main id="main-content">
       <section className="login-page">
         <div className="login-card">
-          <p className="eyebrow"> 404 </p>
-          <h1> Sidan kunde inte hittas</h1>
-          <p>
-            {" "}
-            Sidan du försöker besöka finns inte, har flyttats eller är
-            tillfälligt otillgänglig.
-          </p>
+          <p className="eyebrow">404</p>
+          <h1>Den här sidan finns inte</h1>
+          <p>Plagget kan ha sålts, eller så är länken fel.</p>
 
           <div className="hero-actions">
-            <Link to="/" className="button button-primary">
-              {" "}
-              Till startsidan{" "}
+            <Link to="/products" className="button button-primary">
+              Se alla plagg
             </Link>
-            <Link to="/products" className="button button-secondary">
-              {" "}
-              Utforska produkter{" "}
+            <Link to="/" className="button button-secondary">
+              Till startsidan
             </Link>
           </div>
         </div>

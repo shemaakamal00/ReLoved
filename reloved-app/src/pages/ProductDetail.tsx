@@ -1,148 +1,54 @@
-import { fetchProductById } from "../api/client";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { fetchProductById } from "../api";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useFavorites } from "../context/FavoritesContext";
-import { useState, useEffect } from "react";
-import ProductImage from "../components/product/ProductImage";
+import { useApi } from "../hooks/useApi";
 import type { Product } from "../types";
-
-const CONDITION_STYLES: Record<string, { className: string; label: string }> = {
-  Nyskick: { className: "cond-new", label: "Nyskick" },
-  "Mycket bra": { className: "cond-good", label: "Mycket bra" },
-  Bra: { className: "cond-good", label: "Bra" },
-  Använt: { className: "cond-used", label: "Använt" },
-};
+import { initials } from "../utils/format";
+import Breadcrumbs from "../components/ui/Breadcrumbs";
+import PageMessage from "../components/ui/PageMessage";
+import ConditionBadge from "../components/product/ConditionBadge";
+import ProductImage from "../components/product/ProductImage";
+import SellerRow from "../components/product/SellerRow";
 
 function ProductDetail() {
   const { id } = useParams<{ id: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const { addToCart, items } = useCart();
-  const { isFavorited, toggleFavorite } = useFavorites();
-  const { formatPrice } = useCurrency();
+  const {
+    data: product,
+    loading,
+    error,
+  } = useApi((signal) => fetchProductById(id!, signal), [id], {
+    enabled: Boolean(id),
+  });
 
-  useEffect(() => {
-    if (!id) return;
-
-    setLoading(true);
-    fetchProductById(id)
-      .then(setProduct)
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  if (loading)
+  if (loading) return <PageMessage>Laddar produkt...</PageMessage>;
+  if (error || !product)
     return (
-      <main>
-        <p>Laddar produkt...</p>
-      </main>
-    );
-  if (notFound || !product)
-    return (
-      <main>
-        <p>Produkten hittades inte.</p>
-      </main>
+      <PageMessage>
+        Plagget finns inte längre. Det kan ha sålts eller tagits bort.
+      </PageMessage>
     );
 
   const sellerName = product.seller_name ?? "ReLoved";
-  const sellerInitials = sellerName
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const condition = CONDITION_STYLES[product.condition] ?? {
-    className: "cond-good",
-    label: product.condition,
-  };
-
-  const isAvailable = product.status === "approved";
-  const isUnique = product.stock === null;
-  const isSoldOut = product.stock === 0;
-  const alreadyInCart = items.some((item) => item.product_id === product.id);
 
   return (
     <main>
       <div className="container">
-        <nav className="breadcrumbs" aria-label="Brödsmulor">
-          <Link to="/">Hem</Link>
-          <span>/</span>
-          <Link to="/products">Produkter</Link>
-          <span>/</span>
-          <span>{product.name}</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: "Hem", to: "/" },
+            { label: "Produkter", to: "/products" },
+            { label: product.name },
+          ]}
+        />
 
         <section className="product">
-          <div className="product-gallery">
-            <ProductImage product={product} className="product-image" />
-            <span className={`condition-badge ${condition.className}`}>
-              <span className="ring"></span>
-              {condition.label}
-            </span>
-            {isSoldOut && (
-              <span className="unique-tag sold-out">Slut i lager</span>
-            )}
-            {isUnique && (
-              <span className={`unique-tag ${alreadyInCart ? "reserved" : ""}`}>
-                {alreadyInCart ? "Reserverad" : "1 av 1"}
-              </span>
-            )}
-          </div>
+          <ProductGallery product={product} />
 
           <div className="product-info">
-            <div className="seller-row">
-              <span className="seller-avatar">{sellerInitials}</span>
-              <span className="seller-name">{sellerName}</span>
-            </div>
-
-            <p className="product-brand">{product.brand}</p>
-            <h1>{product.name}</h1>
-            <p className="product-price">{formatPrice(product.price)}</p>
-
-            <div className="product-specs">
-              <div>
-                <span>Storlek</span>
-                <strong>{product.size}</strong>
-              </div>
-              <div>
-                <span>Färg</span>
-                <strong>{product.color}</strong>
-              </div>
-              <div>
-                <span>Material</span>
-                <strong>{product.material}</strong>
-              </div>
-            </div>
-
-            {!isAvailable ? (
-              <p className="form-error">
-                Den här produkten är inte längre tillgänglig.
-              </p>
-            ) : isSoldOut ? (
-              <button type="button" className="button button-primary" disabled>
-                Slut i lager
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="button button-primary"
-                onClick={() => addToCart(product.id)}
-                disabled={alreadyInCart}
-              >
-                {alreadyInCart ? "Redan i varukorgen" : "Lägg i varukorg"}
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={() => toggleFavorite(product.id)}
-            >
-              {isFavorited(product.id) ? "♥ Sparad" : "♡ Spara"}
-            </button>
+            <SellerRow sellerName={product.seller_name} />
+            <ProductSummary product={product} />
           </div>
         </section>
 
@@ -155,7 +61,7 @@ function ProductDetail() {
           <h2>Säljare</h2>
           <div className="seller">
             <div className="seller-avatar seller-avatar--large">
-              {sellerInitials}
+              {initials(sellerName)}
             </div>
             <div className="seller__info">
               <h3>{sellerName}</h3>
@@ -164,6 +70,87 @@ function ProductDetail() {
         </section>
       </div>
     </main>
+  );
+}
+
+function ProductGallery({ product }: { product: Product }) {
+  const { items } = useCart();
+  const alreadyInCart = items.some((item) => item.product_id === product.id);
+  const isUnique = product.stock === null;
+
+  return (
+    <div className="product-gallery">
+      <ProductImage product={product} className="product-image" />
+      <ConditionBadge condition={product.condition} />
+      {product.stock === 0 && (
+        <span className="unique-tag sold-out">Slut i lager</span>
+      )}
+      {isUnique && (
+        <span className={`unique-tag ${alreadyInCart ? "reserved" : ""}`}>
+          {alreadyInCart ? "I din varukorg" : "1 av 1"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ProductSummary({ product }: { product: Product }) {
+  const { addToCart, items } = useCart();
+  const { isFavorited, toggleFavorite } = useFavorites();
+  const { formatPrice } = useCurrency();
+
+  const isAvailable = product.status === "approved";
+  const isSoldOut = product.stock === 0;
+  const alreadyInCart = items.some((item) => item.product_id === product.id);
+
+  return (
+    <>
+      <p className="product-brand">{product.brand}</p>
+      <h1>{product.name}</h1>
+      <p className="product-price">{formatPrice(product.price)}</p>
+
+      <div className="product-specs">
+        <div>
+          <span>Storlek</span>
+          <strong>{product.size}</strong>
+        </div>
+        <div>
+          <span>Färg</span>
+          <strong>{product.color}</strong>
+        </div>
+        <div>
+          <span>Material</span>
+          <strong>{product.material}</strong>
+        </div>
+      </div>
+
+      {!isAvailable ? (
+        <p className="form-error">
+          Sålt. Det här plagget har redan fått en ny ägare.
+        </p>
+      ) : isSoldOut ? (
+        <button type="button" className="button button-primary" disabled>
+          Slut i lager
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="button button-primary"
+          onClick={() => addToCart(product.id)}
+          disabled={alreadyInCart}
+        >
+          {alreadyInCart ? "Redan i varukorgen" : "Lägg i varukorg"}
+        </button>
+      )}
+
+      <button
+        type="button"
+        className="button button-secondary"
+        onClick={() => toggleFavorite(product.id)}
+      >
+        {isFavorited(product.id) ? "♥ Sparad" : "♡ Spara"}
+      </button>
+    </>
   );
 }
 

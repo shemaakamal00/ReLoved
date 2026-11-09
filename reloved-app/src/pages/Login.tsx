@@ -31,7 +31,6 @@ function Login() {
         <div className="login-card">
           <p className="eyebrow">Välkommen tillbaka</p>
           <h1>Logga in</h1>
-          <p>Logga in för att handla, sälja och följa dina beställningar.</p>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label>
@@ -60,14 +59,20 @@ function Login() {
 
             <Link to="/forgot-password">Glömt lösenord?</Link>
 
-            <button className="button button-primary" type="submit" disabled={loading}>
+            <button
+              className="button button-primary"
+              type="submit"
+              disabled={loading}
+            >
               {loading ? "Loggar in..." : "Logga in"}
             </button>
           </form>
 
           <div className="login-register">
             <p>Har du inget konto?</p>
-            <Link to="/register" className="button button-secondary">Skapa konto</Link>
+            <Link to="/register" className="button button-secondary">
+              Skapa konto
+            </Link>
           </div>
         </div>
       </section>

@@ -1,18 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { fetchOrderConfirmation } from "../api/client";
+import { fetchOrderConfirmation } from "../api";
 import { useCart } from "../context/CartContext";
-import { ORDER_STATUS_LABELS } from "../utils/orderStatus";
 import type { OrderConfirmation as Confirmation } from "../types";
+import { formatKr, formatShippingPrice } from "../utils/format";
 import { describeOrderShipping, formatDeliveryDate } from "../utils/shipping";
+import { ORDER_STATUS_LABELS } from "../utils/statusLabels";
+import StatusBadge from "../components/ui/StatusBadge";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 15;
 
 const STATUS_MESSAGES: Partial<Record<Confirmation["status"], string>> = {
-  pending:
-    "Vi väntar på bekräftelse från betaltjänsten. Det brukar ta några sekunder.",
-  paid: "Betalningen är bekräftad. Vi packar din beställning.",
+  pending: "Väntar på Stripe. Det brukar ta några sekunder.",
+  paid: "Betalningen är klar. Du hittar ordern under Mina ordrar.",
   cancelled:
     "Betalningen slutfördes aldrig, så ordern är avbruten. Ingenting har dragits.",
 };
@@ -28,8 +29,9 @@ function OrderConfirmation() {
   );
   const [gaveUp, setGaveUp] = useState(false);
 
+  const clearCartOnce = useEffectEvent(() => clearCart().catch(console.error));
   useEffect(() => {
-    if (sessionId) clearCart().catch(console.error);
+    if (sessionId) clearCartOnce();
   }, [sessionId]);
 
   useEffect(() => {
@@ -66,8 +68,6 @@ function OrderConfirmation() {
     };
   }, [sessionId]);
 
-  const status = order ? ORDER_STATUS_LABELS[order.status] : null;
-
   return (
     <main>
       <section className="confirmation-page section">
@@ -76,7 +76,7 @@ function OrderConfirmation() {
 
           {!error && !order && <p>Hämtar din order...</p>}
 
-          {order && status && (
+          {order && (
             <>
               <div className="confirmation-page__header">
                 <p className="eyebrow">Order #{order.id}</p>
@@ -85,9 +85,7 @@ function OrderConfirmation() {
                     ? "Ordern är avbruten"
                     : `Tack för din beställning, ${order.first_name}!`}
                 </h1>
-                <span className={`status-badge ${status.className}`}>
-                  {status.text}
-                </span>
+                <StatusBadge label={ORDER_STATUS_LABELS[order.status]} />
                 <p>{STATUS_MESSAGES[order.status]}</p>
                 {gaveUp && (
                   <p className="confirmation-page__hint">
@@ -104,14 +102,12 @@ function OrderConfirmation() {
                       {item.product_brand} – {item.product_name}
                       {item.quantity > 1 && ` × ${item.quantity}`}
                     </span>
-                    <span>{item.line_total} kr</span>
+                    <span>{formatKr(item.line_total)}</span>
                   </div>
                 ))}
                 <div className="summary-row">
                   <span>Frakt</span>
-                  <span>
-                    {order.shipping === 0 ? "Gratis" : `${order.shipping} kr`}
-                  </span>
+                  <span>{formatShippingPrice(order.shipping)}</span>
                 </div>
                 {describeOrderShipping(order) && (
                   <p className="order-shipping">
@@ -124,12 +120,12 @@ function OrderConfirmation() {
                 )}
                 <div className="summary-row summary-row--total">
                   <span>Totalt</span>
-                  <span>{order.total} kr</span>
+                  <span>{formatKr(order.total)}</span>
                 </div>
               </div>
 
               <Link to="/products" className="button button-primary">
-                Fortsätt handla
+                Se fler plagg
               </Link>
             </>
           )}

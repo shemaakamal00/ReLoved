@@ -1,16 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { fetchMyListings, deleteMyListing } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { fetchMyListings, deleteMyListing } from "../../api/client";
+import { useApi } from "../../hooks/useApi";
 import type { Product } from "../../types";
-
-const STATUS_LABELS: Record<string, { text: string; className: string }> = {
-  pending: { text: "Väntar", className: "status-badge--pending" },
-  approved: { text: "Aktiv", className: "status-badge--paid" },
-  rejected: { text: "Nekad", className: "status-badge--refunded" },
-  sold: { text: "Såld", className: "status-badge--shipped" },
-  archived: { text: "Arkiverad", className: "status-badge--pending" },
-};
+import { formatKr } from "../../utils/format";
+import { errorMessage } from "../../utils/messages";
+import { PRODUCT_STATUS_LABELS } from "../../utils/statusLabels";
+import PanelSection from "../../components/ui/PanelSection";
+import StatusBadge from "../../components/ui/StatusBadge";
 
 interface MyListingsProps {
   onEdit: (product: Product) => void;
@@ -20,48 +17,34 @@ interface MyListingsProps {
 function MyListings({ onEdit, refreshKey }: MyListingsProps) {
   const { token } = useAuth();
   const { showToast } = useToast();
-  const [listings, setListings] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(() => {
-    if (!token) return;
-    setLoading(true);
-    fetchMyListings(token)
-      .then(setListings)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [token]);
-
-  useEffect(() => {
-    load();
-  }, [load, refreshKey]);
+  const {
+    data: listings,
+    loading,
+    reload,
+  } = useApi((signal) => fetchMyListings(token!, signal), [token, refreshKey], {
+    enabled: Boolean(token),
+  });
 
   async function handleDelete(product: Product) {
     if (!token) return;
     if (!window.confirm(`Ta bort annonsen "${product.name}"?`)) return;
 
     try {
-      await deleteMyListing(product.id, token);
+      await deleteMyListing(token, product.id);
       showToast("Annonsen är borttagen.");
-      load();
+      reload();
     } catch (err) {
       console.error(err);
-      showToast(
-        err instanceof Error ? err.message : "Kunde inte ta bort annonsen.",
-        "error",
-      );
+      showToast(errorMessage(err, "Kunde inte ta bort annonsen."), "error");
     }
   }
 
   return (
-    <details className="seller-section">
-      <summary className="seller-section__header">
-        <div>
-          <p className="eyebrow">Mina annonser</p>
-          <h2>Upplagda produkter</h2>
-        </div>
-      </summary>
-
+    <PanelSection
+      variant="seller"
+      eyebrow="Mina annonser"
+      title="Dina annonser"
+    >
       <div className="seller-table">
         <div className="seller-table__row seller-table__row--head">
           <span>Produkt</span>
@@ -72,11 +55,10 @@ function MyListings({ onEdit, refreshKey }: MyListingsProps) {
 
         {loading ? (
           <p>Laddar dina annonser...</p>
-        ) : listings.length === 0 ? (
-          <p>Du har inga annonser än.</p>
+        ) : !listings || listings.length === 0 ? (
+          <p>Inga annonser än. Den första tar ett par minuter.</p>
         ) : (
           listings.map((product) => {
-            const status = STATUS_LABELS[product.status];
             const isSold = product.status === "sold";
 
             return (
@@ -86,10 +68,8 @@ function MyListings({ onEdit, refreshKey }: MyListingsProps) {
                 key={product.id}
               >
                 <span>{product.name}</span>
-                <span>{product.price} kr</span>
-                <span className={`status-badge ${status.className}`}>
-                  {status.text}
-                </span>
+                <span>{formatKr(product.price)}</span>
+                <StatusBadge label={PRODUCT_STATUS_LABELS[product.status]} />
                 <div className="seller-actions">
                   <button
                     type="button"
@@ -116,7 +96,7 @@ function MyListings({ onEdit, refreshKey }: MyListingsProps) {
           })
         )}
       </div>
-    </details>
+    </PanelSection>
   );
 }
 

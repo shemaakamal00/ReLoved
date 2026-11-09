@@ -1,24 +1,74 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { fetchAllOrders, updateOrderStatus } from "../../api/client";
-import type { Order, OrderStatus } from "../../types";
-import { useToast } from "../../context/ToastContext";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { fetchAllOrders, updateOrderStatus } from "../../api";
+import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
+import { useApi } from "../../hooks/useApi";
+import type { Order, OrderStatus } from "../../types";
+import { formatKr } from "../../utils/format";
+import { ORDER_STATUS_LABELS } from "../../utils/statusLabels";
+import PanelSection from "../../components/ui/PanelSection";
 
-const STATUS_OPTIONS: {
-  value: OrderStatus;
-  label: string;
-  disabled?: boolean;
-}[] = [
-  { value: "pending", label: "Väntar på betalning", disabled: true },
-  { value: "paid", label: "Betald", disabled: true },
-  { value: "ordered", label: "Beställd", disabled: true },
-  { value: "processing", label: "Behandlas" },
-  { value: "shipped", label: "Skickad" },
-  { value: "delivered", label: "Levererad" },
-  { value: "refunded", label: "Återbetald" },
-  { value: "cancelled", label: "Avbruten" },
-];
+const AUTOMATIC_STATUSES: OrderStatus[] = ["pending", "paid", "ordered"];
+const STATUS_OPTIONS = Object.entries(ORDER_STATUS_LABELS).map(
+  ([value, label]) => ({
+    value: value as OrderStatus,
+    label: label.text,
+    disabled: AUTOMATIC_STATUSES.includes(value as OrderStatus),
+  }),
+);
+
+function AdminOrdersTable() {
+  const { token } = useAuth();
+  const { showToast } = useToast();
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const { data: orders, loading } = useApi(
+    (signal) => fetchAllOrders(token!, signal),
+    [token],
+    { enabled: Boolean(token) },
+  );
+
+  async function handleSave(orderId: number, status: OrderStatus) {
+    if (!token) return;
+    setSavingId(orderId);
+    try {
+      await updateOrderStatus(token, orderId, status);
+      showToast(`Order #${orderId} uppdaterad!`);
+    } catch (err) {
+      console.error(err);
+      showToast("Kunde inte uppdatera status.", "error");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  return (
+    <PanelSection variant="admin" eyebrow="Ordrar" title="Senaste ordrar">
+      <div className="admin-table">
+        <div className="admin-table__row admin-table__row--head">
+          <span>Order</span>
+          <span>Kund</span>
+          <span>Total</span>
+          <span>Status</span>
+          <span>Åtgärd</span>
+        </div>
+
+        {loading ? (
+          <p>Laddar ordrar...</p>
+        ) : (
+          (orders ?? []).map((order) => (
+            <OrderRow
+              key={order.id}
+              order={order}
+              saving={savingId === order.id}
+              onSave={handleSave}
+            />
+          ))
+        )}
+      </div>
+    </PanelSection>
+  );
+}
 
 interface OrderRowProps {
   order: Order;
@@ -33,7 +83,7 @@ function OrderRow({ order, saving, onSave }: OrderRowProps) {
     <div className="admin-table__row" data-order-id={order.id}>
       <span>#{order.id}</span>
       <span>{order.full_name}</span>
-      <span>{order.total} kr</span>
+      <span>{formatKr(order.total)}</span>
       <select
         value={status}
         onChange={(e) => setStatus(e.target.value as OrderStatus)}
@@ -55,78 +105,6 @@ function OrderRow({ order, saving, onSave }: OrderRowProps) {
         <Link to={`/orders/${order.id}`}>Visa</Link>
       </div>
     </div>
-  );
-}
-
-function AdminOrdersTable() {
-  const { token } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<number | null>(null);
-  const { showToast } = useToast();
-
-  async function load() {
-    if (!token) return;
-    setLoading(false);
-    try {
-      setOrders(await fetchAllOrders(token));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
-  }, [token]);
-
-  async function handleSave(orderId: number, status: OrderStatus) {
-    if (!token) return;
-    setSavingId(orderId);
-    try {
-      await updateOrderStatus(orderId, status, token);
-      showToast(`Order #${orderId} uppdaterad!`);
-    } catch (err) {
-      console.error(err);
-      showToast("Kunde inte uppdatera status.", "error");
-    } finally {
-      setSavingId(null);
-    }
-  }
-
-  return (
-    <details className="admin-section">
-      <summary className="admin-section__header">
-        <div>
-          <p className="eyebrow">Ordrar</p>
-          <h2>Senaste ordrar</h2>
-        </div>
-      </summary>
-
-      <div className="admin-table">
-        <div className="admin-table__row admin-table__row--head">
-          <span>Order</span>
-          <span>Kund</span>
-          <span>Total</span>
-          <span>Status</span>
-          <span>Åtgärd</span>
-        </div>
-
-        {loading ? (
-          <p>Laddar ordrar...</p>
-        ) : (
-          orders.map((order) => (
-            <OrderRow
-              key={order.id}
-              order={order}
-              saving={savingId === order.id}
-              onSave={handleSave}
-            />
-          ))
-        )}
-      </div>
-    </details>
   );
 }
 

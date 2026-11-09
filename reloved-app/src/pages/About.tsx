@@ -2,37 +2,37 @@ function About() {
   return (
     <main className="about-page">
       <section className="about-hero">
-        <p className="eyebrow"> Om ReLoved </p>
-        <h1> Second hand som får saker att leva vidare </h1>
+        <p className="eyebrow">Om ReLoved</p>
+        <h1>En marknadsplats för kläder som bara finns i ett exemplar</h1>
         <p>
-          ReLoved är en modern marknadsplats där människor enkelt kan köpa och
-          sälja begagnade produkter. Vårt mål är att göra hållbar konsumtion
-          enklare, tryggare och mer inspirerande.
+          På ReLoved säljer privatpersoner sina kläder till andra. Varje annons
+          granskas innan den publiceras, och köparen betalar med kort. Hittar du
+          något du gillar är det ditt, om ingen annan hinner före.
         </p>
       </section>
 
       <section className="about-grid">
         <article className="about-card">
-          <h2>🌿 Vår vision</h2>
+          <h2>Du sätter priset</h2>
           <p>
-            Vi vill att fler produkter ska få ett nytt hem istället för att
-            hamna längst in i garderoben eller slängas i onödan.
+            Ingen budgivning och ingen prutning i en chatt. Priset i annonsen är
+            priset köparen betalar.
           </p>
         </article>
 
         <article className="about-card">
-          <h2>♻️ Hållbarhet</h2>
+          <h2>Vi tittar först</h2>
           <p>
-            Genom att köpa och sälja second hand minskar vi tillsammans
-            överkonsumtion och ger produkter ett längre liv.
+            Alla annonser granskas innan de syns, oftast inom ett dygn. Bilden
+            ska visa plagget och skicket ska stämma.
           </p>
         </article>
 
         <article className="about-card">
-          <h2>🤝 Trygg handel</h2>
+          <h2>Ingen Swish till främlingar</h2>
           <p>
-            ReLoved är byggt för att skapa en säker och smidig upplevelse mellan
-            köpare och säljare.
+            Köparen betalar med kort via Stripe. Plagget skickas med PostNord,
+            till ett ombud eller hem till dörren.
           </p>
         </article>
       </section>
@@ -41,30 +41,29 @@ function About() {
         <p className="eyebrow">Skolprojekt</p>
         <h2>Utvecklat som ett fullstackprojekt</h2>
         <p>
-          ReLoved utvecklas som ett projekt inom utbildningen
-          Fullstackutvecklare på Medieinstitutet.
+          ReLoved är mitt fullstackprojekt på Medieinstitutet. Butiken är byggd
+          med React och TypeScript, ett eget API i Node och Express och en
+          PostgreSQL-databas. Betalningen går via Stripe och frakten via
+          PostNords API.
         </p>
         <p>
-          Projektet byggs stegvis med HTML, CSS, JavaScript, React, TypeScript,
-          Node.js och databas för att efterlikna en modern marketplace.
-        </p>
-        <p>
-          Den här versionen innehåller demonstrationsdata och används endast i
-          utbildningssyfte.
+          Stripe körs i testläge, så inga riktiga pengar dras. Testa gärna med
+          kortnumret 4242 4242 4242 4242.
         </p>
       </section>
+
       <section className="about-developer about-developer--split">
         <div className="developer-image-wrap">
           <img
             src="/imgs/shemaa.JPG"
-            alt="Bild på Shemaa"
+            alt="Shemaa, som har byggt ReLoved"
             className="developer-image"
           />
         </div>
 
         <div className="developer-content">
           <p className="eyebrow">Utvecklare</p>
-          <h2>Hej! 👋</h2>
+          <h2>Hej!</h2>
           <p>
             Mitt namn är Shemaa och jag utvecklar ReLoved som mitt
             fullstackprojekt. Syftet är att omsätta teori till praktik genom att

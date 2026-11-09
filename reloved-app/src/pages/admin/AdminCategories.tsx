@@ -1,88 +1,101 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { createCategory, updateCategory, deleteCategory } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import {
-  fetchCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-} from "../../api/client";
+import { useCategories } from "../../hooks/useCategories";
 import type { Category } from "../../types";
+import PanelSection from "../../components/ui/PanelSection";
 
 function AdminCategories() {
   const { token } = useAuth();
   const { showToast } = useToast();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories, reload } = useCategories();
   const [name, setName] = useState("");
-  const [parentId, setParentId] = useState<string>("");
+  const [parentId, setParentId] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
 
-  function load() {
-    fetchCategories().then(setCategories).catch(console.error);
+  async function change(
+    action: () => Promise<unknown>,
+    success: string,
+    failure: string,
+  ) {
+    try {
+      await action();
+      showToast(success);
+      reload();
+      return true;
+    } catch (err) {
+      console.error(err);
+      showToast(failure, "error");
+      return false;
+    }
   }
-
-  useEffect(load, []);
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
     if (!token || !name.trim()) return;
 
-    try {
-      await createCategory(
-        name.trim(),
-        parentId ? Number(parentId) : null,
-        token,
-      );
-      showToast("Kategorin är skapad!");
+    const created = await change(
+      () =>
+        createCategory(token, name.trim(), parentId ? Number(parentId) : null),
+      "Kategorin är skapad!",
+      "Kunde inte skapa kategorin.",
+    );
+    if (created) {
       setName("");
       setParentId("");
-      load();
-    } catch (err) {
-      console.error(err);
-      showToast("Kunde inte skapa kategorin.", "error");
     }
   }
 
   async function handleUpdate(id: number) {
     if (!token || !editingName.trim()) return;
 
-    try {
-      await updateCategory(id, editingName.trim(), token);
-      showToast("Kategorin är uppdaterad!");
-      setEditingId(null);
-      load();
-    } catch (err) {
-      console.error(err);
-      showToast("Kunde inte uppdatera kategorin.", "error");
-    }
+    const updated = await change(
+      () => updateCategory(token, id, editingName.trim()),
+      "Kategorin är uppdaterad!",
+      "Kunde inte uppdatera kategorin.",
+    );
+    if (updated) setEditingId(null);
   }
 
   async function handleDelete(id: number) {
-    if (!token) return;
-    if (!window.confirm("Ta bort den här kategorin?")) return;
+    if (!token || !window.confirm("Ta bort den här kategorin?")) return;
+    await change(
+      () => deleteCategory(token, id),
+      "Kategorin är borttagen.",
+      "Kunde inte ta bort kategorin.",
+    );
+  }
 
-    try {
-      await deleteCategory(id, token);
-      showToast("Kategorin är borttagen.");
-      load();
-    } catch (err) {
-      console.error(err);
-      showToast("Kunde inte ta bort kategorin.", "error");
-    }
+  function startEditing(category: Category) {
+    setEditingId(category.id);
+    setEditingName(category.name);
   }
 
   const topLevel = categories.filter((c) => c.parent_id === null);
 
-  return (
-    <details className="admin-section">
-      <summary className="admin-section__header">
-        <div>
-          <p className="eyebrow">Kategorier</p>
-          <h2>Hantera kategorier</h2>
-        </div>
-      </summary>
+  function renderRow(category: Category) {
+    return (
+      <CategoryRow
+        key={category.id}
+        category={category}
+        editing={editingId === category.id}
+        editingName={editingName}
+        onEditingNameChange={setEditingName}
+        onEdit={() => startEditing(category)}
+        onSave={() => handleUpdate(category.id)}
+        onDelete={() => handleDelete(category.id)}
+      />
+    );
+  }
 
+  return (
+    <PanelSection
+      variant="admin"
+      eyebrow="Kategorier"
+      title="Hantera kategorier"
+    >
       <form className="admin-form" onSubmit={handleCreate}>
         <label>
           Namn
@@ -101,7 +114,7 @@ function AdminCategories() {
             value={parentId}
             onChange={(e) => setParentId(e.target.value)}
           >
-            <option value="">Ingen </option>
+            <option value="">Ingen</option>
             {topLevel.map((cat) => (
               <option value={cat.id} key={cat.id}>
                 {cat.name}
@@ -127,85 +140,63 @@ function AdminCategories() {
 
         {topLevel.map((parent) => (
           <div key={parent.id}>
-            <div className="admin-table__row">
-              {editingId === parent.id ? (
-                <input
-                  type="text"
-                  value={editingName}
-                  onChange={(e) => setEditingName(e.target.value)}
-                />
-              ) : (
-                <span>{parent.name}</span>
-              )}
-              <span>Huvudkategori</span>
-              <div className="admin-actions">
-                {editingId === parent.id ? (
-                  <button type="button" onClick={() => handleUpdate(parent.id)}>
-                    Spara
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingId(parent.id);
-                      setEditingName(parent.name);
-                    }}
-                  >
-                    Redigera
-                  </button>
-                )}
-                <button type="button" onClick={() => handleDelete(parent.id)}>
-                  Ta bort
-                </button>
-              </div>
-            </div>
-
-            {categories
-              .filter((c) => c.parent_id === parent.id)
-              .map((child) => (
-                <div className="admin-table__row" key={child.id}>
-                  {editingId === child.id ? (
-                    <input
-                      type="text"
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                    />
-                  ) : (
-                    <span>— {child.name}</span>
-                  )}
-                  <span>Underkategori</span>
-                  <div className="admin-actions">
-                    {editingId === child.id ? (
-                      <button
-                        type="button"
-                        onClick={() => handleUpdate(child.id)}
-                      >
-                        Spara
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingId(child.id);
-                          setEditingName(child.name);
-                        }}
-                      >
-                        Redigera
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(child.id)}
-                    >
-                      Ta bort
-                    </button>
-                  </div>
-                </div>
-              ))}
+            {renderRow(parent)}
+            {categories.filter((c) => c.parent_id === parent.id).map(renderRow)}
           </div>
         ))}
       </div>
-    </details>
+    </PanelSection>
+  );
+}
+
+interface CategoryRowProps {
+  category: Category;
+  editing: boolean;
+  editingName: string;
+  onEditingNameChange: (name: string) => void;
+  onEdit: () => void;
+  onSave: () => void;
+  onDelete: () => void;
+}
+
+function CategoryRow({
+  category,
+  editing,
+  editingName,
+  onEditingNameChange,
+  onEdit,
+  onSave,
+  onDelete,
+}: CategoryRowProps) {
+  const isChild = category.parent_id !== null;
+
+  return (
+    <div className="admin-table__row">
+      {editing ? (
+        <input
+          type="text"
+          value={editingName}
+          onChange={(e) => onEditingNameChange(e.target.value)}
+        />
+      ) : (
+        <span>{isChild ? `— ${category.name}` : category.name}</span>
+      )}
+      <span>{isChild ? "Underkategori" : "Huvudkategori"}</span>
+      <div className="admin-actions">
+        {editing ? (
+          <button type="button" onClick={onSave}>
+            Spara
+          </button>
+        ) : (
+          <button type="button" onClick={onEdit}>
+            Redigera
+          </button>
+        )}
+        <button type="button" onClick={onDelete}>
+          Ta bort
+        </button>
+      </div>
+    </div>
   );
 }
 

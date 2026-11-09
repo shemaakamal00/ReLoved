@@ -1,8 +1,13 @@
-import { importSupplierCatalog } from "../../api/client";
-import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
+import { importSupplierCatalog } from "../../api";
+import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import type { ImportFormat, ImportReport } from "../../types";
+import { errorMessage } from "../../utils/messages";
+import PanelSection from "../../components/ui/PanelSection";
+import StatCards from "../../components/ui/StatCards";
+
+const FORMATS: ImportFormat[] = ["csv", "xml"];
 
 interface SupplierImportProps {
   onImported: () => void;
@@ -21,33 +26,31 @@ function SupplierImport({ onImported }: SupplierImportProps) {
     setError(null);
     setReport(null);
     try {
-      const result = await importSupplierCatalog(format, token);
+      const result = await importSupplierCatalog(token, format);
       setReport(result);
       showToast(`Importen (${format.toUpperCase()}) är klar.`);
       onImported();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Importen misslyckades");
+      setError(errorMessage(err, "Importen misslyckades"));
     } finally {
       setRunning(null);
     }
   }
 
   return (
-    <details className="admin-section" open>
-      <summary className="admin-section__header">
-        <div>
-          <p className="eyebrow">Leverantör</p>
-          <h2>Importera produkter</h2>
-        </div>
-      </summary>
-
+    <PanelSection
+      variant="admin"
+      eyebrow="Leverantör"
+      title="Importera produkter"
+      defaultOpen
+    >
       <p>
         Här hämtar du leverantörens katalog. Nya artikelnummer skapas,
         befintliga uppdateras och trasiga produkter hoppas över.
       </p>
 
       <div className="import-actions">
-        {(["csv", "xml"] as const).map((format) => (
+        {FORMATS.map((format) => (
           <button
             key={format}
             type="button"
@@ -77,20 +80,14 @@ function SupplierImport({ onImported }: SupplierImportProps) {
             </p>
           )}
 
-          <div className="admin-stats">
-            <article className="admin-stat-card">
-              <span>Nya</span>
-              <strong>{report.created}</strong>
-            </article>
-            <article className="admin-stat-card">
-              <span>Uppdaterade</span>
-              <strong>{report.updated}</strong>
-            </article>
-            <article className="admin-stat-card">
-              <span>Överhoppade</span>
-              <strong>{report.skipped.length}</strong>
-            </article>
-          </div>
+          <StatCards
+            variant="admin"
+            stats={[
+              { label: "Nya", value: report.created },
+              { label: "Uppdaterade", value: report.updated },
+              { label: "Överhoppade", value: report.skipped.length },
+            ]}
+          />
 
           {report.skipped.length > 0 && (
             <div className="admin-table import-skipped">
@@ -110,7 +107,7 @@ function SupplierImport({ onImported }: SupplierImportProps) {
           )}
         </div>
       )}
-    </details>
+    </PanelSection>
   );
 }
 

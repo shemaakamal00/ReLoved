@@ -1,61 +1,45 @@
-import { useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { fetchOrderById } from "../api";
 import { useAuth } from "../context/AuthContext";
-import { fetchOrderById } from "../api/client";
+import { useApi } from "../hooks/useApi";
 import type { OrderWithItems } from "../types";
-import { ORDER_STATUS_LABELS } from "../utils/orderStatus";
+import { formatDate, formatKr, formatShippingPrice } from "../utils/format";
 import { describeOrderShipping, formatDeliveryDate } from "../utils/shipping";
+import { ORDER_STATUS_LABELS } from "../utils/statusLabels";
+import Breadcrumbs from "../components/ui/Breadcrumbs";
+import PageMessage from "../components/ui/PageMessage";
+import StatusBadge from "../components/ui/StatusBadge";
 
 function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const { token } = useAuth();
-  const [order, setOrder] = useState<OrderWithItems | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: order,
+    loading,
+    error,
+  } = useApi((signal) => fetchOrderById(token!, id!, signal), [id, token], {
+    enabled: Boolean(id && token),
+  });
 
-  useEffect(() => {
-    if (!id || !token) return;
-    fetchOrderById(Number(id), token)
-      .then(setOrder)
-      .catch((err) =>
-        setError(
-          err instanceof Error ? err.message : "Kunde inte hämta ordern",
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, [id, token]);
-
-  if (loading)
-    return (
-      <main>
-        <p>Laddar order...</p>
-      </main>
-    );
-  if (error || !order)
-    return (
-      <main>
-        <p>{error ?? "Ordern hittades inte."}</p>
-      </main>
-    );
-
-  const status = ORDER_STATUS_LABELS[order.status];
+  if (loading) return <PageMessage>Laddar order...</PageMessage>;
+  if (error || !order) {
+    return <PageMessage>{error ?? "Ordern hittades inte."}</PageMessage>;
+  }
 
   return (
     <main>
       <section className="orders-page">
-        <nav className="breadcrumbs" aria-label="Brödsmulor">
-          <Link to="/">Hem</Link>
-          <span>/</span>
-          <Link to="/orders">Mina ordrar</Link>
-          <span>/</span>
-          <span>Order #{order.id}</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: "Hem", to: "/" },
+            { label: "Mina ordrar", to: "/orders" },
+            { label: `Order #${order.id}` },
+          ]}
+        />
 
         <div className="orders-header">
-          <h1>{new Date(order.created_at).toLocaleDateString("sv-SE")}</h1>
-          <span className={`status-badge ${status.className}`}>
-            {status.text}
-          </span>
+          <h1>{formatDate(order.created_at)}</h1>
+          <StatusBadge label={ORDER_STATUS_LABELS[order.status]} />
         </div>
 
         <div className="order-card">
@@ -70,25 +54,7 @@ function OrderDetail() {
           </p>
         </div>
 
-        {describeOrderShipping(order) && (
-          <div className="order-card">
-            <h2>Frakt</h2>
-            <p>{describeOrderShipping(order)}</p>
-            {order.service_point_address && (
-              <p>{order.service_point_address}</p>
-            )}
-            <p>
-              Fraktpris:{" "}
-              {order.shipping === 0 ? "Gratis" : `${order.shipping} kr`}
-            </p>
-            {order.estimated_delivery && (
-              <p>
-                Beräknad leverans:{" "}
-                {formatDeliveryDate(order.estimated_delivery)}
-              </p>
-            )}
-          </div>
-        )}
+        <ShippingCard order={order} />
 
         <div className="order-card">
           <h2>Produkter</h2>
@@ -96,7 +62,7 @@ function OrderDetail() {
             <div className="order-product" key={item.id}>
               <span>{item.product_name}</span>
               <span>{item.product_brand}</span>
-              <span>{item.line_total} kr</span>
+              <span>{formatKr(item.line_total)}</span>
             </div>
           ))}
         </div>
@@ -104,19 +70,36 @@ function OrderDetail() {
         <div className="order-card">
           <div className="summary-row">
             <span>Produkter</span>
-            <span>{order.subtotal} kr</span>
+            <span>{formatKr(order.subtotal)}</span>
           </div>
           <div className="summary-row">
             <span>Frakt</span>
-            <span>{order.shipping} kr</span>
+            <span>{formatKr(order.shipping)}</span>
           </div>
           <div className="summary-row summary-row--total">
             <span>Totalt</span>
-            <span>{order.total} kr</span>
+            <span>{formatKr(order.total)}</span>
           </div>
         </div>
       </section>
     </main>
+  );
+}
+
+function ShippingCard({ order }: { order: OrderWithItems }) {
+  const description = describeOrderShipping(order);
+  if (!description) return null;
+
+  return (
+    <div className="order-card">
+      <h2>Frakt</h2>
+      <p>{description}</p>
+      {order.service_point_address && <p>{order.service_point_address}</p>}
+      <p>Fraktpris: {formatShippingPrice(order.shipping)}</p>
+      {order.estimated_delivery && (
+        <p>Beräknad leverans: {formatDeliveryDate(order.estimated_delivery)}</p>
+      )}
+    </div>
   );
 }
 

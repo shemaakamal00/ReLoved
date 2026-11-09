@@ -41,7 +41,10 @@ function Register() {
         <div className="login-card">
           <p className="eyebrow">Ny på ReLoved?</p>
           <h1>Skapa konto</h1>
-          <p>Skapa ett konto för att handla, sälja och följa dina ordrar.</p>
+          <p>
+            Med ett konto kan du sälja, spara favoriter och se dina ordrar. Att
+            handla går även utan.
+          </p>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label>
@@ -103,7 +106,7 @@ function Register() {
 
             <button
               type="submit"
-              className="button button-secondary"
+              className="button button-primary"
               disabled={loading}
             >
               {loading ? "Skapar konto..." : "Skapa konto"}

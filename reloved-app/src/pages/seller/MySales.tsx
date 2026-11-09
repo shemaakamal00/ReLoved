@@ -1,16 +1,10 @@
-import { useState, useEffect } from "react";
+import { fetchMySales } from "../../api";
 import { useAuth } from "../../context/AuthContext";
-import { fetchMySales } from "../../api/client";
-import type { SellerOrderItem } from "../../types";
-
-const STATUS_LABELS: Record<string, { text: string; className: string }> = {
-  ordered: { text: "Beställd", className: "status-badge--pending" },
-  processing: { text: "Behandlas", className: "status-badge--pending" },
-  shipped: { text: "Skickad", className: "status-badge--shipped" },
-  delivered: { text: "Levererad", className: "status-badge--paid" },
-  refunded: { text: "Återbetald", className: "status-badge--refunded" },
-  cancelled: { text: "Avbruten", className: "status-badge--refunded" },
-};
+import { useApi } from "../../hooks/useApi";
+import { formatKr } from "../../utils/format";
+import { ORDER_STATUS_LABELS } from "../../utils/statusLabels";
+import PanelSection from "../../components/ui/PanelSection";
+import StatusBadge from "../../components/ui/StatusBadge";
 
 interface MySalesProps {
   refreshKey: number;
@@ -18,26 +12,18 @@ interface MySalesProps {
 
 function MySales({ refreshKey }: MySalesProps) {
   const { token } = useAuth();
-  const [sales, setSales] = useState<SellerOrderItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    if (!token) return;
-    setLoading(true);
-    fetchMySales(token)
-      .then(setSales)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [token, refreshKey]);
+  const { data: sales, loading } = useApi(
+    (signal) => fetchMySales(token!, signal),
+    [token, refreshKey],
+    { enabled: Boolean(token) },
+  );
 
   return (
-    <details className="seller-section">
-      <summary className="seller-section__header">
-        <div>
-          <p className="eyebrow">Försäljningar</p>
-          <h2>Senaste försäljningar</h2>
-        </div>
-      </summary>
-
+    <PanelSection
+      variant="seller"
+      eyebrow="Försäljningar"
+      title="Senaste försäljningar"
+    >
       <div className="seller-table">
         <div className="seller-table__row seller-table__row--head">
           <span>Order</span>
@@ -48,29 +34,24 @@ function MySales({ refreshKey }: MySalesProps) {
 
         {loading ? (
           <p>Laddar försäljningar...</p>
-        ) : sales.length === 0 ? (
+        ) : !sales || sales.length === 0 ? (
           <p>Inga försäljningar än.</p>
         ) : (
-          sales.map((item) => {
-            const status = STATUS_LABELS[item.orders.status];
-            return (
-              <div
-                className="seller-table__row"
-                data-order-id={item.orders.id}
-                key={item.id}
-              >
-                <span>#{item.orders.id}</span>
-                <span>{item.product_name}</span>
-                <span>{item.line_total} kr</span>
-                <span className={`status-badge ${status.className}`}>
-                  {status.text}
-                </span>
-              </div>
-            );
-          })
+          sales.map((item) => (
+            <div
+              className="seller-table__row"
+              data-order-id={item.orders.id}
+              key={item.id}
+            >
+              <span>#{item.orders.id}</span>
+              <span>{item.product_name}</span>
+              <span>{formatKr(item.line_total)}</span>
+              <StatusBadge label={ORDER_STATUS_LABELS[item.orders.status]} />
+            </div>
+          ))
         )}
       </div>
-    </details>
+    </PanelSection>
   );
 }
 

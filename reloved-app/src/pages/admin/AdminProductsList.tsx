@@ -1,17 +1,14 @@
-import { fetchAllProducts, deleteProduct } from "../../api/client";
+import { useState } from "react";
+import { fetchAllProducts, deleteProduct } from "../../api";
 import { useAuth } from "../../context/AuthContext";
-import { useState, useEffect, useCallback } from "react";
 import { useToast } from "../../context/ToastContext";
+import { useApi } from "../../hooks/useApi";
 import type { Product } from "../../types";
-import { SEARCH_INDEX_WARNING } from "../../utils/searchIndex";
-
-const STATUS_LABELS: Record<string, { text: string; className: string }> = {
-  pending: { text: "Väntar", className: "status-badge--pending" },
-  approved: { text: "Aktiv", className: "status-badge--paid" },
-  rejected: { text: "Nekad", className: "status-badge--refunded" },
-  sold: { text: "Såld", className: "status-badge--shipped" },
-  archived: { text: "Arkiverad", className: "status-badge--pending" },
-};
+import { formatKr } from "../../utils/format";
+import { SEARCH_INDEX_WARNING } from "../../utils/messages";
+import { PRODUCT_STATUS_LABELS } from "../../utils/statusLabels";
+import PanelSection from "../../components/ui/PanelSection";
+import StatusBadge from "../../components/ui/StatusBadge";
 
 interface AdminProductsListProps {
   onEdit: (product: Product) => void;
@@ -21,26 +18,36 @@ interface AdminProductsListProps {
 function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
   const { token } = useAuth();
   const { showToast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const {
+    data: products,
+    loading,
+    reload,
+  } = useApi(
+    (signal) => fetchAllProducts(token!, signal),
+    [token, refreshKey],
+    {
+      enabled: Boolean(token),
+    },
+  );
 
   async function handleDelete(product: Product) {
     if (!token) return;
-    const confirmed = window.confirm(
-      `Ta bort "${product.name}"? Detta går inte att ångra.`,
-    );
-    if (!confirmed) return;
+    if (
+      !window.confirm(`Ta bort "${product.name}"? Detta går inte att ångra.`)
+    ) {
+      return;
+    }
+
     setDeletingId(product.id);
     try {
-      const result = await deleteProduct(product.id, token);
-      showToast(
-        result.searchIndexed === false
-          ? SEARCH_INDEX_WARNING
-          : "Produkten togs bort.",
-        result.searchIndexed === false ? "error" : "success",
-      );
-      load();
+      const result = await deleteProduct(token, product.id);
+      if (result.searchIndexed === false) {
+        showToast(SEARCH_INDEX_WARNING, "error");
+      } else {
+        showToast("Produkten togs bort.");
+      }
+      reload();
     } catch (err) {
       console.error(err);
       showToast("Kunde inte ta bort produkten.", "error");
@@ -49,28 +56,8 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
     }
   }
 
-  const load = useCallback(() => {
-    if (!token) return;
-    setLoading(true);
-    fetchAllProducts(token)
-      .then(setProducts)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [token]);
-
-  useEffect(() => {
-    load();
-  }, [load, refreshKey]);
-
   return (
-    <details className="admin-section">
-      <summary className="admin-section__header">
-        <div>
-          <p className="eyebrow">Produkter</p>
-          <h2>Alla produkter</h2>
-        </div>
-      </summary>
-
+    <PanelSection variant="admin" eyebrow="Produkter" title="Alla produkter">
       <div className="admin-table">
         <div className="admin-table__row admin-table__row--head">
           <span>Produkt</span>
@@ -82,42 +69,33 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
         {loading ? (
           <p>Laddar produkter...</p>
         ) : (
-          products.map((product) => {
-            const status = STATUS_LABELS[product.status] ?? {
-              text: product.status,
-              className: "status-badge--pending",
-            };
-
-            return (
-              <div
-                className="admin-table__row"
-                data-product-id={product.id}
-                key={product.id}
-              >
-                <span>{product.name}</span>
-                <span>{product.price} kr</span>
-                <span className={`status-badge ${status.className}`}>
-                  {status.text}
-                </span>
-                <div className="admin-actions">
-                  <button type="button" onClick={() => onEdit(product)}>
-                    Redigera
-                  </button>
-                  <button
-                    type="button"
-                    className="button-danger"
-                    onClick={() => handleDelete(product)}
-                    disabled={deletingId === product.id}
-                  >
-                    {deletingId === product.id ? "Tar bort..." : "Ta bort"}
-                  </button>
-                </div>
+          (products ?? []).map((product) => (
+            <div
+              className="admin-table__row"
+              data-product-id={product.id}
+              key={product.id}
+            >
+              <span>{product.name}</span>
+              <span>{formatKr(product.price)}</span>
+              <StatusBadge label={PRODUCT_STATUS_LABELS[product.status]} />
+              <div className="admin-actions">
+                <button type="button" onClick={() => onEdit(product)}>
+                  Redigera
+                </button>
+                <button
+                  type="button"
+                  className="button-danger"
+                  onClick={() => handleDelete(product)}
+                  disabled={deletingId === product.id}
+                >
+                  {deletingId === product.id ? "Tar bort..." : "Ta bort"}
+                </button>
               </div>
-            );
-          })
+            </div>
+          ))
         )}
       </div>
-    </details>
+    </PanelSection>
   );
 }
 
