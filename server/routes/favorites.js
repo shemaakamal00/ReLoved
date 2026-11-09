@@ -1,38 +1,43 @@
+//api/favorites är den inloggade användarens sparade produkter
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
+import { unwrap } from "../lib/db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
+router.use(requireAuth);
 
-router.get("/", requireAuth, async (req, res) => {
-  const { data, error } = await supabase
-    .from("favorites")
-    .select("product_id, products(*)")
-    .eq("user_id", req.user.userId);
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+router.get("/", async (req, res) => {
+  res.json(
+    await unwrap(
+      supabase
+        .from("favorites")
+        .select("product_id, products(*)")
+        .eq("user_id", req.user.userId),
+      "Läsa favoriter",
+    ),
+  );
 });
 
-router.post("/:productId", requireAuth, async (req, res) => {
-  const { productId } = req.params;
-  const { error } = await supabase
-    .from("favorites")
-    .insert({ user_id: req.user.userId, product_id: productId });
-
-  if (error) return res.status(500).json({ error: error.message });
+router.post("/:productId", async (req, res) => {
+  await unwrap(
+    supabase
+      .from("favorites")
+      .insert({ user_id: req.user.userId, product_id: req.params.productId }),
+    "Spara favorit",
+  );
   res.status(201).json({ success: true });
 });
 
-router.delete("/:productId", requireAuth, async (req, res) => {
-  const { productId } = req.params;
-  const { error } = await supabase
-    .from("favorites")
-    .delete()
-    .eq("user_id", req.user.userId)
-    .eq("product_id", productId);
-
-  if (error) return res.status(500).json({ error: error.message });
+router.delete("/:productId", async (req, res) => {
+  await unwrap(
+    supabase
+      .from("favorites")
+      .delete()
+      .eq("user_id", req.user.userId)
+      .eq("product_id", req.params.productId),
+    "Ta bort favorit",
+  );
   res.json({ success: true });
 });
 

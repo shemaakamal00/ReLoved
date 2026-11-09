@@ -10,7 +10,7 @@ interface ApiState<T> {
 }
 
 export function useApi<T>(
-  load: (singal: AbortSignal) => Promise<T>,
+  load: (signal: AbortSignal) => Promise<T>,
   deps: readonly unknown[],
   { enabled = true }: { enabled?: boolean } = {},
 ): ApiState<T> {

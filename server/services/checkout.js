@@ -39,7 +39,7 @@ async function resolveServicePoint(customer) {
 }
 
 // Leveranstiden är bara information, köpet går igenom även om den saknas
-async function estimateDeliveryFor(customer) {
+async function estimatedDeliveryFor(customer) {
   try {
     const dates = await estimateDelivery(customer.postal_code);
     return dates[customer.shipping_method];
@@ -52,7 +52,7 @@ async function estimateDeliveryFor(customer) {
 // Om orderraderna misslyckas så tar ordern bort igen
 async function saveOrder(
   customer,
-  { lines, subtotal, shipping, servicePoint, estimateDelivery },
+  { lines, subtotal, shipping, servicePoint, estimatedDelivery },
 ) {
   const { data: order, error: orderError } = await supabase
     .from("orders")

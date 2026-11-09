@@ -8,7 +8,7 @@ export function fetchProducts(signal?: AbortSignal) {
   return request<Product[]>("/products", { signal });
 }
 
-export function fetchProductsById(id: string | number, signal?: AbortSignal) {
+export function fetchProductById(id: string | number, signal?: AbortSignal) {
   return request<Product>(`/products/${id}`, { signal });
 }
 

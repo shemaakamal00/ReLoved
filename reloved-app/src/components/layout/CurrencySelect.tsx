@@ -6,9 +6,9 @@ import {
 
 function CurrencySelect() {
   const { currency, setCurrency, status, ratesDate } = useCurrency();
-  const tiltle =
+  const title =
     status === "error"
-      ? "Valutakurser är inte tillgänliga just nu, priser visas i SEK"
+      ? "Valutakurser är inte tillgängliga just nu, priser visas i SEK"
       : ratesDate
         ? `Kurser från ${ratesDate}`
         : "Hämtar valutakurser...";
@@ -24,7 +24,7 @@ function CurrencySelect() {
         value={currency}
         onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
         disabled={status !== "ready"}
-        title={tiltle}
+        title={title}
       >
         {CURRENCIES.map((c) => (
           <option key={c.code} value={c.code}>

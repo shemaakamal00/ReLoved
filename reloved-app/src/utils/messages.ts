@@ -5,7 +5,7 @@ export const SEARCH_INDEX_WARNING =
 
 export function errorMessage(
   err: unknown,
-  fallback = "Något fick fel.",
+  fallback = "Något gick fel.",
 ): string {
   return err instanceof Error && err.message ? err.message : fallback;
 }

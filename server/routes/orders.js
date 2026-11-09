@@ -1,146 +1,97 @@
+//api/orders är kundens ordrar, säljarens försäljningar och admins orderhantering
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
-import { requireAuth, requireAdmin } from "../middleware/auth.js";
-import { syncProductsToSearch } from "../lib/searchSync.js";
+import { unwrap } from "../lib/db.js";
+import { HttpError } from "../lib/http.js";
+import { requireAuth, adminOnly } from "../middleware/auth.js";
+import { ADMIN_ORDER_STATUSES, restockOrder } from "../services/orders.js";
 
 const router = Router();
 
-router.get("/seller", requireAuth, async (req, res) => {
-  const { data, error } = await supabase
-    .from("order_items")
-    .select("*, orders(id, status, created_at)")
-    .eq("seller_id", req.user.userId)
-    .order("id", { ascending: false });
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
-});
-
-router.get("/all", requireAuth, requireAdmin, async (req, res) => {
-  const { data, error } = await supabase
+function newestOrdersQuery() {
+  return supabase
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false });
+}
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+async function getOrderOr404(id, columns = "*") {
+  const order = await unwrap(
+    supabase.from("orders").select(columns).eq("id", id).maybeSingle(),
+    `Läsa order ${id}`,
+  );
+  if (!order) throw new HttpError(404, "Ordern hittades inte");
+  return order;
+}
+
+// Säljarens sålda produkter
+router.get("/seller", requireAuth, async (req, res) => {
+  res.json(
+    await unwrap(
+      supabase
+        .from("order_items")
+        .select("*, orders(id, status, created_at)")
+        .eq("seller_id", req.user.userId)
+        .order("id", { ascending: false }),
+      "Läsa säljarens försäljningar",
+    ),
+  );
+});
+
+router.get("/all", adminOnly, async (req, res) => {
+  res.json(await unwrap(newestOrdersQuery(), "Läsa alla ordrar"));
 });
 
 router.get("/:id", requireAuth, async (req, res) => {
-  const { id } = req.params;
-
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (orderError) {
-    return res.status(404).json({ error: "Ordern hittades inte" });
-  }
+  const order = await getOrderOr404(req.params.id);
 
   const isOwner = order.email === req.user.email;
   const isAdmin = req.user.role === "admin";
-
   if (!isOwner && !isAdmin) {
-    return res
-      .status(403)
-      .json({ error: "Du har inte tillgång till den här ordern" });
+    throw new HttpError(403, "Du har inte tillgång till den här ordern");
   }
 
-  const { data: orderItems, error: itemsError } = await supabase
-    .from("order_items")
-    .select("*")
-    .eq("order_id", id);
-
-  if (itemsError) {
-    return res.status(500).json({ error: itemsError.message });
-  }
-
-  res.json({ ...order, items: orderItems });
+  const items = await unwrap(
+    supabase.from("order_items").select("*").eq("order_id", order.id),
+    `Läsa orderrader för order ${order.id}`,
+  );
+  res.json({ ...order, items });
 });
 
+// Kunden ser sina egna ordrar, admin ser alla.
 router.get("/", requireAuth, async (req, res) => {
-  let query = supabase
-    .from("orders")
-    .select("*")
-    .order("created_at", { ascending: false });
-
+  let query = newestOrdersQuery();
   if (req.user.role !== "admin") {
     query = query.eq("email", req.user.email);
   }
-
-  const { data, error } = await query;
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  res.json(data);
+  res.json(await unwrap(query, "Läsa ordrar"));
 });
 
-router.patch("/:id/status", requireAuth, requireAdmin, async (req, res) => {
+router.patch("/:id/status", adminOnly, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const validStatuses = [
-    "ordered",
-    "processing",
-    "shipped",
-    "delivered",
-    "refunded",
-    "cancelled",
-  ];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ error: "Ogiltig status" });
+  if (!ADMIN_ORDER_STATUSES.includes(status)) {
+    throw new HttpError(400, "Ogiltig status");
   }
 
-  const { data: current, error: currentError } = await supabase
-    .from("orders")
-    .select("status")
-    .eq("id", id)
-    .single();
-  if (currentError || !current) {
-    return res.status(404).json({ error: "Ordern hittades inte" });
-  }
-
+  const current = await getOrderOr404(id, "status");
   if (current.status === "pending" && status !== "cancelled") {
-    return res
-      .status(409)
-      .json({ error: "Ordern är inte betald. Den kan bara avbrytas." });
+    throw new HttpError(409, "Ordern är inte betald. Den kan bara avbrytas.");
   }
 
-  const { data, error } = await supabase
-    .from("orders")
-    .update({ status })
-    .eq("id", id)
-    .select()
-    .single();
+  const order = await unwrap(
+    supabase.from("orders").update({ status }).eq("id", id).select().single(),
+    `Ändra status på order ${id}`,
+  );
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
+  // Ordern är redan uppdaterad, så ett fel här loggas men stoppar inte svaret.
   if (status === "refunded") {
-    const { data: orderItems } = await supabase
-      .from("order_items")
-      .select("product_id")
-      .eq("order_id", id);
-
-    const productIds = (orderItems ?? [])
-      .map((item) => item.product_id)
-      .filter(Boolean);
-
-    if (productIds.length > 0) {
-      await supabase
-        .from("products")
-        .update({ status: "approved" })
-        .in("id", productIds);
-      await syncProductsToSearch(productIds);
-    }
+    await restockOrder(id).catch((err) =>
+      console.error(`Order ${id}: ${err.message}`),
+    );
   }
-
-  res.json(data);
+  res.json(order);
 });
 
 export default router;

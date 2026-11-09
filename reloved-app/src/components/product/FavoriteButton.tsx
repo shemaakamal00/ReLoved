@@ -2,7 +2,7 @@ import { useState, type AnimationEvent } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useFavorites } from "../../context/FavoritesContext";
 import { useToast } from "../../context/ToastContext";
-import { errorMessage } from "../.../utils/messages";
+import { errorMessage } from "../../utils/messages";
 
 interface FavoriteButtonProps {
   productId: number;

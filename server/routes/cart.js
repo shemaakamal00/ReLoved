@@ -1,106 +1,91 @@
+//api/cart den inloggade användarens varukorg som sparar i databasen
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
+import { unwrap } from "../lib/db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
+router.use(requireAuth);
 
+// Varje användare har en varukorg.
 async function getOrCreateCart(userId) {
-  const { data: existingRows, error: selectError } = await supabase
-    .from("carts")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1);
+  const [existing] = await unwrap(
+    supabase
+      .from("carts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .limit(1),
+    "Läsa varukorg",
+  );
+  if (existing) return existing;
 
-  if (selectError) throw selectError;
-  if (existingRows && existingRows.length > 0) return existingRows[0];
-
-  const { data: created, error } = await supabase
-    .from("carts")
-    .insert({ user_id: userId })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return created;
+  return unwrap(
+    supabase.from("carts").insert({ user_id: userId }).select().single(),
+    "Skapa varukorg",
+  );
 }
 
-router.get("/", requireAuth, async (req, res) => {
-  try {
-    const cart = await getOrCreateCart(req.user.userId);
-    const { data, error } = await supabase
-      .from("cart_items")
-      .select("product_id, products(*)")
-      .eq("cart_id", cart.id);
-
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+router.get("/", async (req, res) => {
+  const cart = await getOrCreateCart(req.user.userId);
+  res.json(
+    await unwrap(
+      supabase
+        .from("cart_items")
+        .select("product_id, products(*)")
+        .eq("cart_id", cart.id),
+      "Läsa varukorgens produkter",
+    ),
+  );
 });
 
-router.post("/items", requireAuth, async (req, res) => {
+router.post("/items", async (req, res) => {
   const { product_id, quantity = 1 } = req.body;
+  const cart = await getOrCreateCart(req.user.userId);
 
-  try {
-    const cart = await getOrCreateCart(req.user.userId);
-
-    const { data: existing } = await supabase
+  // Second hand produkterna kan ligga i varukorgen en gång
+  const existing = await unwrap(
+    supabase
       .from("cart_items")
       .select("*")
       .eq("cart_id", cart.id)
       .eq("product_id", product_id)
-      .maybeSingle();
+      .maybeSingle(),
+    "Läsa varukorgsrad",
+  );
+  if (existing) return res.json(existing);
 
-    if (existing) {
-      return res.json(existing);
-    }
-
-    const { data, error } = await supabase
+  const item = await unwrap(
+    supabase
       .from("cart_items")
       .insert({ cart_id: cart.id, product_id, quantity })
       .select()
-      .single();
-
-    if (error) return res.status(500).json({ error: error.message });
-    res.status(201).json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+      .single(),
+    "Lägga i varukorgen",
+  );
+  res.status(201).json(item);
 });
 
-router.delete("/items/:productId", requireAuth, async (req, res) => {
-  const { productId } = req.params;
-
-  try {
-    const cart = await getOrCreateCart(req.user.userId);
-    const { error } = await supabase
+router.delete("/items/:productId", async (req, res) => {
+  const cart = await getOrCreateCart(req.user.userId);
+  await unwrap(
+    supabase
       .from("cart_items")
       .delete()
       .eq("cart_id", cart.id)
-      .eq("product_id", productId);
-
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+      .eq("product_id", req.params.productId),
+    "Ta bort ur varukorgen",
+  );
+  res.json({ success: true });
 });
 
-router.delete("/", requireAuth, async (req, res) => {
-  try {
-    const cart = await getOrCreateCart(req.user.userId);
-    const { error } = await supabase
-      .from("cart_items")
-      .delete()
-      .eq("cart_id", cart.id);
-
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+router.delete("/", async (req, res) => {
+  const cart = await getOrCreateCart(req.user.userId);
+  await unwrap(
+    supabase.from("cart_items").delete().eq("cart_id", cart.id),
+    "Tömma varukorgen",
+  );
+  res.json({ success: true });
 });
 
 export default router;

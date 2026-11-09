@@ -1,6 +1,8 @@
+// /api/search som är produktsökning via Algolia
 import { Router } from "express";
 import { z } from "zod";
 import { searchProducts } from "../integrations/searchAdapter.ts";
+import { HttpError, parseOr400 } from "../lib/http.js";
 
 const router = Router();
 const MAX_PAGE_SIZE = 48;
@@ -64,20 +66,17 @@ const SearchQuery = z
   );
 
 router.get("/", async (req, res) => {
-  const result = SearchQuery.safeParse(req.query);
-  if (!result.success) {
-    return res.status(400).json({
-      error: result.error.issues[0]?.message ?? "Ogiltiga sökparametrar",
-      details: result.error.issues.map((issue) => issue.message),
-    });
-  }
+  const query = parseOr400(SearchQuery, req.query, "Ogiltiga sökparametrar", {
+    withDetails: true,
+  });
   try {
-    res.json(await searchProducts(result.data));
+    res.json(await searchProducts(query));
   } catch (err) {
     console.error(`Sökningen misslyckades: ${err.message}`);
-    res.status(502).json({
-      error: "Sökningen är inte tillgänglig just nu. Försök igen om en stund.",
-    });
+    throw new HttpError(
+      502,
+      "Sökningen är inte tillgänglig just nu. Försök igen om en stund.",
+    );
   }
 });
 

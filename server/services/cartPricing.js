@@ -1,6 +1,6 @@
 // Räknar fram varukorgens pris från databasen
 import { z } from "zod";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 import { HttpError } from "../lib/http.js";
 
 export const CartItems = z
@@ -20,7 +20,7 @@ export const CartItems = z
 // Slår ihop rader med samma produkt
 function sumQuantities(items) {
   const quantities = new Map();
-  for (const item of itmes) {
+  for (const item of items) {
     quantities.set(
       item.product_id,
       (quantities.get(item.product_id) ?? 0) + item.quantity,
@@ -57,8 +57,8 @@ export async function priceCart(items) {
   const { data: products, error } =
     (await supabase
       .from("products")
-      .select("id, name, brand, price, stock, status, seller_id")) in
-    ("id", productIds);
+      .select("id, name, brand, price, stock, status, seller_id")
+      .in("id", productIds));
 
   if (error) {
     console.error(`Varukorgen: kunde inte läsa produkter: ${error.message}`);

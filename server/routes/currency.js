@@ -1,3 +1,4 @@
+// /api/currency/rates – valutakurser för prisväljaren (via Frankfurter, med cache).
 import express from "express";
 import { getExchangeRates } from "../integrations/currencyAdapter.ts";
 

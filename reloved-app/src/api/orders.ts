@@ -53,7 +53,7 @@ export function fetchOrderById(
 
 // Säljare
 export function fetchMySales(token: string, signal?: AbortSignal) {
-  return request<SellerOrderItem[]>("/orderss/seller", { token, signal });
+  return request<SellerOrderItem[]>("/orders/seller", { token, signal });
 }
 
 // Admin
