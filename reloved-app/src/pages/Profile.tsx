@@ -12,12 +12,12 @@ import PageMessage from "../components/ui/PageMessage";
 import Spinner from "../components/ui/Spinner";
 
 function Profile() {
-  const { user: authUser, token, logout } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const { data: profile, setData: setProfile } = useApi(
-    (signal) => fetchMyProfile(token!, signal),
-    [token],
+    (signal) => fetchMyProfile(signal),
+    [authUser],
     {
-      enabled: Boolean(token),
+      enabled: Boolean(authUser),
     },
   );
 
@@ -64,7 +64,7 @@ interface ProfileFormProps {
 }
 
 function ProfileForm({ profile, onSaved }: ProfileFormProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [justSaved, markSaved] = useTemporaryFlag(2000);
@@ -86,11 +86,11 @@ function ProfileForm({ profile, onSaved }: ProfileFormProps) {
 
   async function handleSave(event: FormEvent) {
     event.preventDefault();
-    if (!token) return;
+    if (!user) return;
 
     setSaving(true);
     try {
-      onSaved(await updateMyProfile(token, form));
+      onSaved(await updateMyProfile(form));
       markSaved();
       showToast("Sparat. Adressen fylls i automatiskt i kassan.");
     } catch (err) {

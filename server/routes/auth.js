@@ -1,9 +1,11 @@
-//api/auth registera och logga in.
+//api/auth: registerar och loggar in ed lösenord
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import { supabase } from "../lib/supabase.js";
+import { unwrap } from "../lib/db.js";
 import { HttpError } from "../lib/http.js";
-import { signToken } from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
+import { setSessionCookie, clearSessionCookie } from "../lib/cookies.js";
 
 const router = Router();
 
@@ -17,6 +19,7 @@ function toPublicUser(user) {
   return { id, first_name, last_name, email, role };
 }
 
+// Lösenord
 router.post("/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   if (!firstName || !lastName || !email || !password) {
@@ -28,7 +31,7 @@ router.post("/register", async (req, res) => {
     .insert({
       first_name: firstName,
       last_name: lastName,
-      email,
+      email: email.trim().toLowerCase(),
       password_hash: await bcrypt.hash(password, 10),
       role: "customer",
     })
@@ -40,7 +43,8 @@ router.post("/register", async (req, res) => {
   }
   if (error) throw new Error(`Registrera användare: ${error.message}`);
 
-  res.status(201).json({ user, token: signToken(user) });
+  setSessionCookie(res, user);
+  res.status(201).json({ user });
 });
 
 router.post("/login", async (req, res) => {
@@ -52,14 +56,38 @@ router.post("/login", async (req, res) => {
   const { data: user } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
+    .ilike("email", email.trim())
     .maybeSingle();
-  // Samma svar oavsett om e-posten eller lösenordet är fel.
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+
+  // Ett Google-konto har inget lösenord.
+  if (!user?.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
     throw new HttpError(401, WRONG_LOGIN);
   }
 
-  res.json({ user: toPublicUser(user), token: signToken(user) });
+  setSessionCookie(res, user);
+  res.json({ user: toPublicUser(user) });
+});
+
+// Vem är inloggad
+router.get("/me", requireAuth, async (req, res) => {
+  const user = await unwrap(
+    supabase
+      .from("users")
+      .select(PUBLIC_USER_COLUMNS)
+      .eq("id", req.user.userId)
+      .maybeSingle(),
+    "Läsa inloggad användare",
+  );
+  if (!user) {
+    clearSessionCookie(res);
+    throw new HttpError(401, "Du måste vara inloggad");
+  }
+  res.json({ user });
+});
+
+router.post("/logout", (req, res) => {
+  clearSessionCookie(res);
+  res.status(204).end();
 });
 
 export default router;

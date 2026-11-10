@@ -22,26 +22,26 @@ function askForRejectionReason(): string | undefined {
 }
 
 function PendingListings() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const {
     data: listings,
     loading,
     reload,
-  } = useApi((signal) => fetchPendingProducts(token!, signal), [token], {
-    enabled: Boolean(token),
+  } = useApi((signal) => fetchPendingProducts(signal), [user], {
+    enabled: Boolean(user),
   });
 
   const shown = useExitList(listings ?? NO_LISTINGS, (product) => product.id);
   const [deciding, setDeciding] = useState<number | null>(null);
 
   async function handleDecision(id: number, status: Decision) {
-    if (!token) return;
+    if (!user) return;
     const reason = status === "rejected" ? askForRejectionReason() : undefined;
 
     setDeciding(id);
     try {
-      const updated = await updateProductStatus(token, id, status, reason);
+      const updated = await updateProductStatus(id, status, reason);
       reload();
       if (updated.searchIndexed === false) {
         showToast(SEARCH_INDEX_WARNING, "error");

@@ -21,10 +21,25 @@ export function registerUser(
   });
 }
 
-export function fetchMyProfile(token: string, signal?: AbortSignal) {
-  return request<User>("/users/me", { token, signal });
+// Kollar vem som är inloggad, 401 om ingen är det
+export function fetchCurrentUser(signal?: AbortSignal) {
+  return request<AuthResponse>("/auth/me", { signal });
 }
 
-export function updateMyProfile(token: string, updates: ProfileUpdate) {
-  return request<User>("/users/me", { method: "PATCH", token, body: updates });
+export function logoutUser() {
+  return request<void>("/auth/logout", { method: "POST" });
+}
+
+// Google inloggningen är en vanlig länk
+export function googleLoginUrl(returnTo = "/") {
+  const base = import.meta.env.VITE_API_URL || "/api";
+  return `${base}/auth/google?${new URLSearchParams({ returnTo })}`;
+}
+
+export function fetchMyProfile(signal?: AbortSignal) {
+  return request<User>("/users/me", { signal });
+}
+
+export function updateMyProfile(updates: ProfileUpdate) {
+  return request<User>("/users/me", { method: "PATCH", body: updates });
 }

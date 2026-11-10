@@ -7,26 +7,24 @@ import type {
   SellerStats,
 } from "../types";
 
-export function fetchAdminStats(token: string, signal?: AbortSignal) {
-  return request<AdminStats>("/admin/stats", { token, signal });
+export function fetchAdminStats(signal?: AbortSignal) {
+  return request<AdminStats>("/admin/stats", { signal });
 }
 
-export function fetchSellerStats(token: string, signal?: AbortSignal) {
-  return request<SellerStats>("/seller/stats", { token, signal });
+export function fetchSellerStats( signal?: AbortSignal) {
+  return request<SellerStats>("/seller/stats", { signal });
 }
 
 // Hämtar leverantörens katalog och skapar/uppdaterar produkter.
-export function importSupplierCatalog(token: string, format: ImportFormat) {
+export function importSupplierCatalog( format: ImportFormat) {
   return request<ImportReport>(`/admin/products/import/${format}`, {
     method: "POST",
-    token,
   });
 }
 
 // Bygger om hela sökindexet från databasen.
-export function reindexSearch(token: string) {
+export function reindexSearch() {
   return request<{ indexed: number }>("/admin/search/reindex", {
     method: "POST",
-    token,
   });
 }

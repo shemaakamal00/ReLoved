@@ -12,11 +12,11 @@ interface MySalesProps {
 }
 
 function MySales({ refreshKey }: MySalesProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { data: sales, loading } = useApi(
-    (signal) => fetchMySales(token!, signal),
-    [token, refreshKey],
-    { enabled: Boolean(token) },
+    (signal) => fetchMySales(signal),
+    [refreshKey],
+    { enabled: Boolean(user) },
   );
 
   return (

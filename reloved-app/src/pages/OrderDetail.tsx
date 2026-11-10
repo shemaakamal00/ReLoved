@@ -12,13 +12,13 @@ import StatusBadge from "../components/ui/StatusBadge";
 
 function OrderDetail() {
   const { id } = useParams<{ id: string }>();
-  const { token } = useAuth();
+  const { user } = useAuth();
   const {
     data: order,
     loading,
     error,
-  } = useApi((signal) => fetchOrderById(token!, id!, signal), [id, token], {
-    enabled: Boolean(id && token),
+  } = useApi((signal) => fetchOrderById(id!, signal), [id], {
+    enabled: Boolean(id && user),
   });
 
   if (loading) return <PageMessage>Laddar order...</PageMessage>;

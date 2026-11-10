@@ -14,19 +14,19 @@ interface SupplierImportProps {
 }
 
 function SupplierImport({ onImported }: SupplierImportProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [running, setRunning] = useState<ImportFormat | null>(null);
   const [report, setReport] = useState<ImportReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleImport(format: ImportFormat) {
-    if (!token) return;
+    if (!user) return;
     setRunning(format);
     setError(null);
     setReport(null);
     try {
-      const result = await importSupplierCatalog(token, format);
+      const result = await importSupplierCatalog(format);
       setReport(result);
       showToast(`Importen (${format.toUpperCase()}) är klar.`);
       onImported();

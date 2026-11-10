@@ -5,6 +5,7 @@ import { HttpError, parseOr400 } from "../lib/http.js";
 import { CartItems } from "../services/cartPricing.js";
 import { PostalCode, SHIPPING_METHODS } from "../services/shipping.js";
 import { startCheckout, findOrderBySession } from "../services/checkout.js";
+import { optionalAuth } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -25,10 +26,11 @@ const CheckoutRequest = z
     { message: "Välj ett ombud", path: ["service_point_id"] },
   );
 
-router.post("/", async (req, res) => {
-  const customer = parseOr400(CheckoutRequest, req.body, "Ogiltig beställning");
-  res.status(201).json(await startCheckout(customer));
-});
+  // Inloggad kund: ordern kopplas till kontot. Gäst: ordern får inget konto.
+  router.post("/", optionalAuth, async (req, res) => {
+    const customer = parseOr400(CheckoutRequest, req.body, "Ogiltig beställning");
+    res.status(201).json(await startCheckout(customer, req.user?.userId ?? null));
+  });
 
 router.get("/order", async (req, res) => {
   const sessionId = req.query.session_id;

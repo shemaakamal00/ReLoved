@@ -13,12 +13,10 @@ import SearchIndexPanel from "./SearchIndexPanel";
 import SupplierImport from "./SupplierImport";
 
 function AdminDashboard() {
-  const { token } = useAuth();
-  const { data: stats } = useApi(
-    (signal) => fetchAdminStats(token!, signal),
-    [token],
-    { enabled: Boolean(token) },
-  );
+  const { user } = useAuth();
+  const { data: stats } = useApi((signal) => fetchAdminStats(signal), [user], {
+    enabled: Boolean(user),
+  });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const [refreshKey, setRefreshKey] = useState(0);

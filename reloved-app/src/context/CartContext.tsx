@@ -90,20 +90,20 @@ async function loadLocalCart(): Promise<CartLine[]> {
   });
 }
 
-async function moveLocalCartToServer(token: string) {
+async function moveLocalCartToServer() {
   const lines = loadLocalLines();
   for (const line of lines) {
     // En vara som hunnit säljas ska inte stoppa resten av varukorgen
-    await addCartItem(token, line.id, line).catch((err) =>
+    await addCartItem(line.id, line).catch((err) =>
       console.warn(`Kunde inte flytta vara ${line.id} till varukorgen:`, err),
     );
   }
   if (lines.length > 0) localStorage.removeItem(LOCAL_CART_KEY);
 }
 
-async function loadServerCart(token: string): Promise<CartLine[]> {
-  await moveLocalCartToServer(token);
-  const rows = await fetchCart(token);
+async function loadServerCart(): Promise<CartLine[]> {
+  await moveLocalCartToServer();
+  const rows = await fetchCart();
   return rows.map((row) => ({
     product_id: row.product_id,
     size: row.size ?? "",
@@ -116,22 +116,23 @@ const sameLine = (productId: number, size: string) => (line: LocalLine) =>
   line.id === productId && line.size === size;
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuth();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [items, setItems] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
     try {
-      setItems(token ? await loadServerCart(token) : await loadLocalCart());
+      setItems(userId ? await loadServerCart() : await loadLocalCart());
     } catch (err) {
       console.error("Kunde inte läsa varukorgen:", err);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [userId]);
   useEffect(() => {
     let cancelled = false;
-    const load = token ? loadServerCart(token) : loadLocalCart();
+    const load = userId ? loadServerCart() : loadLocalCart();
     load
       .then((lines) => !cancelled && setItems(lines))
       .catch((err) => console.error("Kunde inte läsa varukorgen:", err))
@@ -139,7 +140,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [userId]);
 
   async function addToCart(
     productId: number,
@@ -151,8 +152,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // Second hand-plagg finns bara i ett exemplar
     if (existing && existing.product.stock === null) return;
 
-    if (token) {
-      await addCartItem(token, productId, { size, quantity });
+    if (userId) {
+      await addCartItem(productId, { size, quantity });
     } else {
       const lines = loadLocalLines();
       const line = lines.find(sameLine(productId, size));
@@ -169,8 +170,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     size: string,
     quantity: number,
   ) {
-    if (token) {
-      await updateCartItem(token, productId, size, quantity);
+    if (userId) {
+      await updateCartItem(productId, size, quantity);
     } else {
       saveLocalLines(
         loadLocalLines().map((line) =>
@@ -182,7 +183,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   async function removeFromCart(productId: number, size = "") {
-    if (token) await removeCartItem(token, productId, size);
+    if (userId) await removeCartItem(productId, size);
     else
       saveLocalLines(
         loadLocalLines().filter((line) => !sameLine(productId, size)(line)),
@@ -191,7 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   async function clearCart() {
-    if (token) await clearCartApi(token);
+    if (userId) await clearCartApi();
     else localStorage.removeItem(LOCAL_CART_KEY);
     await reload();
   }

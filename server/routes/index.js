@@ -3,6 +3,7 @@ import { Router } from "express";
 
 import adminRouter from "./admin.js";
 import authRouter from "./auth.js";
+import googleAuthRouter from "./googleAuth.js";
 import cartRouter from "./cart.js";
 import categoriesRouter from "./categories.js";
 import checkoutRouter from "./checkout.js";
@@ -31,6 +32,7 @@ api.use("/checkout", checkoutRouter);
 api.use("/orders", ordersRouter);
 
 // Konton
+api.use("/auth/google", googleAuthRouter);
 api.use("/auth", authRouter);
 api.use("/users", usersRouter);
 

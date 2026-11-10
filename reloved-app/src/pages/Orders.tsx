@@ -8,11 +8,11 @@ import StatusBadge from "../components/ui/StatusBadge";
 import TableSkeleton from "../components/ui/TableSkeleton";
 
 function Orders() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { data: orders, loading } = useApi(
-    (signal) => fetchOrders(token!, signal),
-    [token],
-    { enabled: Boolean(token) },
+    (signal) => fetchOrders(signal),
+    [user],
+    { enabled: Boolean(user) },
   );
 
   return (
@@ -20,7 +20,7 @@ function Orders() {
       <section className="orders-page section">
         <div className="container">
           <div className="orders-header">
-            <p className="eyebrow">Mitt konto</p>
+            <p className="eyebrow">Mina sidor</p>
             <h1>Mina ordrar</h1>
           </div>
 

@@ -1,12 +1,11 @@
 // Funktionen som pratar med vårt API. Alla filer använder denna
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
-/** Nyckeln i lS där AuthContext sparar inloggningen */
-export const AUTH_STORAGE_KEY = "reloved-auth";
+// Används när servern svarar 401
+export const UNAUTHORIZED_EVENT = "reloved:unauthorized";
 
 export interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
-  token?: string | null;
   body?: unknown;
   signal?: AbortSignal;
   cache?: RequestCache;
@@ -14,10 +13,9 @@ export interface RequestOptions {
 
 export async function request<T>(
   path: string,
-  { method = "GET", token, body, signal, cache }: RequestOptions = {},
+  { method = "GET", body, signal, cache }: RequestOptions = {},
 ): Promise<T> {
   const headers: Record<string, string> = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
 
   let payload: BodyInit | undefined;
   if (body instanceof FormData) {
@@ -33,12 +31,11 @@ export async function request<T>(
     body: payload,
     signal,
     cache,
+    credentials: "include",
   });
 
-  if (response.status === 401 && token) {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    window.location.href = "/login";
-    throw new Error("Sessionen har gått ut, logga in igen.");
+  if (response.status === 401) {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
   }
 
   if (!response.ok) {
@@ -46,5 +43,6 @@ export async function request<T>(
     throw new Error(data.error || "Något gick fel");
   }
 
+  if (response.status === 204) return undefined as T;
   return response.json();
 }

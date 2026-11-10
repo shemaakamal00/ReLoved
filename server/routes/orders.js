@@ -45,7 +45,7 @@ router.get("/all", adminOnly, async (req, res) => {
 router.get("/:id", requireAuth, async (req, res) => {
   const order = await getOrderOr404(req.params.id);
 
-  const isOwner = order.email === req.user.email;
+  const isOwner = order.user_id === req.user.userId;
   const isAdmin = req.user.role === "admin";
   if (!isOwner && !isAdmin) {
     throw new HttpError(403, "Du har inte tillgång till den här ordern");
@@ -60,11 +60,12 @@ router.get("/:id", requireAuth, async (req, res) => {
 
 // Kunden ser sina egna ordrar, admin ser alla.
 router.get("/", requireAuth, async (req, res) => {
-  let query = newestOrdersQuery();
-  if (req.user.role !== "admin") {
-    query = query.eq("email", req.user.email);
-  }
-  res.json(await unwrap(query, "Läsa ordrar"));
+  res.json(
+    await unwrap(
+      newestOrdersQuery().eq("user_id", req.user.userId),
+      "Läsa kundens ordrar",
+    ),
+  );
 });
 
 router.patch("/:id/status", adminOnly, async (req, res) => {

@@ -1,37 +1,38 @@
+// Kontrollerar vem som är inloggad. Läses ur shoppens httpOnly cookie
 import jwt from "jsonwebtoken";
+import { readCookie, SESSION_COOKIE } from "../lib/cookies.js";
 
-const TOKEN_LIFETIME = "7d";
-
-//Skapar en token för en användare.
-export function signToken(user) {
-  return jwt.sign(
-    { userId: user.id, role: user.role, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: TOKEN_LIFETIME },
-  );
+function userFromCookie(req) {
+  const token = readCookie(req, SESSION_COOKIE);
+  if (!token) return null;
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return null;
+  }
 }
 
+// Routen kräver inloggninng: Annars 401 utan en giltig cookie
 export function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
+  const user = userFromCookie(req);
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!user) {
     return res.status(401).json({ error: "Du måste vara inloggad" });
   }
+  req.user = user;
+  next();
+}
 
-  const token = authHeader.split(" ")[1];
-
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: "Du har loggats ut. Logga in igen." });
-  }
+// Frivliig inloggning
+export function optionalAuth(req, res, next) {
+  req.user = userFromCookie(req);
+  next();
 }
 
 // Används efter requireAuth
 export function requireAdmin(req, res, next) {
   if (req.user?.role !== "admin") {
-    return res.status(403).json({ error: "Kräver admin-behörighet" });
+    return res.status(403).json({ error: "Kräver admin behörighet" });
   }
   next();
 }

@@ -39,36 +39,33 @@ export function fetchOrderConfirmation(
 }
 
 // Kundens ordrar
-export function fetchOrders(token: string, signal?: AbortSignal) {
-  return request<Order[]>("/orders", { token, signal });
+export function fetchOrders(signal?: AbortSignal) {
+  return request<Order[]>("/orders", { signal });
 }
 
 export function fetchOrderById(
-  token: string,
   id: string | number,
   signal?: AbortSignal,
 ) {
-  return request<OrderWithItems>(`/orders/${id}`, { token, signal });
+  return request<OrderWithItems>(`/orders/${id}`, { signal });
 }
 
 // Säljare
-export function fetchMySales(token: string, signal?: AbortSignal) {
-  return request<SellerOrderItem[]>("/orders/seller", { token, signal });
+export function fetchMySales( signal?: AbortSignal) {
+  return request<SellerOrderItem[]>("/orders/seller", { signal });
 }
 
 // Admin
-export function fetchAllOrders(token: string, signal?: AbortSignal) {
-  return request<Order[]>("/orders/all", { token, signal });
+export function fetchAllOrders(signal?: AbortSignal) {
+  return request<Order[]>("/orders/all", { signal });
 }
 
 export function updateOrderStatus(
-  token: string,
   id: number,
   status: OrderStatus,
 ) {
   return request<Order>(`/orders/${id}/status`, {
     method: "PATCH",
-    token,
     body: { status },
   });
 }

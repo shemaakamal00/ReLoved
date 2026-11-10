@@ -7,7 +7,7 @@ import type { Category } from "../../types";
 import PanelSection from "../../components/ui/PanelSection";
 
 function AdminCategories() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { categories, reload } = useCategories();
   const [name, setName] = useState("");
@@ -34,11 +34,10 @@ function AdminCategories() {
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
-    if (!token || !name.trim()) return;
+    if (!user || !name.trim()) return;
 
     const created = await change(
-      () =>
-        createCategory(token, name.trim(), parentId ? Number(parentId) : null),
+      () => createCategory(name.trim(), parentId ? Number(parentId) : null),
       "Kategorin är skapad!",
       "Kunde inte skapa kategorin.",
     );
@@ -49,10 +48,10 @@ function AdminCategories() {
   }
 
   async function handleUpdate(id: number) {
-    if (!token || !editingName.trim()) return;
+    if (!user || !editingName.trim()) return;
 
     const updated = await change(
-      () => updateCategory(token, id, editingName.trim()),
+      () => updateCategory(id, editingName.trim()),
       "Kategorin är uppdaterad!",
       "Kunde inte uppdatera kategorin.",
     );
@@ -60,9 +59,9 @@ function AdminCategories() {
   }
 
   async function handleDelete(id: number) {
-    if (!token || !window.confirm("Ta bort den här kategorin?")) return;
+    if (!user || !window.confirm("Ta bort den här kategorin?")) return;
     await change(
-      () => deleteCategory(token, id),
+      () => deleteCategory(id),
       "Kategorin är borttagen.",
       "Kunde inte ta bort kategorin.",
     );

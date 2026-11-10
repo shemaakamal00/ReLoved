@@ -21,20 +21,20 @@ const STATUS_OPTIONS = Object.entries(ORDER_STATUS_LABELS).map(
 );
 
 function AdminOrdersTable() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [savingId, setSavingId] = useState<number | null>(null);
   const { data: orders, loading } = useApi(
-    (signal) => fetchAllOrders(token!, signal),
-    [token],
-    { enabled: Boolean(token) },
+    (signal) => fetchAllOrders(signal),
+    [user],
+    { enabled: Boolean(user) },
   );
 
   async function handleSave(orderId: number, status: OrderStatus) {
-    if (!token) return false;
+    if (!user) return false;
     setSavingId(orderId);
     try {
-      await updateOrderStatus(token, orderId, status);
+      await updateOrderStatus(orderId, status);
       showToast(`Order #${orderId} uppdaterad!`);
       return true;
     } catch (err) {

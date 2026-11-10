@@ -13,73 +13,66 @@ export function fetchProductById(id: string | number, signal?: AbortSignal) {
 }
 
 // Admin
-export function fetchAllProducts(token: string, signal?: AbortSignal) {
-  return request<Product[]>("/products/all", { token, signal });
+export function fetchAllProducts(signal?: AbortSignal) {
+  return request<Product[]>("/products/all", { signal });
 }
 
 // Annonser som väntar på granskning
-export function fetchPendingProducts(token: string, signal?: AbortSignal) {
+export function fetchPendingProducts(signal?: AbortSignal) {
   return request<Product[]>("/products?status=pending", {
-    token,
     signal,
     cache: "no-store",
   });
 }
 
-export function createProduct(token: string, form: FormData) {
+export function createProduct(form: FormData) {
   return request<WithSearchStatus<Product>>("/products", {
     method: "POST",
-    token,
     body: form,
   });
 }
 
-export function updateProduct(token: string, id: number, form: FormData) {
+export function updateProduct(id: number, form: FormData) {
   return request<WithSearchStatus<Product>>(`/products/${id}`, {
     method: "PATCH",
-    token,
     body: form,
   });
 }
 
 export function updateProductStatus(
-  token: string,
   id: number,
   status: Product["status"],
   reason?: string,
 ) {
   return request<WithSearchStatus<Product>>(`/products/${id}/status`, {
     method: "PATCH",
-    token,
     body: { status, reason },
   });
 }
 
-export function deleteProduct(token: string, id: number) {
-  return request<Deleted>(`/products/${id}`, { method: "DELETE", token });
+export function deleteProduct(id: number) {
+  return request<Deleted>(`/products/${id}`, { method: "DELETE" });
 }
 
 // Säljarens egna annonser
-export function fetchMyListings(token: string, signal?: AbortSignal) {
-  return request<Product[]>("/products/mine", { token, signal });
+export function fetchMyListings(signal?: AbortSignal) {
+  return request<Product[]>("/products/mine", { signal });
 }
 
-export function submitListing(token: string, form: FormData) {
+export function submitListing(form: FormData) {
   return request<Product>("/products/submit", {
     method: "POST",
-    token,
     body: form,
   });
 }
 
-export function updateMyListing(token: string, id: number, form: FormData) {
+export function updateMyListing(id: number, form: FormData) {
   return request<WithSearchStatus<Product>>(`/products/${id}/mine`, {
     method: "PATCH",
-    token,
     body: form,
   });
 }
 
-export function deleteMyListing(token: string, id: number) {
-  return request<Deleted>(`/products/${id}/mine`, { method: "DELETE", token });
+export function deleteMyListing(id: number) {
+  return request<Deleted>(`/products/${id}/mine`, { method: "DELETE" });
 }

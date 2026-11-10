@@ -16,22 +16,22 @@ interface MyListingsProps {
 }
 
 function MyListings({ onEdit, refreshKey }: MyListingsProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const {
     data: listings,
     loading,
     reload,
-  } = useApi((signal) => fetchMyListings(token!, signal), [token, refreshKey], {
-    enabled: Boolean(token),
+  } = useApi((signal) => fetchMyListings(signal), [refreshKey], {
+    enabled: Boolean(user),
   });
 
   async function handleDelete(product: Product) {
-    if (!token) return;
+    if (!user) return;
     if (!window.confirm(`Ta bort annonsen "${product.name}"?`)) return;
 
     try {
-      await deleteMyListing(token, product.id);
+      await deleteMyListing(product.id);
       showToast("Annonsen är borttagen.");
       reload();
     } catch (err) {
