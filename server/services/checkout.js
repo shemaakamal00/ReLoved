@@ -53,11 +53,13 @@ async function estimatedDeliveryFor(customer) {
 // Om orderraderna misslyckas så tar ordern bort igen
 async function saveOrder(
   customer,
+  userId,
   { lines, subtotal, shipping, servicePoint, estimatedDelivery },
 ) {
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
+      user_id: userId,
       email: customer.email,
       phone: customer.phone,
       full_name: customer.full_name,
@@ -145,7 +147,7 @@ async function startPayment(
   return checkout.url;
 }
 
-export async function startCheckout(customer) {
+export async function startCheckout(customer, userId = null) {
   const { lines, subtotal } = await priceCart(customer.items);
   const servicePoint = await resolveServicePoint(customer);
   const shipping = shippingPrice(customer.shipping_method, subtotal);
@@ -158,7 +160,7 @@ export async function startCheckout(customer) {
     servicePoint,
     estimatedDelivery,
   };
-  const order = await saveOrder(customer, details);
+  const order = await saveOrder(customer, userId, details);
   const url = await startPayment(order, customer, details);
 
   console.log(
