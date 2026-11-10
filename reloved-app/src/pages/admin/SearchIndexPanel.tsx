@@ -6,19 +6,19 @@ import { errorMessage } from "../../utils/messages";
 import PanelSection from "../../components/ui/PanelSection";
 
 function SearchIndexPanel() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [running, setRunning] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleReindex() {
-    if (!token) return;
+    if (!user) return;
     setRunning(true);
     setMessage(null);
     setError(null);
     try {
-      const { indexed } = await reindexSearch(token);
+      const { indexed } = await reindexSearch();
       setMessage(`${indexed} produkter finns nu i sökningen.`);
       showToast("Sökindexet är uppdaterat.");
     } catch (err) {

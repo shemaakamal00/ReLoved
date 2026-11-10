@@ -17,23 +17,19 @@ interface AdminProductsListProps {
 }
 
 function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const {
     data: products,
     loading,
     reload,
-  } = useApi(
-    (signal) => fetchAllProducts(token!, signal),
-    [token, refreshKey],
-    {
-      enabled: Boolean(token),
-    },
-  );
+  } = useApi((signal) => fetchAllProducts(signal), [user, refreshKey], {
+    enabled: Boolean(user),
+  });
 
   async function handleDelete(product: Product) {
-    if (!token) return;
+    if (!user) return;
     if (
       !window.confirm(`Ta bort "${product.name}"? Detta går inte att ångra.`)
     ) {
@@ -42,7 +38,7 @@ function AdminProductsList({ onEdit, refreshKey }: AdminProductsListProps) {
 
     setDeletingId(product.id);
     try {
-      const result = await deleteProduct(token, product.id);
+      const result = await deleteProduct(product.id);
       if (result.searchIndexed === false) {
         showToast(SEARCH_INDEX_WARNING, "error");
       } else {

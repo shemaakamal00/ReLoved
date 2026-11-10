@@ -22,7 +22,7 @@ export function readCookie(req, name) {
   if (!header) return null;
   for (const part of header.split(";")) {
     const [key, ...value] = part.trim().split("=");
-    if (key === name) return decodeURIComponent(value.json("="));
+    if (key === name) return decodeURIComponent(value.join("="));
   }
   return null;
 }
@@ -54,7 +54,7 @@ export function setTemporaryCookie(res, name, payload, minutes) {
   res.cookie(name, token, baseOptions(minutes * 60 * 1000));
 }
 
-export function readTemporaryCookie(res, name) {
+export function readTemporaryCookie(req, name) {
   const token = readCookie(req, name);
   if (!token) return null;
   try {

@@ -24,7 +24,7 @@ interface CustomerDetails {
 }
 
 function useCustomerDetails() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [details, setDetails] = useState<CustomerDetails>({
     email: user?.email ?? "",
     phone: "",
@@ -35,18 +35,22 @@ function useCustomerDetails() {
   });
 
   useEffect(() => {
-    if (!token) return;
-    fetchMyProfile(token)
+    if (!user) return;
+    fetchMyProfile()
       .then((profile) =>
         setDetails((current) => ({
           ...current,
+          email: current.email || profile.email,
+          fullName:
+            current.fullName ||
+            `${profile.first_name} ${profile.last_name}`.trim(),
           address: profile.address || current.address,
           postalCode: profile.postal_code || current.postalCode,
           city: profile.city || current.city,
         })),
       )
       .catch(console.error);
-  }, [token]);
+  }, [user]);
 
   function update(field: keyof CustomerDetails, value: string) {
     setDetails((current) => ({ ...current, [field]: value }));

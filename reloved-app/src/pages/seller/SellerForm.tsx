@@ -22,7 +22,7 @@ function hasImage(formData: FormData) {
 }
 
 function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { categories } = useCategories();
   const handleImageChange = useImageCheck();
@@ -32,7 +32,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!token) return;
+    if (!user) return;
 
     setSuccess(null);
     const form = event.currentTarget;
@@ -46,10 +46,10 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
     setSubmitting(true);
     try {
       if (editingProduct) {
-        await updateMyListing(token, editingProduct.id, formData);
+        await updateMyListing(editingProduct.id, formData);
         showToast("Sparat.");
       } else {
-        await submitListing(token, formData);
+        await submitListing(formData);
         setSuccess(
           "Annonsen är skickad! Vi granskar den, oftast inom ett dygn, och sedan syns den i butiken.",
         );

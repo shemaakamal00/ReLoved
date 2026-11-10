@@ -1,10 +1,17 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import {
+  useNavigate,
+  Link,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import FormMessage from "../components/ui/FormMessage";
 import PasswordInput from "../components/ui/PasswordInput";
 import Spinner from "../components/ui/Spinner";
+import GoogleLoginButton from "../components/auth/GoogleLoginButton";
+import { loginErrorMessage } from "../utils/loginErrors";
 
 function Login() {
   const { login } = useAuth();
@@ -12,6 +19,11 @@ function Login() {
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const returnTo =
+    (location.state as { from?: string } | null)?.from ?? "/";
+  const googleError = loginErrorMessage(searchParams.get("error"));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +35,7 @@ function Login() {
     try {
       await login(email, password);
       showToast("Du är inloggad. Välkommen tillbaka!");
-      navigate("/");
+      navigate(returnTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kunde inte logga in");
     } finally {
@@ -37,6 +49,12 @@ function Login() {
         <div className="login-card">
           <p className="eyebrow">Välkommen tillbaka</p>
           <h1>Logga in</h1>
+
+          <FormMessage message={googleError} />
+          <GoogleLoginButton returnTo={returnTo} />
+          <p className="login-divider">
+            <span>eller med e-post</span>
+          </p>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label>

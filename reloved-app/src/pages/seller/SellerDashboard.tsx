@@ -9,13 +9,13 @@ import MyListings from "./MyListings";
 import MySales from "./MySales";
 
 function SellerDashboard() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const { data: stats } = useApi(
-    (signal) => fetchSellerStats(token!, signal),
-    [token, refreshKey],
-    { enabled: Boolean(token) },
+    (signal) => fetchSellerStats(signal),
+    [refreshKey],
+    { enabled: Boolean(user) },
   );
 
   const handleSaved = useCallback(() => {

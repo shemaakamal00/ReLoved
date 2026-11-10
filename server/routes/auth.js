@@ -59,11 +59,8 @@ router.post("/login", async (req, res) => {
     .ilike("email", email.trim())
     .maybeSingle();
 
-  // Ett Google konto har inget lösenord
-  if (
-    !user?.password_hash ||
-    !(await bcrypt.compare(password, user.password_hash))
-  ) {
+  // Ett Google-konto har inget lösenord.
+  if (!user?.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
     throw new HttpError(401, WRONG_LOGIN);
   }
 

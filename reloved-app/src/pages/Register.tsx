@@ -5,6 +5,7 @@ import { useToast } from "../context/ToastContext";
 import FormMessage from "../components/ui/FormMessage";
 import PasswordInput from "../components/ui/PasswordInput";
 import Spinner from "../components/ui/Spinner";
+import GoogleLoginButton from "../components/auth/GoogleLoginButton";
 
 function Register() {
   const { register } = useAuth();
@@ -50,6 +51,11 @@ function Register() {
           <p>
             Med ett konto kan du sälja, spara favoriter och se dina ordrar. Att
             handla går även utan.
+          </p>
+
+          <GoogleLoginButton />
+          <p className="login-divider">
+            <span>eller med e-post</span>
           </p>
 
           <form className="login-form" onSubmit={handleSubmit}>

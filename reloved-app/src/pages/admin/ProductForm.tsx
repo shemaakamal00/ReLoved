@@ -14,7 +14,7 @@ interface ProductFormProps {
 }
 
 function ProductForm({ editingProduct, onSaved }: ProductFormProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { categories } = useCategories();
   const handleImageChange = useImageCheck();
@@ -22,7 +22,7 @@ function ProductForm({ editingProduct, onSaved }: ProductFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!token) return;
+    if (!user) return;
 
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -30,8 +30,8 @@ function ProductForm({ editingProduct, onSaved }: ProductFormProps) {
 
     try {
       const saved = editingProduct
-        ? await updateProduct(token, editingProduct.id, formData)
-        : await createProduct(token, formData);
+        ? await updateProduct(editingProduct.id, formData)
+        : await createProduct(formData);
 
       if (saved.searchIndexed === false) {
         showToast(SEARCH_INDEX_WARNING, "error");

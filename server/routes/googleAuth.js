@@ -26,7 +26,7 @@ function safeReturnPath(value) {
     value.startsWith("/") &&
     !value.startsWith("//")
     ? value
-    : "/orders";
+    : "/";
 }
 
 // Tillbaka till inloggningssidan med ett begripligt felkod

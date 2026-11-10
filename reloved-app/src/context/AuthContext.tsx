@@ -1,11 +1,17 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-import { loginUser, registerUser } from "../api";
-import { AUTH_STORAGE_KEY as AUTH_KEY } from "../api/http";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { fetchCurrentUser, loginUser, logoutUser, registerUser } from "../api";
+import { UNAUTHORIZED_EVENT } from "../api/http";
 import type { User } from "../types";
 
 interface AuthContextValue {
   user: User | null;
-  token: string | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (
     firstName: string,
@@ -13,41 +19,35 @@ interface AuthContextValue {
     email: string,
     password: string,
   ) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function loadStoredAuth(): { user: User; token: string } | null {
-  const raw = localStorage.getItem(AUTH_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
+//Inloggningen är en httpOnly cookie, eftersom JS inte kan läsa den så frågar React servern vem som är inloggad
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(
-    () => loadStoredAuth()?.user ?? null,
-  );
-  const [token, setToken] = useState<string | null>(
-    () => loadStoredAuth()?.token ?? null,
-  );
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  function persist(newUser: User, newToken: string) {
-    localStorage.setItem(
-      AUTH_KEY,
-      JSON.stringify({ user: newUser, token: newToken }),
-    );
-    setUser(newUser);
-    setToken(newToken);
-  }
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCurrentUser(controller.signal)
+      .then(({ user }) => setUser(user))
+      .catch(() => setUser(null))
+      .finally(() => !controller.signal.aborted && setLoading(false));
+
+    // Om cookien går ut och servern svarar 401, logga ut React också
+    const onUnauthorized = () => setUser(null);
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => {
+      controller.abort();
+      window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    };
+  }, []);
 
   async function login(email: string, password: string) {
-    const { user, token } = await loginUser(email, password);
-    persist(user, token);
+    const { user } = await loginUser(email, password);
+    setUser(user);
   }
 
   async function register(
@@ -56,23 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ) {
-    const { user, token } = await registerUser(
-      firstName,
-      lastName,
-      email,
-      password,
-    );
-    persist(user, token);
+    const { user } = await registerUser(firstName, lastName, email, password);
+    setUser(user);
   }
 
-  function logout() {
-    localStorage.removeItem(AUTH_KEY);
+  async function logout() {
+    // Servern tar bort cookien. Även om det misslyckas
+    await logoutUser().catch((err) => console.error("Utloggning:", err));
     setUser(null);
-    setToken(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

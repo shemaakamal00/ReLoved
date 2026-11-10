@@ -1,6 +1,5 @@
 // Google adapter: Enda stället i ReLoved som vet hur Googles inloggning fungerar
 import { createHash, randomBytes } from "node:crypto";
-import { access } from "node:fs";
 import { z } from "zod";
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
@@ -151,6 +150,9 @@ function verifyIdToken(idToken: string, expectedNonce: string): GoogleProfile {
     throw new GoogleLoginError("ID tokenet har gått ut");
   }
   if (claims.nonce !== expectedNonce) {
+    throw new GoogleLoginError("ID tokenet hör inte till den här inloggningen (nonce)");
+  }
+  if (claims.email_verified === false) {
     throw new GoogleLoginError("E-postadressen är inte verifierad hos Google");
   }
 
