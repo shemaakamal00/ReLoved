@@ -1,86 +1,65 @@
+//api/auth registera och logga in.
 import { Router } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { supabase } from "../lib/supabase.js";
+import { HttpError } from "../lib/http.js";
+import { signToken } from "../middleware/auth.js";
 
 const router = Router();
 
+const PUBLIC_USER_COLUMNS = "id, first_name, last_name, email, role";
+const WRONG_LOGIN = "Fel e-post eller lösenord";
+const UNIQUE_VIOLATION = "23505";
+
+// Det klienten får veta om användaren
+function toPublicUser(user) {
+  const { id, first_name, last_name, email, role } = user;
+  return { id, first_name, last_name, email, role };
+}
+
 router.post("/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
-
   if (!firstName || !lastName || !email || !password) {
-    return res
-      .status(400)
-      .json({ error: "Fyll i förnamn, efternamn, e-post och lösenord" });
+    throw new HttpError(400, "Fyll i förnamn, efternamn, e-post och lösenord");
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const { data, error } = await supabase
+  const { data: user, error } = await supabase
     .from("users")
     .insert({
       first_name: firstName,
       last_name: lastName,
       email,
-      password_hash: passwordHash,
+      password_hash: await bcrypt.hash(password, 10),
       role: "customer",
     })
-    .select("id, first_name, last_name, email, role")
+    .select(PUBLIC_USER_COLUMNS)
     .single();
 
-  if (error) {
-    if (error.code === "23505") {
-      return res.status(409).json({ error: "E-postadressen används redan" });
-    }
-    return res.status(500).json({ error: error.message });
+  if (error?.code === UNIQUE_VIOLATION) {
+    throw new HttpError(409, "E-postadressen används redan");
   }
+  if (error) throw new Error(`Registrera användare: ${error.message}`);
 
-  const token = jwt.sign(
-    { userId: data.id, role: data.role, email: data.email },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" },
-  );
-  res.status(201).json({ user: data, token });
+  res.status(201).json({ user, token: signToken(user) });
 });
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
-    return res.status(400).json({ error: "Fyll i e-post och lösenord" });
+    throw new HttpError(400, "Fyll i e-post och lösenord");
   }
 
-  const { data: user, error } = await supabase
+  const { data: user } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
-    .single();
-
-  if (error || !user) {
-    return res.status(401).json({ error: "Fel e-post eller lösenord" });
+    .maybeSingle();
+  // Samma svar oavsett om e-posten eller lösenordet är fel.
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    throw new HttpError(401, WRONG_LOGIN);
   }
 
-  const passwordMatches = await bcrypt.compare(password, user.password_hash);
-
-  if (!passwordMatches) {
-    return res.status(401).json({ error: "Fel e-post eller lösenord" });
-  }
-
-  const token = jwt.sign(
-    { userId: user.id, role: user.role, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" },
-  );
-  res.json({
-    user: {
-      id: user.id,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      email: user.email,
-      role: user.role,
-    },
-    token,
-  });
+  res.json({ user: toPublicUser(user), token: signToken(user) });
 });
 
 export default router;

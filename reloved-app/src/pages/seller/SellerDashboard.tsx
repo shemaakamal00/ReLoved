@@ -1,21 +1,22 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { fetchSellerStats } from "../../api";
 import { useAuth } from "../../context/AuthContext";
-import { fetchSellerStats } from "../../api/client";
-import type { SellerStats, Product } from "../../types";
+import { useApi } from "../../hooks/useApi";
+import type { Product } from "../../types";
+import StatCards from "../../components/ui/StatCards";
 import SellerForm from "./SellerForm";
 import MyListings from "./MyListings";
 import MySales from "./MySales";
 
 function SellerDashboard() {
   const { token } = useAuth();
-  const [stats, setStats] = useState<SellerStats | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  useEffect(() => {
-    if (!token) return;
-    fetchSellerStats(token).then(setStats).catch(console.error);
-  }, [token, refreshKey]);
+  const { data: stats } = useApi(
+    (signal) => fetchSellerStats(token!, signal),
+    [token, refreshKey],
+    { enabled: Boolean(token) },
+  );
 
   const handleSaved = useCallback(() => {
     setEditingProduct(null);
@@ -27,28 +28,22 @@ function SellerDashboard() {
       <section className="seller-page">
         <div className="seller-header">
           <p className="eyebrow">Säljarpanel</p>
-          <h1>Mina försäljningar</h1>
-          <p>Hantera dina annonser, produkter och försäljningar på ReLoved.</p>
+          <h1>Mina annonser</h1>
+          <p>
+            Nya annonser granskas innan de publiceras, oftast inom ett dygn. Du
+            ser status i listan nedan.
+          </p>
         </div>
 
-        <div className="seller-stats">
-          <article className="seller-stat-card">
-            <span>Väntar på granskning</span>
-            <strong>{stats ? stats.pending : "–"}</strong>
-          </article>
-          <article className="seller-stat-card">
-            <span>Aktiva annonser</span>
-            <strong>{stats ? stats.active : "–"}</strong>
-          </article>
-          <article className="seller-stat-card">
-            <span>Sålda produkter</span>
-            <strong>{stats ? stats.sold : "–"}</strong>
-          </article>
-          <article className="seller-stat-card">
-            <span>Väntar på leverans</span>
-            <strong>{stats ? stats.pendingDelivery : "–"}</strong>
-          </article>
-        </div>
+        <StatCards
+          variant="seller"
+          stats={[
+            { label: "Väntar på granskning", value: stats?.pending },
+            { label: "Aktiva annonser", value: stats?.active },
+            { label: "Sålda", value: stats?.sold },
+            { label: "Väntar på leverans", value: stats?.pendingDelivery },
+          ]}
+        />
 
         <SellerForm editingProduct={editingProduct} onSaved={handleSaved} />
         <MyListings onEdit={setEditingProduct} refreshKey={refreshKey} />

@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { reindexSearch } from "../../api/client";
+import { reindexSearch } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { errorMessage } from "../../utils/messages";
+import PanelSection from "../../components/ui/PanelSection";
 
 function SearchIndexPanel() {
   const { token } = useAuth();
@@ -20,23 +22,14 @@ function SearchIndexPanel() {
       setMessage(`${indexed} produkter finns nu i sökningen.`);
       showToast("Sökindexet är uppdaterat.");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Kunde inte uppdatera sökindexet.",
-      );
+      setError(errorMessage(err, "Kunde inte uppdatera sökindexet."));
     } finally {
       setRunning(false);
     }
   }
 
   return (
-    <details className="admin-section">
-      <summary className="admin-section__header">
-        <div>
-          <p className="eyebrow">Sök</p>
-          <h2>Sökindex</h2>
-        </div>
-      </summary>
-
+    <PanelSection variant="admin" eyebrow="Sök" title="Sökindex">
       <p>
         Sökningen uppdateras automatiskt när produkter sparas. Om du har gjort
         ändringar i produkterna som inte syns i sökningen kan du bygga om
@@ -56,7 +49,7 @@ function SearchIndexPanel() {
 
       {message && <p className="form-success">{message}</p>}
       {error && <p className="form-error">{error}</p>}
-    </details>
+    </PanelSection>
   );
 }
 

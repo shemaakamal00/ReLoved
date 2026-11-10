@@ -1,13 +1,15 @@
+// /api/shipping/quote här är fraktalternativ, pris och ombud för en varukorg.
 import { Router } from "express";
 import { z } from "zod";
-import { CartItems, CartError, priceCart } from "../lib/cartPricing.js";
-import { PostalCode } from "../lib/postalCode.js";
+import { parseOr400 } from "../lib/http.js";
+import { CartItems, priceCart } from "../services/cartPricing.js";
 import {
   FREE_SHIPPING_FROM,
   SHIPPING_METHODS,
   SHIPPING_OPTIONS,
+  PostalCode,
   shippingPrice,
-} from "../lib/shippingPrices.js";
+} from "../services/shipping.js";
 import {
   findServicePoints,
   estimateDelivery,
@@ -21,50 +23,43 @@ const QuoteRequest = z.object({
   items: CartItems,
 });
 
-router.post("/quote", async (req, res) => {
-  const parsed = QuoteRequest.safeParse(req.body);
-  if (!parsed.success) {
-    return res
-      .status(400)
-      .json({ error: parsed.error.issues[0]?.message ?? "Ogiltig förfrågan" });
-  }
-  const { postal_code: postalCode, items } = parsed.data;
-
-  let subtotal;
-  try {
-    ({ subtotal } = await priceCart(items));
-  } catch (err) {
-    if (err instanceof CartError)
-      return res.status(err.status).json({ error: err.message });
-    throw err;
-  }
+// Hämtar ombud och leveranstider från PostNord samtidigt.
+async function fetchPostNordInfo(postalCode) {
+  const [points, dates] = await Promise.allSettled([
+    findServicePoints(postalCode),
+    estimateDelivery(postalCode),
+  ]);
 
   let servicePoints = null;
-  let deliveries = {};
   let servicePointsError = null;
-
-  if (postalCode) {
-    const [points, dates] = await Promise.allSettled([
-      findServicePoints(postalCode),
-      estimateDelivery(postalCode),
-    ]);
-
-    if (points.status === "fulfilled") {
-      servicePoints = points.value;
-      if (servicePoints.length === 0)
-        servicePointsError =
-          "PostNord hittade inga ombud nära ditt postnummer. Välj hemleverans.";
-    } else {
-      console.error(`[frakt] ${points.reason.message}`);
+  if (points.status === "fulfilled") {
+    servicePoints = points.value;
+    if (servicePoints.length === 0) {
       servicePointsError =
-        points.reason instanceof PostNordInputError
-          ? `PostNord hittar inga ombud för postnummer ${postalCode}. Kontrollera att postnumret stämmer.`
-          : "Vi kunde inte hämta ombud från PostNord just nu. Du kan välja hemleverans.";
+        "PostNord hittade inga ombud nära ditt postnummer. Välj hemleverans.";
     }
-
-    if (dates.status === "fulfilled") deliveries = dates.value;
-    else console.error(`[frakt] ${dates.reason.message}`);
+  } else {
+    console.error(`[frakt] ${points.reason.message}`);
+    servicePointsError =
+      points.reason instanceof PostNordInputError
+        ? `PostNord hittar inga ombud för postnummer ${postalCode}. Kontrollera att postnumret stämmer.`
+        : "Vi kunde inte hämta ombud från PostNord just nu. Du kan välja hemleverans.";
   }
+
+  let deliveries = {};
+  if (dates.status === "fulfilled") deliveries = dates.value;
+  else console.error(`[frakt] ${dates.reason.message}`);
+
+  return { servicePoints, servicePointsError, deliveries };
+}
+
+router.post("/quote", async (req, res) => {
+  const { postal_code: postalCode, items } = parseOr400(QuoteRequest, req.body);
+  const { subtotal } = await priceCart(items);
+
+  const { servicePoints, servicePointsError, deliveries } = postalCode
+    ? await fetchPostNordInfo(postalCode)
+    : { servicePoints: null, servicePointsError: null, deliveries: {} };
 
   res.json({
     subtotal,

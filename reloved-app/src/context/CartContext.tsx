@@ -1,148 +1,210 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useState,
   useEffect,
+  useState,
   type ReactNode,
 } from "react";
 import { useAuth } from "./AuthContext";
 import {
   fetchCart,
   addCartItem,
+  updateCartItem,
   removeCartItem,
   clearCart as clearCartApi,
   fetchProducts,
-} from "../api/client";
+} from "../api";
 import type { Product } from "../types";
 
-interface CartLine {
+export interface CartLine {
   product_id: number;
+  /** Tom text = ingen storlek */
+  size: string;
+  quantity: number;
   product: Product;
 }
 
-interface LocalCartLine {
-  id: number;
+interface AddOptions {
+  size?: string;
+  quantity?: number;
 }
 
 interface CartContextValue {
   items: CartLine[];
   loading: boolean;
   cartCount: number;
-  addToCart: (productId: number,) => Promise<void>;
-  removeFromCart: (productId: number) => Promise<void>;
+  addToCart: (productId: number, options?: AddOptions) => Promise<void>;
+  updateQuantity: (
+    productId: number,
+    size: string,
+    quantity: number,
+  ) => Promise<void>;
+  removeFromCart: (productId: number, size?: string) => Promise<void>;
   clearCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 const LOCAL_CART_KEY = "reloved-cart";
+const MAX_QUANTITY = 10;
 
-function loadLocalCart(): LocalCartLine[] {
-  const raw = localStorage.getItem(LOCAL_CART_KEY);
-  if (!raw) return [];
+// Utloggad varukorg i localStorage: [{ id, size, quantity }]
+type LocalLine = { id: number; size: string; quantity: number };
+
+function loadLocalLines(): LocalLine[] {
   try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(localStorage.getItem(LOCAL_CART_KEY) ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    // Äldre varukorgar sparade bara { id }
+    return parsed.map((line) => ({
+      id: Number(line.id),
+      size: typeof line.size === "string" ? line.size : "",
+      quantity: Number(line.quantity) || 1,
+    }));
   } catch {
     return [];
   }
 }
 
-function saveLocalCart(items: LocalCartLine[]) {
-  localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(items));
+function saveLocalLines(lines: LocalLine[]) {
+  localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(lines));
 }
 
+async function loadLocalCart(): Promise<CartLine[]> {
+  const lines = loadLocalLines();
+  if (lines.length === 0) return [];
+
+  const products = await fetchProducts();
+  return lines.flatMap((line) => {
+    const product = products.find((p) => p.id === line.id);
+    return product
+      ? [
+          {
+            product_id: product.id,
+            size: line.size,
+            quantity: line.quantity,
+            product,
+          },
+        ]
+      : [];
+  });
+}
+
+async function moveLocalCartToServer(token: string) {
+  const lines = loadLocalLines();
+  for (const line of lines) {
+    // En vara som hunnit säljas ska inte stoppa resten av varukorgen
+    await addCartItem(token, line.id, line).catch((err) =>
+      console.warn(`Kunde inte flytta vara ${line.id} till varukorgen:`, err),
+    );
+  }
+  if (lines.length > 0) localStorage.removeItem(LOCAL_CART_KEY);
+}
+
+async function loadServerCart(token: string): Promise<CartLine[]> {
+  await moveLocalCartToServer(token);
+  const rows = await fetchCart(token);
+  return rows.map((row) => ({
+    product_id: row.product_id,
+    size: row.size ?? "",
+    quantity: row.quantity ?? 1,
+    product: row.products,
+  }));
+}
+
+const sameLine = (productId: number, size: string) => (line: LocalLine) =>
+  line.id === productId && line.size === size;
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const [items, setItems] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadCart(showLoading = true) {
-    if (showLoading) setLoading(true);
-
-    if (user && token) {
-      const local = loadLocalCart();
-      if (local.length > 0) {
-        for (const line of local) {
-          await addCartItem(token, line.id);
-        }
-        localStorage.removeItem(LOCAL_CART_KEY);
-      }
-
-      const data = await fetchCart(token);
-      setItems(
-        data.map((row) => ({
-          product_id: row.product_id,
-          product: row.products,
-        })),
-      );
-    } else {
-      const local = loadLocalCart();
-      if (local.length === 0) {
-        setItems([]);
-      } else {
-        const products = await fetchProducts();
-        const joined = local
-          .map((line) => {
-            const product = products.find((p) => p.id === line.id);
-            return product
-              ? { product_id: product.id, product }
-              : null;
-          })
-          .filter((line): line is CartLine => line !== null);
-        setItems(joined);
-      }
+  const reload = useCallback(async () => {
+    try {
+      setItems(token ? await loadServerCart(token) : await loadLocalCart());
+    } catch (err) {
+      console.error("Kunde inte läsa varukorgen:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  }
-
+  }, [token]);
   useEffect(() => {
-    loadCart();
-  }, [user]);
+    let cancelled = false;
+    const load = token ? loadServerCart(token) : loadLocalCart();
+    load
+      .then((lines) => !cancelled && setItems(lines))
+      .catch((err) => console.error("Kunde inte läsa varukorgen:", err))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
-  async function addToCart(productId: number) {
-    const alreadyInCart = items.some((item) => item.product_id === productId);
-    if (alreadyInCart) {
-      return;
-    }
+  async function addToCart(
+    productId: number,
+    { size = "", quantity = 1 }: AddOptions = {},
+  ) {
+    const existing = items.find(
+      (item) => item.product_id === productId && item.size === size,
+    );
+    // Second hand-plagg finns bara i ett exemplar
+    if (existing && existing.product.stock === null) return;
 
-    if (user && token) {
-      await addCartItem(token, productId);
+    if (token) {
+      await addCartItem(token, productId, { size, quantity });
     } else {
-      const local = loadLocalCart();
-      local.push({ id: productId});
-      saveLocalCart(local);
+      const lines = loadLocalLines();
+      const line = lines.find(sameLine(productId, size));
+      if (line)
+        line.quantity = Math.min(line.quantity + quantity, MAX_QUANTITY);
+      else lines.push({ id: productId, size, quantity });
+      saveLocalLines(lines);
     }
-    await loadCart(false);
+    await reload();
   }
 
-  async function removeFromCart(productId: number) {
-    if (user && token) {
-      await removeCartItem(token, productId);
+  async function updateQuantity(
+    productId: number,
+    size: string,
+    quantity: number,
+  ) {
+    if (token) {
+      await updateCartItem(token, productId, size, quantity);
     } else {
-      saveLocalCart(loadLocalCart().filter((l) => l.id !== productId));
+      saveLocalLines(
+        loadLocalLines().map((line) =>
+          sameLine(productId, size)(line) ? { ...line, quantity } : line,
+        ),
+      );
     }
-    await loadCart(false);
+    await reload();
+  }
+
+  async function removeFromCart(productId: number, size = "") {
+    if (token) await removeCartItem(token, productId, size);
+    else
+      saveLocalLines(
+        loadLocalLines().filter((line) => !sameLine(productId, size)(line)),
+      );
+    await reload();
   }
 
   async function clearCart() {
-    if (user && token) {
-      await clearCartApi(token);
-    } else {
-      localStorage.removeItem(LOCAL_CART_KEY);
-    }
-    await loadCart(false);
+    if (token) await clearCartApi(token);
+    else localStorage.removeItem(LOCAL_CART_KEY);
+    await reload();
   }
-
-  const cartCount = items.length;
 
   return (
     <CartContext.Provider
       value={{
         items,
         loading,
-        cartCount,
+        // Antalet i headern räknar alla exemplar
+        cartCount: items.reduce((sum, item) => sum + item.quantity, 0),
         addToCart,
+        updateQuantity,
         removeFromCart,
         clearCart,
       }}

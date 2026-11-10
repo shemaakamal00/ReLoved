@@ -5,7 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { fetchExchangeRates } from "../api/client";
+import { fetchExchangeRates } from "../api";
 
 export const CURRENCIES = [
   { code: "SEK", prefix: "", suffix: " kr" },

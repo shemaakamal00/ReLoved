@@ -5,43 +5,33 @@ function TermsOfService() {
         <p className="eyebrow">Villkor</p>
         <h1>Användarvillkor</h1>
         <p>
-          Här beskrivs de villkor som skulle gälla för ReLoved i en framtida
-          version.
+          ReLoved är ett skolprojekt. Inga riktiga köp eller försäljningar görs
+          här, och plaggen och priserna är exempel.
         </p>
       </section>
 
       <section className="policy-page">
         <article className="policy-card">
-          <h2>Utbildningsprojekt</h2>
+          <h2>Ditt konto</h2>
           <p>
-            ReLoved är ett skolprojekt och används endast i demonstrationssyfte.
-            Inga riktiga köp, betalningar eller försäljningar genomförs på
-            sidan.
+            Med ett konto kan du sälja, spara favoriter och se dina ordrar.
+            Inloggningen är riktig, men allt annat är testdata.
           </p>
 
-          <h2>Användarkonton</h2>
+          <h2>Annonser</h2>
           <p>
-            Du kan skapa ett konto, köpa produkter, sälja egna annonser och
-            följa dina ordrar. Kontot skapas med riktig autentisering, men all
-            data i denna version är demo- och testdata.
+            Alla annonser granskas innan de publiceras. En annons kan nekas om
+            bilden inte visar plagget eller om beskrivningen inte stämmer.
           </p>
 
-          <h2>Köp och försäljning</h2>
-          <p>
-            Produkter, priser och ordrar som visas på sidan är exempeldata och
-            ska inte betraktas som riktiga erbjudanden.
-          </p>
+          <h2>Returer</h2>
+          <p>Second hand säljs i befintligt skick och kan inte returneras.</p>
 
-          <h2>Ansvar</h2>
+          <h2>Betalning</h2>
           <p>
-            ReLoved ansvarar inte för riktiga transaktioner eftersom denna
-            version inte är en aktiv marknadsplats.
-          </p>
-
-          <h2>Ändringar</h2>
-          <p>
-            Villkoren kan komma att uppdateras i takt med att projektet
-            utvecklas.
+            Betalningen går via Stripe i testläge, så inga riktiga pengar dras.
+            ReLoved ansvarar inte för riktiga köp, eftersom det inte är en
+            riktig butik.
           </p>
         </article>
       </section>

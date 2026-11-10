@@ -1,0 +1,352 @@
+@charset "UTF-8";
+
+/* Rörelser */
+@keyframes reloved-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reloved-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Sidövergångar */
+.page-transition {
+  animation: reloved-fade-in var(--dur-base) ease-out both;
+}
+
+/* Tonas vid scroll */
+[data-revealed] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-revealed="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Bilder tonas in när de laddats (ProductImage) */
+.img-fade {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.img-fade.is-loaded {
+  opacity: 1;
+}
+
+/* Skeleton */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-sand);
+  border-radius: var(--radius-xs);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: reloved-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton--line {
+  height: 0.75rem;
+}
+
+@keyframes reloved-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Favorit pop */
+.favorite-button.is-popping svg {
+  animation: reloved-heart-pop 0.45s var(--ease-spring);
+}
+
+.favorite-button.is-popping::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px dotted var(--color-heart);
+  animation: reloved-heart-burst 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes reloved-heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.75);
+  }
+  70% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes reloved-heart-burst {
+  from {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* Fly to cart */
+.fly-to-cart {
+  position: fixed;
+  z-index: 1000;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  pointer-events: none;
+  box-shadow: var(--shadow-lift);
+}
+
+.icon-badge {
+  animation: reloved-badge-bump 0.4s var(--ease-spring);
+}
+
+@keyframes reloved-badge-bump {
+  40% {
+    transform: scale(1.45);
+  }
+}
+
+/* Globala animationer */
+
+.fade-in {
+  animation: reloved-fade-in var(--dur-base) ease-out both;
+  animation-delay: var(--delay, 0ms);
+}
+
+.slide-up {
+  animation: reloved-fade-up var(--dur-slow) var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+.scale-pop {
+  animation: reloved-scale-pop 0.4s var(--ease-spring);
+}
+
+@keyframes reloved-scale-pop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Lyfts lite vid hover (knappar och utvalda kort) */
+.hover-lift {
+  transition:
+    translate var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-base) ease;
+}
+
+.hover-lift:hover {
+  translate: 0 -3px;
+  box-shadow: var(--shadow-lift);
+}
+
+/* Något som tas bort tonas ut och krymper ihop (useExitList) */
+.is-leaving {
+  animation: reloved-leave 0.3s var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes reloved-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Rader i listor tonas ut åt sidan */
+.is-leaving-row {
+  animation: reloved-leave-row 0.3s var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes reloved-leave-row {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+/* Ett värde som ändras blinkar till (key={värde} gör att den spelas om) */
+.value-flash {
+  display: inline-block;
+  animation: reloved-value-flash 0.6s var(--ease-out);
+}
+
+@keyframes reloved-value-flash {
+  from {
+    opacity: 0.25;
+    transform: translateY(-4px);
+  }
+}
+
+/* Spinner i knappar */
+.spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: reloved-spin 0.7s linear infinite;
+}
+
+@keyframes reloved-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Bock som ritas upp */
+.checkmark {
+  width: 4rem;
+  height: 4rem;
+  color: var(--color-success);
+}
+
+.checkmark circle {
+  fill: var(--color-success-bg);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-dasharray: 152;
+  stroke-dashoffset: 152;
+  animation: reloved-draw 0.6s var(--ease-out) forwards;
+}
+
+.checkmark path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: reloved-draw 0.4s 0.45s var(--ease-out) forwards;
+}
+
+.checkmark--small {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+@keyframes reloved-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Dialogrutor och lightbox */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: rgba(22, 21, 20, 0.55);
+  backdrop-filter: blur(4px);
+  animation: reloved-fade-in var(--dur-base) ease-out;
+}
+
+.modal-backdrop.is-closing {
+  animation: reloved-fade-out var(--dur-fast) ease-in forwards;
+}
+
+.modal-backdrop > * {
+  animation: reloved-modal-in var(--dur-base) var(--ease-out);
+}
+
+.modal-backdrop.is-closing > * {
+  animation: reloved-modal-out var(--dur-fast) ease-in forwards;
+}
+
+@keyframes reloved-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes reloved-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+@keyframes reloved-modal-out {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+/* Minska rörelse */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  [data-revealed] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .skeleton::after {
+    display: none;
+  }
+}

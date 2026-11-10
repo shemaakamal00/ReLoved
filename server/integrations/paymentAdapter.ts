@@ -1,11 +1,9 @@
-import type { NumericFilters } from "algoliasearch";
 import Stripe from "stripe";
 
 const SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? "";
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 const EXPIRES_MINUTES = Number(process.env.CHECKOUT_EXPIRES_MINUTES ?? 30);
-
 const stripe = new Stripe(SECRET_KEY, {
   timeout: 10_000,
   maxNetworkRetries: 2,
@@ -88,29 +86,39 @@ export type PaymentEvent =
   | { type: "expired"; orderId: number; sessionId: string }
   | { type: "ignored"; reason: string };
 
+
+function paymentFromSession(session: Stripe.Checkout.Session): PaymentEvent {
+  if (session.payment_status !== "paid") {
+    return {
+      type: "ignored",
+      reason: `payment_status ${session.payment_status}`,
+    };
+  }
+  const orderId = Number(session.client_reference_id);
+  if (!Number.isInteger(orderId)) {
+    return { type: "ignored", reason: "saknar client_reference_id" };
+  }
+  return {
+    type: "paid",
+    orderId,
+    sessionId: session.id,
+    amountTotal: (session.amount_total ?? 0) / 100,
+    currency: session.currency ?? "",
+  };
+}
+
+export async function fetchCheckoutPayment(
+  sessionId: string,
+): Promise<PaymentEvent> {
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  return paymentFromSession(session);
+}
+
 export function toPaymentEvent(event: Stripe.Event): PaymentEvent {
   switch (event.type) {
     case "checkout.session.completed":
-    case "checkout.session.async_payment_succeeded": {
-      const session = event.data.object;
-      if (session.payment_status !== "paid") {
-        return {
-          type: "ignored",
-          reason: `payment_status ${session.payment_status}`,
-        };
-      }
-      const orderId = Number(session.client_reference_id);
-      if (!Number.isInteger(orderId)) {
-        return { type: "ignored", reason: "saknar client_reference_id" };
-      }
-      return {
-        type: "paid",
-        orderId,
-        sessionId: session.id,
-        amountTotal: (session.amount_total ?? 0) / 100,
-        currency: session.currency ?? "",
-      };
-    }
+    case "checkout.session.async_payment_succeeded":
+      return paymentFromSession(event.data.object);
 
     case "checkout.session.expired": {
       const session = event.data.object;

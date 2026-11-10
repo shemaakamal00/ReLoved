@@ -1,62 +1,89 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useSearchParams } from "react-router-dom";
-import { fetchProducts, fetchCategories } from "../api/client";
-import type { Product, Category } from "../types";
-import ProductCard from "../components/ProductCard";
+import { fetchProducts } from "../api";
+import { useApi } from "../hooks/useApi";
+import { useCategories } from "../hooks/useCategories";
+import type { Category, Product } from "../types";
+import ProductCard from "../components/product/ProductCard";
+import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
+import EmptyState from "../components/ui/EmptyState";
 
-function Products() {
-  const [searchParams] = useSearchParams();
-  const categoryId = searchParams.get("category");
+type SortBy = "newest" | "price-asc" | "price-desc";
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">(
-    "newest",
-  );
+const SORT_LABELS: Record<SortBy, string> = {
+  newest: "Nyast",
+  "price-asc": "Lägst pris",
+  "price-desc": "Högst pris",
+};
 
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([fetchProducts(), fetchCategories()])
-      .then(([productsData, categoriesData]) => {
-        setProducts(productsData);
-        setCategories(categoriesData);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+function withViewTransition(update: () => void) {
+  if (
+    !document.startViewTransition ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    update();
+    return;
+  }
+  document.startViewTransition(() => flushSync(update));
+}
 
-  const searchQuery = searchParams.get("search")?.toLowerCase() ?? "";
+function categoryWithChildren(
+  categories: Category[],
+  categoryId: number | null,
+) {
+  if (categoryId === null) return null;
+  return categories
+    .filter((c) => c.id === categoryId || c.parent_id === categoryId)
+    .map((c) => c.id);
+}
 
-  const matchingCategoryIds = categoryId
-    ? categories
-        .filter(
-          (c) =>
-            c.id === Number(categoryId) || c.parent_id === Number(categoryId),
-        )
-        .map((c) => c.id)
-    : null;
-
-  const filteredProducts = products
-    .filter((p) =>
-      matchingCategoryIds
-        ? matchingCategoryIds.includes(p.category_id ?? -1)
-        : true,
-    )
-    .filter((p) =>
-      searchQuery
-        ? p.name.toLowerCase().includes(searchQuery) ||
-          p.brand.toLowerCase().includes(searchQuery)
-        : true,
-    );
-
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+function sortProducts(products: Product[], sortBy: SortBy) {
+  return [...products].sort((a, b) => {
     if (sortBy === "price-asc") return a.price - b.price;
     if (sortBy === "price-desc") return b.price - a.price;
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
+}
 
-  const activeCategory = categories.find((c) => c.id === Number(categoryId));
+function Products() {
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  const categoryId = categoryParam ? Number(categoryParam) : null;
+  const searchQuery = searchParams.get("search")?.toLowerCase() ?? "";
+
+  const { data: products, loading } = useApi(
+    (signal) => fetchProducts(signal),
+    [],
+  );
+  const { categories } = useCategories();
+  const [sortBy, setSortBy] = useState<SortBy>("newest");
+  const [sortChanged, setSortChanged] = useState(false);
+
+  function handleSortChange(value: SortBy) {
+    withViewTransition(() => {
+      setSortBy(value);
+      setSortChanged(true);
+    });
+  }
+
+  const categoryIds = categoryWithChildren(categories, categoryId);
+  const visibleProducts = sortProducts(
+    (products ?? [])
+      .filter((p) => !categoryIds || categoryIds.includes(p.category_id ?? -1))
+      .filter(
+        (p) =>
+          !searchQuery ||
+          p.name.toLowerCase().includes(searchQuery) ||
+          p.brand.toLowerCase().includes(searchQuery),
+      ),
+    sortBy,
+  );
+
+  const activeCategory = categories.find((c) => c.id === categoryId);
+  const heading = searchQuery
+    ? `Sökresultat för "${searchQuery}"`
+    : (activeCategory?.name ?? "Alla plagg");
 
   return (
     <main>
@@ -64,34 +91,41 @@ function Products() {
         <div className="container">
           <div className="products-page__header">
             <p className="eyebrow">Produkter</p>
-            <h1>
-              {searchQuery
-                ? `Sökresultat för "${searchQuery}"`
-                : activeCategory
-                  ? activeCategory.name
-                  : "Alla produkter"}
-            </h1>
+            <h1>{heading}</h1>
           </div>
 
           <div className="products-toolbar">
+            {/* Kvitto på sorteringen. key gör att texten tonas in vid varje byte. */}
+            <p className="sort-feedback" role="status" key={sortBy}>
+              {sortChanged &&
+                `Sorterat på ${SORT_LABELS[sortBy].toLowerCase()}`}
+            </p>
+            <label className="sr-only" htmlFor="products-sort">
+              Sortera
+            </label>
             <select
+              id="products-sort"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              onChange={(e) => handleSortChange(e.target.value as SortBy)}
             >
-              <option value="newest">Nyast först</option>
-              <option value="price-asc">Lägst pris</option>
-              <option value="price-desc">Högst pris</option>
+              {Object.entries(SORT_LABELS).map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
 
           {loading ? (
-            <p>Laddar produkter...</p>
-          ) : sortedProducts.length === 0 ? (
-            <p>Inga produkter hittades i den här kategorin.</p>
+            <ProductGridSkeleton />
+          ) : visibleProducts.length === 0 ? (
+            <EmptyState title="Inget här just nu">
+              Nya plagg kommer in hela tiden. Titta in igen snart.
+            </EmptyState>
           ) : (
             <div className="product-grid">
-              {sortedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {visibleProducts.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
               ))}
             </div>
           )}

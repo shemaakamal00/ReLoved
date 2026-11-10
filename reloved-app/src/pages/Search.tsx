@@ -1,18 +1,17 @@
-import { useEffect, useState, type FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { searchProducts } from "../api/client";
-import ProductCard from "../components/ProductCard";
-import SearchFilterBar from "../components/SearchFilterBar";
-import type { SearchFilters, SearchResult, SearchSort } from "../types";
+import { searchProducts } from "../api";
+import { useApi } from "../hooks/useApi";
+import ProductCard from "../components/product/ProductCard";
+import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
+import SearchFilterBar, {
+  SORT_LABELS,
+} from "../components/search/SearchFilterBar";
+import EmptyState from "../components/ui/EmptyState";
+import type { SearchFilters, SearchSort } from "../types";
 
 const PAGE_SIZE = 12;
 const SORTS: SearchSort[] = ["relevance", "price_asc", "price_desc", "newest"];
-
-type SearchState = {
-  key: string;
-  result: SearchResult | null;
-  error: string | null;
-};
 
 function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,37 +25,15 @@ function Search() {
     minPrice: searchParams.get("minPrice") ?? "",
     maxPrice: searchParams.get("maxPrice") ?? "",
   };
-  const key = searchParams.toString();
-
-  const [state, setState] = useState<SearchState>({
-    key: "",
-    result: null,
-    error: null,
-  });
-  const loading = state.key !== key;
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    searchProducts(
-      { q, page, pageSize: PAGE_SIZE, ...filters },
-      controller.signal,
-    )
-      .then((result) => setState({ key, result, error: null }))
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        console.error("Sökningen misslyckades:", err);
-        setState({
-          key,
-          result: null,
-          error:
-            err instanceof Error && err.message !== "Något gick fel"
-              ? err.message
-              : "Sökningen kunde inte genomföras just nu. Försök igen om en stund.",
-        });
-      });
-    return () => controller.abort();
-  }, [key]);
+  const {
+    data: result,
+    loading,
+    error,
+  } = useApi(
+    (signal) =>
+      searchProducts({ q, page, pageSize: PAGE_SIZE, ...filters }, signal),
+    [searchParams.toString()],
+  );
 
   function updateParams(changes: Record<string, string>) {
     const next = new URLSearchParams(searchParams);
@@ -82,7 +59,6 @@ function Search() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const result = state.result;
   const meta = result?.meta;
   const hasFilters = Boolean(
     filters.category ||
@@ -97,7 +73,7 @@ function Search() {
         <div className="container">
           <div className="products-page__header">
             <p className="eyebrow">Sök</p>
-            <h1>{q ? `”${q}”` : "Sök bland produkter"}</h1>
+            <h1>{q ? `”${q}”` : "Sök bland plaggen"}</h1>
           </div>
           <form className="search-page__form" onSubmit={handleSubmit} key={q}>
             <label className="sr-only" htmlFor="search-page-input">
@@ -108,7 +84,7 @@ function Search() {
               name="q"
               type="search"
               defaultValue={q}
-              placeholder="Sök plagg, märken, kategorier..."
+              placeholder="Sök på plagg eller märke"
               maxLength={100}
             />
             <button type="submit" className="button button-primary">
@@ -131,24 +107,31 @@ function Search() {
             }
           />
 
-          {loading && <p className="search-page__status">Söker...</p>}
+          {loading && <ProductGridSkeleton count={PAGE_SIZE / 2} />}
 
-          {!loading && state.error && (
-            <p className="form-error">{state.error}</p>
+          {!loading && error && <p className="form-error">{error}</p>}
+
+          {!loading && meta && meta.total === 0 && (
+            <EmptyState icon="search" title="Inga träffar">
+              {`Inga plagg matchade ${q ? `”${q}”` : "sökningen"}${hasFilters ? " med de här filtren" : ""}. Kontrollera stavningen eller prova ett annat ord.`}
+            </EmptyState>
           )}
 
-          {!loading && meta && (
-            <p className="search-page__status">
-              {meta.total === 0
-                ? `Inga produkter matchade ${q ? `”${q}”` : "sökningen"}${hasFilters ? " med de här filtren" : ""}. Kontrollera stavningen eller prova ett annat ord.`
-                : `${meta.total} ${meta.total === 1 ? "träff" : "träffar"} · sida ${meta.page} av ${Math.max(meta.totalPages, 1)}`}
+          {/* Statusraden tonas in efter varje ny sökning, och visar sorteringen
+              som ett kvitto när den ändrats */}
+          {!loading && meta && meta.total > 0 && (
+            <p className="search-page__status fade-in" role="status">
+              {meta.total} {meta.total === 1 ? "träff" : "träffar"}
+              {filters.sort !== "relevance" &&
+                ` · sorterat på ${SORT_LABELS[filters.sort].toLowerCase()}`}
+              {` · sida ${meta.page} av ${Math.max(meta.totalPages, 1)}`}
             </p>
           )}
 
           {!loading && result && result.data.length > 0 && (
             <div className="product-grid">
-              {result.data.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {result.data.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
               ))}
             </div>
           )}

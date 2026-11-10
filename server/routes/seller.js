@@ -1,43 +1,32 @@
+// /api/seller/stats som är siffrorna överst i säljarpanelen.
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
+import { countRows } from "../lib/db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
 router.get("/stats", requireAuth, async (req, res) => {
-  try {
-    const { count: pending } = await supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("seller_id", req.user.userId)
-      .eq("status", "pending");
+  const sellerId = req.user.userId;
+  const count = (table, columns = "*") =>
+    supabase
+      .from(table)
+      .select(columns, { count: "exact", head: true })
+      .eq("seller_id", sellerId);
 
-    const { count: active } = await supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("seller_id", req.user.userId)
-      .eq("status", "approved");
+  const [pending, active, sold, pendingDelivery] = await Promise.all([
+    countRows(count("products").eq("status", "pending")),
+    countRows(count("products").eq("status", "approved")),
+    countRows(count("order_items")),
+    countRows(
+      count("order_items", "*, orders!inner(status)").in("orders.status", [
+        "ordered",
+        "processing",
+      ]),
+    ),
+  ]);
 
-    const { count: sold } = await supabase
-      .from("order_items")
-      .select("*", { count: "exact", head: true })
-      .eq("seller_id", req.user.userId);
-
-    const { count: pendingDelivery } = await supabase
-      .from("order_items")
-      .select("*, orders!inner(status)", { count: "exact", head: true })
-      .eq("seller_id", req.user.userId)
-      .in("orders.status", ["ordered", "processing"]);
-
-    res.json({
-      pending: pending ?? 0,
-      active: active ?? 0,
-      sold: sold ?? 0,
-      pendingDelivery: pendingDelivery ?? 0,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.json({ pending, active, sold, pendingDelivery });
 });
 
 export default router;

@@ -1,262 +1,115 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  type FormEvent,
-  type ChangeEvent,
-} from "react";
+import { useState, type FormEvent } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import {
-  submitListing,
-  updateMyListing,
-  fetchCategories,
-} from "../../api/client";
-import type { Category, Product } from "../../types";
-import {
-  IMAGE_ACCEPT,
-  MAX_IMAGE_MB,
-  imageFileProblem,
-} from "../../utils/imageFile";
+import { submitListing, updateMyListing } from "../../api";
+import type { Product } from "../../types";
+import { useCategories } from "../../hooks/useCategories";
+import { useImageCheck } from "../../hooks/useImageCheck";
+import { errorMessage } from "../../utils/messages";
+import PanelSection from "../../components/ui/PanelSection";
+import ProductFormFields from "../../components/product/ProductFormFields";
+import FormMessage from "../../components/ui/FormMessage";
+import Spinner from "../../components/ui/Spinner";
 
 interface SellerFormProps {
   editingProduct?: Product | null;
   onSaved?: () => void;
 }
 
+function hasImage(formData: FormData) {
+  const file = formData.get("image") as File | null;
+  return Boolean(file && file.size > 0);
+}
+
 function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
   const { token } = useAuth();
   const { showToast } = useToast();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories } = useCategories();
+  const handleImageChange = useImageCheck();
   const [submitting, setSubmitting] = useState(false);
-  const detailsRef = useRef<HTMLDetailsElement>(null);
-
-  useEffect(() => {
-    fetchCategories().then(setCategories).catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    if (editingProduct && detailsRef.current) {
-      detailsRef.current.open = true;
-    }
-  }, [editingProduct]);
-
-  function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const problem = imageFileProblem(file);
-    if (problem) {
-      showToast(problem, "error");
-      event.target.value = "";
-      return;
-    }
-    showToast(`Bild vald: ${file.name}`);
-  }
+  const [success, setSuccess] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token) return;
 
+    setSuccess(null);
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    if (!editingProduct) {
-      const imageFile = formData.get("image") as File | null;
-      if (!imageFile || imageFile.size === 0) {
-        showToast(
-          "Du måste ladda upp en bild för att skicka in annonsen.",
-          "error",
-        );
-        return;
-      }
+    if (!editingProduct && !hasImage(formData)) {
+      showToast("Lägg till en bild innan du skickar in.", "error");
+      return;
     }
 
     setSubmitting(true);
     try {
       if (editingProduct) {
-        await updateMyListing(editingProduct.id, formData, token);
-        showToast("Annonsen är uppdaterad!");
+        await updateMyListing(token, editingProduct.id, formData);
+        showToast("Sparat.");
       } else {
-        await submitListing(formData, token);
-        showToast("Din annons är inskickad och väntar på granskning!");
-        form.reset();
+        await submitListing(token, formData);
+        setSuccess(
+          "Annonsen är skickad! Vi granskar den, oftast inom ett dygn, och sedan syns den i butiken.",
+        );
+        setFormKey((key) => key + 1);
       }
       onSaved?.();
     } catch (err) {
       console.error(err);
-      const message =
-        err instanceof Error ? err.message : "Kunde inte spara produkten.";
-      showToast(message, "error");
+      showToast(errorMessage(err, "Kunde inte spara produkten."), "error");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <details className="seller-section" ref={detailsRef}>
-      <summary className="seller-section__header">
-        <div>
-          <p className="eyebrow">Produkt</p>
-          <h2>Lägg upp ny annons</h2>
-        </div>
-      </summary>
-
+    <PanelSection
+      variant="seller"
+      eyebrow="Produkt"
+      title="Ny annons"
+      forceOpen={Boolean(editingProduct)}
+    >
+      {}
       <form
         className="seller-form"
         onSubmit={handleSubmit}
-        key={editingProduct?.id ?? "new"}
+        key={editingProduct?.id ?? `new-${formKey}`}
       >
-        <label>
-          Produktnamn
-          <input
-            name="title"
-            type="text"
-            defaultValue={editingProduct?.name}
-            placeholder="Svart skinnjacka"
-            required
-          />
-        </label>
+        <ProductFormFields
+          variant="seller"
+          product={editingProduct}
+          categories={categories}
+          onImageChange={handleImageChange}
+        />
 
-        <label>
-          Varumärke
-          <input
-            name="brand"
-            type="text"
-            defaultValue={editingProduct?.brand}
-            placeholder="Zara"
-            required
-          />
-        </label>
-
-        <label>
-          Pris
-          <input
-            name="price"
-            type="number"
-            defaultValue={editingProduct?.price}
-            placeholder="350"
-            required
-          />
-        </label>
-
-        <label>
-          Kategori
-          <select
-            name="category"
-            defaultValue={
-              editingProduct ? String(editingProduct.category_id ?? "") : ""
-            }
-            required
+        <div className="seller-form__full form-actions">
+          <FormMessage message={success} type="success" />
+          {/* Rörlig rand medan bilden laddas upp */}
+          {submitting && (
+            <div
+              className="upload-progress"
+              role="progressbar"
+              aria-label="Laddar upp"
+            >
+              <span />
+            </div>
+          )}
+          <button
+            className="button button-primary"
+            type="submit"
+            disabled={submitting}
+            aria-busy={submitting}
           >
-            <option value="" disabled>
-              Välj kategori
-            </option>
-            {categories
-              .filter((cat) => cat.parent_id === null)
-              .map((parent) => (
-                <optgroup label={parent.name} key={parent.id}>
-                  <option value={parent.id}>{parent.name} (alla)</option>
-                  {categories
-                    .filter((cat) => cat.parent_id === parent.id)
-                    .map((child) => (
-                      <option value={child.id} key={child.id}>
-                        {child.name}
-                      </option>
-                    ))}
-                </optgroup>
-              ))}
-          </select>
-        </label>
-
-        <label>
-          Skick
-          <select
-            name="condition"
-            defaultValue={editingProduct?.condition ?? ""}
-            required
-          >
-            <option value="" disabled>
-              Välj skick
-            </option>
-            <option>Nyskick</option>
-            <option>Mycket bra</option>
-            <option>Bra</option>
-            <option>Använt</option>
-          </select>
-        </label>
-
-        <label>
-          Storlek
-          <input
-            name="size"
-            type="text"
-            defaultValue={editingProduct?.size ?? ""}
-            placeholder="M"
-            required
-          />
-        </label>
-
-        <label>
-          Färg
-          <input
-            name="color"
-            type="text"
-            defaultValue={editingProduct?.color ?? ""}
-            placeholder="Svart"
-            required
-          />
-        </label>
-
-        <label>
-          Material
-          <input
-            name="material"
-            type="text"
-            defaultValue={editingProduct?.material ?? ""}
-            placeholder="Skinn"
-            required
-          />
-        </label>
-
-        <label className="upload-box">
-          <input
-            name="image"
-            type="file"
-            accept={IMAGE_ACCEPT}
-            onChange={handleImageChange}
-            hidden
-          />
-          <span className="upload-icon">📷</span>
-          <strong>
-            {editingProduct
-              ? "Byt produktbild (valfritt)"
-              : "Ladda upp produktbild (obligatoriskt)"}
-          </strong>
-          <p>JPEG eller PNG, max {MAX_IMAGE_MB} MB</p>
-        </label>
-
-        <label className="seller-form__full">
-          Beskrivning
-          <textarea
-            name="description"
-            defaultValue={editingProduct?.description ?? ""}
-            placeholder="Beskriv plagget..."
-            required
-          ></textarea>
-        </label>
-
-        <button
-          className="button button-primary seller-form__full"
-          type="submit"
-          disabled={submitting}
-        >
-          {submitting
-            ? "Sparar..."
-            : editingProduct
-              ? "Spara ändringar"
-              : "Skicka för granskning"}
-        </button>
+            {submitting && <Spinner />}
+            {submitting
+              ? "Sparar..."
+              : editingProduct
+                ? "Spara ändringar"
+                : "Skicka för granskning"}
+          </button>
+        </div>
 
         {editingProduct && (
           <button
@@ -268,7 +121,7 @@ function SellerForm({ editingProduct, onSaved }: SellerFormProps) {
           </button>
         )}
       </form>
-    </details>
+    </PanelSection>
   );
 }
 

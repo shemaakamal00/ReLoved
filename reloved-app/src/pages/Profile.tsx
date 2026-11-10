@@ -1,67 +1,29 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { fetchMyProfile, updateMyProfile } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { fetchMyProfile, updateMyProfile } from "../api/client";
-import type { User } from "../types";
+import { useApi } from "../hooks/useApi";
+import { useTemporaryFlag } from "../hooks/useTemporaryFlag";
+import type { ProfileUpdate, User } from "../types";
+import { initials } from "../utils/format";
+import Checkmark from "../components/ui/Checkmark";
+import PageMessage from "../components/ui/PageMessage";
+import Spinner from "../components/ui/Spinner";
 
 function Profile() {
   const { user: authUser, token, logout } = useAuth();
-  const { showToast } = useToast();
-  const [profile, setProfile] = useState<User | null>(null);
+  const { data: profile, setData: setProfile } = useApi(
+    (signal) => fetchMyProfile(token!, signal),
+    [token],
+    {
+      enabled: Boolean(token),
+    },
+  );
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [address, setAddress] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [city, setCity] = useState("");
-  const [saving, setSaving] = useState(false);
+  if (!profile) return <PageMessage>Laddar profil...</PageMessage>;
 
-  useEffect(() => {
-    if (!token) return;
-    fetchMyProfile(token).then((data) => {
-      setProfile(data);
-      setFirstName(data.first_name);
-      setLastName(data.last_name);
-      setAddress(data.address ?? "");
-      setPostalCode(data.postal_code ?? "");
-      setCity(data.city ?? "");
-    });
-  }, [token]);
-
-  async function handleSave(event: FormEvent) {
-    event.preventDefault();
-    if (!token) return;
-
-    setSaving(true);
-    try {
-      const updated = await updateMyProfile(token, {
-        first_name: firstName,
-        last_name: lastName,
-        address,
-        postal_code: postalCode,
-        city,
-      });
-      setProfile(updated);
-      showToast("Dina uppgifter är sparade!");
-    } catch (err) {
-      console.error(err);
-      showToast("Kunde inte spara ändringarna.", "error");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (!profile) {
-    return (
-      <main>
-        <p> Laddar profil ...</p>
-      </main>
-    );
-  }
-
-  const initials =
-    `${profile.first_name[0] ?? ""}${profile.last_name[0] ?? ""}`.toUpperCase();
+  const fullName = `${profile.first_name} ${profile.last_name}`;
 
   return (
     <main>
@@ -69,15 +31,12 @@ function Profile() {
         <div className="profile-header">
           <p className="eyebrow">Mitt konto</p>
           <h1>Min profil</h1>
-          <p>Hantera dina uppgifter och navigera till dina sidor.</p>
         </div>
 
         <div className="profile-layout">
           <aside className="profile-sidebar">
-            <div className="profile-avatar">{initials}</div>
-            <h2>
-              {profile.first_name} {profile.last_name}
-            </h2>
+            <div className="profile-avatar">{initials(fullName)}</div>
+            <h2>{fullName}</h2>
             <p>{profile.email}</p>
 
             <nav className="profile-menu" aria-label="Kontomeny">
@@ -92,80 +51,109 @@ function Profile() {
             </nav>
           </aside>
 
-          <form className="profile-content" onSubmit={handleSave}>
-            <div className="profile-card">
-              <h2>Profiluppgifter</h2>
-              <div className="profile-form">
-                <label>
-                  Förnamn
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                  />
-                </label>
-
-                <label>
-                  Efternamn
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                  />
-                </label>
-
-                <label className="profile-form__full">
-                  E-post
-                  <input type="email" value={profile.email} disabled />
-                </label>
-              </div>
-            </div>
-
-            <div className="profile-card">
-              <h2>Leveransadress</h2>
-              <div className="profile-form">
-                <label className="profile-form__full">
-                  Adress
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                </label>
-
-                <label>
-                  Postnummer
-                  <input
-                    type="text"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                  />
-                </label>
-
-                <label>
-                  Stad
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  />
-                </label>
-              </div>
-            </div>
-
-            <button
-              className="button button-primary"
-              type="submit"
-              disabled={saving}
-            >
-              {saving ? "Sparar..." : "Spara ändringar"}
-            </button>
-          </form>
+          <ProfileForm profile={profile} onSaved={setProfile} />
         </div>
       </section>
     </main>
+  );
+}
+
+interface ProfileFormProps {
+  profile: User;
+  onSaved: (profile: User) => void;
+}
+
+function ProfileForm({ profile, onSaved }: ProfileFormProps) {
+  const { token } = useAuth();
+  const { showToast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [justSaved, markSaved] = useTemporaryFlag(2000);
+  const [form, setForm] = useState<ProfileUpdate>({
+    first_name: profile.first_name,
+    last_name: profile.last_name,
+    address: profile.address ?? "",
+    postal_code: profile.postal_code ?? "",
+    city: profile.city ?? "",
+  });
+
+  function field(name: keyof ProfileUpdate) {
+    return {
+      value: form[name],
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setForm((current) => ({ ...current, [name]: e.target.value })),
+    };
+  }
+
+  async function handleSave(event: FormEvent) {
+    event.preventDefault();
+    if (!token) return;
+
+    setSaving(true);
+    try {
+      onSaved(await updateMyProfile(token, form));
+      markSaved();
+      showToast("Sparat. Adressen fylls i automatiskt i kassan.");
+    } catch (err) {
+      console.error(err);
+      showToast("Kunde inte spara ändringarna.", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form className="profile-content" onSubmit={handleSave}>
+      <div className="profile-card">
+        <h2>Profiluppgifter</h2>
+        <div className="profile-form">
+          <label>
+            Förnamn
+            <input type="text" {...field("first_name")} required />
+          </label>
+
+          <label>
+            Efternamn
+            <input type="text" {...field("last_name")} required />
+          </label>
+
+          <label className="profile-form__full">
+            E-post
+            <input type="email" value={profile.email} disabled />
+          </label>
+        </div>
+      </div>
+
+      <div className="profile-card">
+        <h2>Leveransadress</h2>
+        <div className="profile-form">
+          <label className="profile-form__full">
+            Adress
+            <input type="text" {...field("address")} />
+          </label>
+
+          <label>
+            Postnummer
+            <input type="text" {...field("postal_code")} />
+          </label>
+
+          <label>
+            Stad
+            <input type="text" {...field("city")} />
+          </label>
+        </div>
+      </div>
+
+      <button
+        className={`button button-primary ${justSaved ? "button--added" : ""}`}
+        type="submit"
+        disabled={saving}
+        aria-busy={saving}
+      >
+        {saving && <Spinner />}
+        {justSaved && <Checkmark small />}
+        {saving ? "Sparar..." : justSaved ? "Sparat" : "Spara ändringar"}
+      </button>
+    </form>
   );
 }
 

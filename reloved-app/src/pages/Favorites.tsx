@@ -1,39 +1,46 @@
 import { Link } from "react-router-dom";
 import { useFavorites } from "../context/FavoritesContext";
-import ProductCard from "../components/ProductCard";
+import { useExitList } from "../hooks/useExitList";
+import ProductCard from "../components/product/ProductCard";
+import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
+import EmptyState from "../components/ui/EmptyState";
 
 function Favorites() {
   const { favorites, loading } = useFavorites();
 
-  if (loading) {
-    return (
-      <main>
-        <p>Laddar favoriter...</p>
-      </main>
-    );
-  }
+  const shown = useExitList(favorites, (product) => product.id);
 
   return (
     <main>
       <section className="favorites-page section">
         <div className="container">
           <div className="favorites-header">
-            <p className="eyebrow">Mina sparade plagg</p>
             <h1>Mina favoriter</h1>
           </div>
 
-          {favorites.length === 0 ? (
-            <div className="favorites-empty">
-              <h2>Inga favoriter ännu</h2>
-              <p>När du sparar produkter visas de här.</p>
-              <Link to="/products" className="button button-primary">
-                Utforska produkter
-              </Link>
-            </div>
+          {loading ? (
+            <ProductGridSkeleton count={3} />
+          ) : shown.length === 0 ? (
+            <EmptyState
+              icon="heart"
+              title="Inga favoriter än"
+              action={
+                <Link to="/products" className="button button-primary">
+                  Se alla plagg
+                </Link>
+              }
+            >
+              Tryck på hjärtat på ett plagg så hamnar det här.
+            </EmptyState>
           ) : (
             <div className="product-grid">
-              {favorites.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {shown.map(({ item: product, leaving }, index) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                  className={leaving ? "is-leaving" : ""}
+                />
               ))}
             </div>
           )}

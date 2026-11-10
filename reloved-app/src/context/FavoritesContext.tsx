@@ -1,14 +1,15 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useState,
   useEffect,
+  useState,
   type ReactNode,
 } from "react";
 import { useAuth } from "./AuthContext";
-import { fetchFavorites, addFavorite, removeFavorite } from "../api/client";
-import type { Product } from "../types";
 import { useToast } from "./ToastContext";
+import { fetchFavorites, addFavorite, removeFavorite } from "../api";
+import type { Product } from "../types";
 
 interface FavoritesContextValue {
   favorites: Product[];
@@ -21,35 +22,39 @@ const FavoritesContext = createContext<FavoritesContextValue | undefined>(
   undefined,
 );
 
+async function loadFavorites(token: string | null): Promise<Product[]> {
+  if (!token) return [];
+  const rows = await fetchFavorites(token);
+  return rows.map((row) => row.products);
+}
+
 export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
+  const { showToast } = useToast();
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { showToast } = useToast();
 
-  async function loadFavorites() {
-    if (!user || !token) {
-      setFavorites([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const data = await fetchFavorites(token);
-    setFavorites(data.map((row) => row.products));
-    setLoading(false);
-  }
+  const reload = useCallback(async () => {
+    setFavorites(await loadFavorites(token));
+  }, [token]);
 
   useEffect(() => {
-    loadFavorites();
-  }, [user]);
+    let cancelled = false;
+    loadFavorites(token)
+      .then((list) => !cancelled && setFavorites(list))
+      .catch((err) => console.error("Kunde inte läsa favoriter:", err))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   function isFavorited(productId: number) {
     return favorites.some((p) => p.id === productId);
   }
 
   async function toggleFavorite(productId: number) {
-    if (!user || !token) {
+    if (!token) {
       showToast("Logga in för att spara favoriter", "error");
       return;
     }
@@ -58,8 +63,9 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       await removeFavorite(token, productId);
     } else {
       await addFavorite(token, productId);
+      showToast("Sparad i favoriter");
     }
-    await loadFavorites();
+    await reload();
   }
 
   return (
