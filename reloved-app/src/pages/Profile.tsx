@@ -37,7 +37,7 @@ function Profile() {
           <aside className="profile-sidebar">
             <div className="profile-avatar">{initials(fullName)}</div>
             <h2>{fullName}</h2>
-            <p>{profile.email}</p>
+            <p>{profile.email ?? "Inloggad med GitHub"}</p>
 
             <nav className="profile-menu" aria-label="Kontomeny">
               <Link to="/orders">Mina ordrar</Link>
@@ -118,7 +118,7 @@ function ProfileForm({ profile, onSaved }: ProfileFormProps) {
 
           <label className="profile-form__full">
             E-post
-            <input type="email" value={profile.email} disabled />
+            <input type="email" value={profile.email ?? ""} disabled />
           </label>
         </div>
       </div>

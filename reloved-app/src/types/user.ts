@@ -2,7 +2,7 @@ export interface User {
   id: number;
   first_name: string;
   last_name: string;
-  email: string;
+  email: string | null; // eftersom admins loggar in med GitHub
   role: "customer" | "seller" | "admin";
   address?: string | null;
   postal_code?: string | null;

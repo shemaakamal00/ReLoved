@@ -21,7 +21,7 @@ const ATTEMPT_MINUTES = 10;
 // Tillbaka till inloggningssidan med en felkod
 function loginFailed(res, code) {
   clearTemporaryCookie(res, ATTEMPT_COOKIE);
-  res.redirect(`/login?error=${code}`);
+  res.redirect(`/admin?error=${code}`);
 }
 
 // "Logga in med GitHub" länken

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchAdminStats } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useApi } from "../../hooks/useApi";
@@ -13,7 +14,8 @@ import SearchIndexPanel from "./SearchIndexPanel";
 import SupplierImport from "./SupplierImport";
 
 function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const { data: stats } = useApi((signal) => fetchAdminStats(signal), [user], {
     enabled: Boolean(user),
   });
@@ -27,13 +29,29 @@ function AdminDashboard() {
     refreshProducts();
   }, [refreshProducts]);
 
+  // Servern tar bort cookien, sedan går admin till startsidan
+  async function handleLogout() {
+    await logout();
+    navigate("/");
+  }
+
   return (
     <main>
       <section className="admin-page">
         <div className="admin-header">
-          <p className="eyebrow">Admin</p>
-          <h1>Adminpanel</h1>
-          <p>Hantera produkter, annonser, ordrar och användare på ReLoved.</p>
+          <p className="eyebrow">Administratör</p>
+          <h1>Administratörspanelen</h1>
+          <p>
+            Inloggad som {user?.first_name}. Hantera produkter, annonser, ordrar
+            och användare på ReLoved.
+          </p>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={handleLogout}
+          >
+            Logga ut
+          </button>
         </div>
 
         <StatCards
