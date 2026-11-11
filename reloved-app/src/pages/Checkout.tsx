@@ -40,7 +40,7 @@ function useCustomerDetails() {
       .then((profile) =>
         setDetails((current) => ({
           ...current,
-          email: current.email || profile.email,
+          email: current.email || profile.email || "",
           fullName:
             current.fullName ||
             `${profile.first_name} ${profile.last_name}`.trim(),

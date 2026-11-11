@@ -1,6 +1,11 @@
 // Inloggning, registrering och den egna profilen.
 import { request } from "./http";
-import type { AuthResponse, CurrentUserResponse, ProfileUpdate, User } from "../types";
+import type {
+  AuthResponse,
+  CurrentUserResponse,
+  ProfileUpdate,
+  User,
+} from "../types";
 
 export function loginUser(email: string, password: string) {
   return request<AuthResponse>("/auth/login", {
@@ -34,6 +39,12 @@ export function logoutUser() {
 export function googleLoginUrl(returnTo = "/") {
   const base = import.meta.env.VITE_API_URL || "/api";
   return `${base}/auth/google?${new URLSearchParams({ returnTo })}`;
+}
+
+// En vanlig admin länk till servern som skickar dig vidare till GitHub
+export function githubLoginUrl() {
+  const base = import.meta.env.VITE_API_URL || "/api";
+  return `${base}/auth/github`;
 }
 
 export function fetchMyProfile(signal?: AbortSignal) {
