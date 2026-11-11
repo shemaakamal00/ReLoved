@@ -26,7 +26,6 @@ function AdminLogin() {
           )}
 
           <GitHubLoginButton />
-          <p>GitHub frågar bara om läsrättighet till din profil.</p>
         </div>
       </section>
     </main>
