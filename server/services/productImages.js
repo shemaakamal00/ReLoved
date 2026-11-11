@@ -6,6 +6,7 @@ import {
 } from "../integrations/storageAdapter.ts";
 import { validateImage } from "../lib/upload.js";
 import { HttpError } from "../lib/http.js";
+import { optimizeImage } from "../lib/imageOptimizer.js";
 
 export const IMAGE_SERVICE_DOWN =
   "Bildtjänsten svarar inte just nu. Ingenting har ändrats, försök igen om en stund.";
@@ -16,8 +17,19 @@ export async function storeUploadedImage(file) {
   if (error) throw new HttpError(400, error);
   if (!image) return null;
 
+  let optimized;
   try {
-    return await uploadProductImage(image);
+    optimized = await optimizeImage(image.buffer);
+  } catch (err) {
+    console.error(`[bilder] Kunde inte läsa bilden: ${err.message}`);
+    throw new HttpError(
+      400,
+      "Bilden gick inte att läsa. Prova en annan JPEG eller PNG.",
+    );
+  }
+
+  try {
+    return await uploadProductImage(optimized);
   } catch (err) {
     console.error(`[bilder] Uppladdning misslyckades: ${err.message}`);
     throw new HttpError(502, IMAGE_SERVICE_DOWN);
