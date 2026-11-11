@@ -16,6 +16,7 @@ interface FavoritesContextValue {
   loading: boolean;
   isFavorited: (productId: number) => boolean;
   toggleFavorite: (productId: number) => Promise<void>;
+  refreshFavorites: () => Promise<void>;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | undefined>(
@@ -71,7 +72,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   return (
     <FavoritesContext.Provider
-      value={{ favorites, loading, isFavorited, toggleFavorite }}
+      value={{
+        favorites,
+        loading,
+        isFavorited,
+        toggleFavorite,
+        refreshFavorites: reload,
+      }}
     >
       {children}
     </FavoritesContext.Provider>

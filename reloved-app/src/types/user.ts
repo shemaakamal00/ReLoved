@@ -13,6 +13,10 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface CurrentUserResponse {
+  user: User | null;
+}
+
 export interface ProfileUpdate {
   first_name: string;
   last_name: string;

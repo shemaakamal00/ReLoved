@@ -4,9 +4,16 @@ import { useExitList } from "../hooks/useExitList";
 import ProductCard from "../components/product/ProductCard";
 import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
 import EmptyState from "../components/ui/EmptyState";
+import { useEffect } from "react";
 
 function Favorites() {
-  const { favorites, loading } = useFavorites();
+  const { favorites, loading, refreshFavorites } = useFavorites();
+
+  useEffect(() => {
+    refreshFavorites().catch((err) =>
+      console.error("Kunde inte läsa favoriter:", err),
+    );
+  }, [refreshFavorites]);
 
   const shown = useExitList(favorites, (product) => product.id);
 

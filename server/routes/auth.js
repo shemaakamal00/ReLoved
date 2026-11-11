@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import { supabase } from "../lib/supabase.js";
 import { unwrap } from "../lib/db.js";
 import { HttpError } from "../lib/http.js";
-import { requireAuth } from "../middleware/auth.js";
+import { optionalAuth } from "../middleware/auth.js";
 import { setSessionCookie, clearSessionCookie } from "../lib/cookies.js";
 
 const router = Router();
@@ -60,7 +60,10 @@ router.post("/login", async (req, res) => {
     .maybeSingle();
 
   // Ett Google-konto har inget lösenord.
-  if (!user?.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
+  if (
+    !user?.password_hash ||
+    !(await bcrypt.compare(password, user.password_hash))
+  ) {
     throw new HttpError(401, WRONG_LOGIN);
   }
 
@@ -69,7 +72,8 @@ router.post("/login", async (req, res) => {
 });
 
 // Vem är inloggad
-router.get("/me", requireAuth, async (req, res) => {
+router.get("/me", optionalAuth, async (req, res) => {
+  if (!req.user) return res.json({ user: null });
   const user = await unwrap(
     supabase
       .from("users")
@@ -78,11 +82,8 @@ router.get("/me", requireAuth, async (req, res) => {
       .maybeSingle(),
     "Läsa inloggad användare",
   );
-  if (!user) {
-    clearSessionCookie(res);
-    throw new HttpError(401, "Du måste vara inloggad");
-  }
-  res.json({ user });
+  if (!user) clearSessionCookie(res);
+  res.json({ user: user ?? null });
 });
 
 router.post("/logout", (req, res) => {

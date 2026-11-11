@@ -15,7 +15,7 @@ const supabase = createClient(SUPABASE_URL, SECRET_KEY, {
 
 export type ImageFile = {
   buffer: Buffer;
-  mimeType: "image/jpeg" | "image/png";
+  mimeType: "image/jpeg" | "image/png" | "image/webp";
 };
 
 export type StoredImage = {
@@ -26,6 +26,7 @@ export type StoredImage = {
 const EXTENSIONS: Record<ImageFile["mimeType"], string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
+  "image/webp": "webp",
 };
 
 export async function uploadProductImage(
