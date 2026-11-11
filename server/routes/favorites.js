@@ -8,15 +8,15 @@ const router = Router();
 router.use(requireAuth);
 
 router.get("/", async (req, res) => {
-  res.json(
-    await unwrap(
-      supabase
-        .from("favorites")
-        .select("product_id, products(*)")
-        .eq("user_id", req.user.userId),
-      "Läsa favoriter",
-    ),
+  const rows = await unwrap(
+    supabase
+      .from("favorites")
+      .select("product_id, products(*)")
+      .eq("user_id", req.user.userId),
+    "Läsa favoriter",
   );
+
+  res.json(rows.filter((row) => row.products?.status === "approved"));
 });
 
 router.post("/:productId", async (req, res) => {

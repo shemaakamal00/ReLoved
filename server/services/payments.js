@@ -24,11 +24,29 @@ function matchesOrder(order, payment) {
   return true;
 }
 
+// De köpta plaggen tas bort ur kundens varukorg i databasen
+async function removePurchasedFromCart(userId, productIds) {
+  if (!userId || productIds.length === 0) return;
+  const { data: carts } = await supabase
+    .from("carts")
+    .select("id")
+    .eq("user_id", userId);
+  const cartIds = (carts ?? []).map((cart) => cart.id);
+  if (cartIds.length === 0) return;
+  const { error } = await supabase
+    .from("cart_items")
+    .delete()
+    .in("cart_id", cartIds)
+    .in("product_id", productIds);
+  if (error)
+    console.error(`[webhook] Kunde inte tömma varukorgen: ${error.message}`);
+}
+
 // När betalningen är klar så markeras ordern som betald och lagret minskas
 export async function handlePaid(payment) {
   const { data: order, error } = await supabase
     .from("orders")
-    .select("id, status, total, stripe_session_id")
+    .select("id, status, total, stripe_session_id, user_id")
     .eq("id", payment.orderId)
     .maybeSingle();
   if (error) {
@@ -60,6 +78,7 @@ export async function handlePaid(payment) {
   }
   console.log(`[webhook] Order ${order.id} är betald, lagret är uppdaterat`);
   const productIds = await productIdsInOrder(order.id).catch(() => []);
+  await removePurchasedFromCart(order.user_id, productIds);
   await syncProductsToSearch(productIds);
 }
 
