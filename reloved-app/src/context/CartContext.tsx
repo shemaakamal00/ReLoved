@@ -46,7 +46,7 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 const LOCAL_CART_KEY = "reloved-cart";
-const MAX_QUANTITY = 10;
+const MAX_QUANTITY = 1000;
 
 // Utloggad varukorg i localStorage: [{ id, size, quantity }]
 type LocalLine = { id: number; size: string; quantity: number };
@@ -158,7 +158,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const lines = loadLocalLines();
       const line = lines.find(sameLine(productId, size));
       if (line)
-        line.quantity = Math.min(line.quantity + quantity, MAX_QUANTITY);
+        line.quantity = Math.min(
+          line.quantity + quantity,
+          existing?.product.stock ?? MAX_QUANTITY,
+        );
       else lines.push({ id: productId, size, quantity });
       saveLocalLines(lines);
     }

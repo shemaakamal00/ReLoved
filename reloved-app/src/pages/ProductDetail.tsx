@@ -160,9 +160,7 @@ function ProductSummary({
     .reduce((sum, item) => sum + item.quantity, 0);
   const alreadyInCart = !stockItem && inCart > 0;
   // Hur många till som går att lägga i varukorgen
-  const maxToAdd = stockItem
-    ? Math.max(0, Math.min(10, (product.stock ?? 0) - inCart))
-    : 1;
+  const maxToAdd = stockItem ? Math.max(0, (product.stock ?? 0) - inCart) : 1;
 
   function chooseSize(value: string) {
     setSize(value);
