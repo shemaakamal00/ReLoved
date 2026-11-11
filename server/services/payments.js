@@ -77,6 +77,14 @@ export async function handlePaid(payment) {
     return;
   }
   console.log(`[webhook] Order ${order.id} är betald, lagret är uppdaterat`);
+  updateAfterPayment(order).catch((err) =>
+    console.error(
+      `[webhook] Efterarbete för order ${order.id} misslyckades: ${err.message}`,
+    ),
+  );
+}
+
+async function updateAfterPayment(order) {
   const productIds = await productIdsInOrder(order.id).catch(() => []);
   await removePurchasedFromCart(order.user_id, productIds);
   await syncProductsToSearch(productIds);

@@ -4,11 +4,11 @@ import { useLocation } from "react-router-dom";
 // Tonar in varje sida. När adressen byts får wrappern en ny key för att React ska kunna bygga om den
 
 function PageTransition({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname]);
+  }, [pathname, search]);
 
   return (
     <div className="page-transition" key={pathname}>

@@ -1,6 +1,6 @@
 // Inloggning, registrering och den egna profilen.
 import { request } from "./http";
-import type { AuthResponse, ProfileUpdate, User } from "../types";
+import type { AuthResponse, CurrentUserResponse, ProfileUpdate, User } from "../types";
 
 export function loginUser(email: string, password: string) {
   return request<AuthResponse>("/auth/login", {
@@ -21,9 +21,9 @@ export function registerUser(
   });
 }
 
-// Kollar vem som är inloggad, 401 om ingen är det
+// Kollar vem som är inloggad, user är null om ingen är inloggad
 export function fetchCurrentUser(signal?: AbortSignal) {
-  return request<AuthResponse>("/auth/me", { signal });
+  return request<CurrentUserResponse>("/auth/me", { signal });
 }
 
 export function logoutUser() {
