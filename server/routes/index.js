@@ -4,6 +4,7 @@ import { Router } from "express";
 import adminRouter from "./admin.js";
 import authRouter from "./auth.js";
 import googleAuthRouter from "./googleAuth.js";
+import githubAuthRouter from "./githubAuth.js";
 import cartRouter from "./cart.js";
 import categoriesRouter from "./categories.js";
 import checkoutRouter from "./checkout.js";
@@ -34,6 +35,7 @@ api.use("/orders", ordersRouter);
 
 // Konton
 api.use("/auth/google", googleAuthRouter);
+api.use("/auth/github", githubAuthRouter);
 api.use("/auth", authRouter);
 api.use("/users", usersRouter);
 
