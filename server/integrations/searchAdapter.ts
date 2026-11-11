@@ -1,4 +1,4 @@
-import { algoliasearch } from "algoliasearch";
+import { algoliasearch, type IndexSettings } from "algoliasearch";
 import { z } from "zod";
 
 const APP_ID = process.env.ALGOLIA_APP_ID ?? "";
@@ -96,15 +96,25 @@ const DEFAULT_RANKING = [
   "exact",
   "custom",
 ];
-const SEARCHABLE = [
-  "name",
-  "brand",
-  "category",
-  "color",
-  "material",
-  "description",
-];
 const FACETS = ["category", "condition"];
+
+const SHARED_SETTINGS: IndexSettings = {
+  searchableAttributes: [
+    "name",
+    "brand",
+    "category",
+    "unordered(color)",
+    "unordered(material)",
+    "unordered(description)",
+  ],
+  attributesForFaceting: FACETS,
+  queryLanguages: ["sv"],
+  ignorePlurals: ["sv"],
+  removeStopWords: ["sv"],
+  minWordSizefor1Typo: 5,
+  minWordSizefor2Typos: 9,
+  typoTolerance: "min",
+};
 
 export function toObjectId(product: {
   id: number;
@@ -174,8 +184,7 @@ export async function configureIndex(): Promise<void> {
   const { taskID } = await adminClient.setSettings({
     indexName: INDEX_NAME,
     indexSettings: {
-      searchableAttributes: SEARCHABLE,
-      attributesForFaceting: FACETS,
+      ...SHARED_SETTINGS,
       replicas: Object.keys(SORT_RANKING).map(
         (sort) => SORT_INDEX[sort as SearchSort],
       ),
@@ -188,8 +197,7 @@ export async function configureIndex(): Promise<void> {
     const task = await adminClient.setSettings({
       indexName,
       indexSettings: {
-        searchableAttributes: SEARCHABLE,
-        attributesForFaceting: FACETS,
+        ...SHARED_SETTINGS,
         ranking: [ranking, ...DEFAULT_RANKING],
       },
     });

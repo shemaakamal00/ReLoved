@@ -1,4 +1,3 @@
-import type { FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { searchProducts } from "../api";
 import { useApi } from "../hooks/useApi";
@@ -25,6 +24,7 @@ function Search() {
     minPrice: searchParams.get("minPrice") ?? "",
     maxPrice: searchParams.get("maxPrice") ?? "",
   };
+  
   const {
     data: result,
     loading,
@@ -44,14 +44,6 @@ function Search() {
     if (!("page" in changes)) next.delete("page");
     if (next.get("sort") === "relevance") next.delete("sort");
     setSearchParams(next);
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const text = String(
-      new FormData(event.currentTarget).get("q") ?? "",
-    ).trim();
-    updateParams({ q: text });
   }
 
   function goToPage(newPage: number) {
@@ -75,22 +67,6 @@ function Search() {
             <p className="eyebrow">Sök</p>
             <h1>{q ? `”${q}”` : "Sök bland plaggen"}</h1>
           </div>
-          <form className="search-page__form" onSubmit={handleSubmit} key={q}>
-            <label className="sr-only" htmlFor="search-page-input">
-              Sök på ReLoved
-            </label>
-            <input
-              id="search-page-input"
-              name="q"
-              type="search"
-              defaultValue={q}
-              placeholder="Sök på plagg eller märke"
-              maxLength={100}
-            />
-            <button type="submit" className="button button-primary">
-              Sök
-            </button>
-          </form>
 
           <SearchFilterBar
             filters={filters}

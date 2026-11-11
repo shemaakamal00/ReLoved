@@ -15,6 +15,7 @@ import searchRouter from "./search.js";
 import sellerRouter from "./seller.js";
 import shippingRouter from "./shipping.js";
 import usersRouter from "./users.js";
+import cronRouter from "./cron.js";
 
 const api = Router();
 
@@ -39,5 +40,9 @@ api.use("/users", usersRouter);
 // Paneler
 api.use("/seller", sellerRouter);
 api.use("/admin", adminRouter);
+
+// Hälsokontroll och schemalagda jobb
+api.get("/health", (req, res) => res.json({ ok: true }));
+api.use("/cron", cronRouter);
 
 export default api;

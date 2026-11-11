@@ -1,5 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useFavorites } from "../../context/FavoritesContext";
@@ -15,6 +20,10 @@ function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const scrolled = useScrolled();
+  const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
+  const currentQuery =
+    pathname === "/search" ? (searchParams.get("q") ?? "") : "";
 
   const topLevelCategories = categories
     .filter((c) => c.parent_id === null)
@@ -58,6 +67,8 @@ function Header() {
             Sök på ReLoved
           </label>
           <input
+            defaultValue={currentQuery}
+            key={currentQuery}
             className="search-input"
             type="search"
             id="search"

@@ -1,0 +1,16 @@
+name: Bygg om sökindexet
+
+on:
+  schedule:
+    - cron: "17 2 * * *"  
+  workflow_dispatch:
+
+jobs:
+  reindex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Väck servern och bygg om sökindexet
+        run: |
+          curl --fail --retry 3 --retry-delay 30 --max-time 120 \
+            -X POST https://reloved.onrender.com/api/cron/reindex \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

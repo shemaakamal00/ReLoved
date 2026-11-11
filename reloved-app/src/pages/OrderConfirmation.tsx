@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchOrderConfirmation } from "../api";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import type { OrderConfirmation as Confirmation } from "../types";
 import { formatKr, formatShippingPrice } from "../utils/format";
 import { describeOrderShipping, formatDeliveryDate } from "../utils/shipping";
@@ -10,8 +11,8 @@ import StatusBadge from "../components/ui/StatusBadge";
 import Checkmark from "../components/ui/Checkmark";
 import Spinner from "../components/ui/Spinner";
 
-const POLL_INTERVAL_MS = 2000;
-const MAX_POLLS = 15;
+const POLL_INTERVAL_MS = 1000;
+const MAX_POLLS = 30;
 
 const STATUS_MESSAGES: Partial<Record<Confirmation["status"], string>> = {
   pending: "Väntar på Stripe. Det brukar ta några sekunder.",
@@ -31,10 +32,11 @@ function OrderConfirmation() {
   );
   const [gaveUp, setGaveUp] = useState(false);
 
+  const { loading: authLoading } = useAuth();
   const clearCartOnce = useEffectEvent(() => clearCart().catch(console.error));
   useEffect(() => {
-    if (sessionId) clearCartOnce();
-  }, [sessionId]);
+    if (sessionId && !authLoading) clearCartOnce();
+  }, [sessionId, authLoading]);
 
   useEffect(() => {
     if (!sessionId) return;
