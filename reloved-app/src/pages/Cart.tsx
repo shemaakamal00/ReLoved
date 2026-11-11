@@ -141,7 +141,7 @@ function CartRow({ item, leaving, index }: CartRowProps) {
         {stockItem && available && (
           <QuantityStepper
             value={item.quantity}
-            max={Math.min(10, item.product.stock ?? 1)}
+            max={item.product.stock ?? 1}
             onChange={handleQuantity}
             disabled={updating || removing}
           />
