@@ -16,6 +16,8 @@ function hasCronSecret(req) {
   );
 }
 
+let running = false;
+
 router.post("/reindex", (req, res) => {
   if (!hasCronSecret(req)) throw new HttpError(401, "Ogiltig nyckel");
   if (running)
