@@ -1,89 +1,103 @@
-import { useState } from "react";
-import { flushSync } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { fetchProducts } from "../api";
 import { useApi } from "../hooks/useApi";
 import { useCategories } from "../hooks/useCategories";
-import type { Category, Product } from "../types";
+import type {
+  Category,
+  FacetValue,
+  Product,
+  SearchFilters,
+  SearchSort,
+} from "../types";
 import ProductCard from "../components/product/ProductCard";
 import ProductGridSkeleton from "../components/product/ProductGridSkeleton";
+import SearchFilterBar from "../components/search/SearchFilterBar";
 import EmptyState from "../components/ui/EmptyState";
 
-type SortBy = "newest" | "price-asc" | "price-desc";
+// Utan sökord finns ingen relevans att sortera på
+const SORTS: SearchSort[] = ["newest", "price_asc", "price_desc"];
+const DEFAULT_SORT: SearchSort = "newest";
 
-const SORT_LABELS: Record<SortBy, string> = {
-  newest: "Nyast",
-  "price-asc": "Lägsta pris",
-  "price-desc": "Högsta pris",
-};
-
-function withViewTransition(update: () => void) {
-  if (
-    !document.startViewTransition ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  ) {
-    update();
-    return;
-  }
-  document.startViewTransition(() => flushSync(update));
-}
-
-function categoryWithChildren(
-  categories: Category[],
-  categoryId: number | null,
-) {
+// Kategorin och dess underkategorier, t.ex. Dam med Klänningar och Jackor
+function categoryWithChildren(categories: Category[], categoryId: number | null) {
   if (categoryId === null) return null;
   return categories
     .filter((c) => c.id === categoryId || c.parent_id === categoryId)
     .map((c) => c.id);
 }
 
-function sortProducts(products: Product[], sortBy: SortBy) {
+function sortProducts(products: Product[], sort: SearchSort) {
   return [...products].sort((a, b) => {
-    if (sortBy === "price-asc") return a.price - b.price;
-    if (sortBy === "price-desc") return b.price - a.price;
+    if (sort === "price_asc") return a.price - b.price;
+    if (sort === "price_desc") return b.price - a.price;
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 }
 
+function countBy(products: Product[], valueOf: (p: Product) => string): FacetValue[] {
+  const counts = new Map<string, number>();
+  for (const product of products) {
+    const value = valueOf(product);
+    if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return [...counts]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
 function Products() {
-  const [searchParams] = useSearchParams();
-  const categoryParam = searchParams.get("category");
-  const categoryId = categoryParam ? Number(categoryParam) : null;
-  const searchQuery = searchParams.get("search")?.toLowerCase() ?? "";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryId = Number(searchParams.get("category")) || null;
+  const sortParam = searchParams.get("sort") as SearchSort;
+  const filters: SearchFilters = {
+    sort: SORTS.includes(sortParam) ? sortParam : DEFAULT_SORT,
+    category: searchParams.get("sub") ?? "",
+    condition: searchParams.get("condition") ?? "",
+    minPrice: searchParams.get("minPrice") ?? "",
+    maxPrice: searchParams.get("maxPrice") ?? "",
+  };
 
-  const { data: products, loading } = useApi(
-    (signal) => fetchProducts(signal),
-    [],
-  );
+  const { data: products, loading } = useApi((signal) => fetchProducts(signal), []);
   const { categories } = useCategories();
-  const [sortBy, setSortBy] = useState<SortBy>("newest");
-  const [sortChanged, setSortChanged] = useState(false);
 
-  function handleSortChange(value: SortBy) {
-    withViewTransition(() => {
-      setSortBy(value);
-      setSortChanged(true);
-    });
+  function updateParams(changes: Record<string, string>) {
+    const next = new URLSearchParams(searchParams);
+    for (const [name, value] of Object.entries(changes)) {
+      const param = name === "category" ? "sub" : name;
+      if (value) next.set(param, value);
+      else next.delete(param);
+    }
+    if (next.get("sort") === DEFAULT_SORT) next.delete("sort");
+    setSearchParams(next, { replace: true });
   }
 
+  const categoryName = (id: number | null) =>
+    categories.find((c) => c.id === id)?.name ?? "";
+
   const categoryIds = categoryWithChildren(categories, categoryId);
-  const visibleProducts = sortProducts(
-    (products ?? [])
-      .filter((p) => !categoryIds || categoryIds.includes(p.category_id ?? -1))
-      .filter(
-        (p) =>
-          !searchQuery ||
-          p.name.toLowerCase().includes(searchQuery) ||
-          p.brand.toLowerCase().includes(searchQuery),
-      ),
-    sortBy,
+  const inCategory = (products ?? []).filter(
+    (p) => !categoryIds || categoryIds.includes(p.category_id ?? -1),
   );
 
-  const activeCategory = categories.find((c) => c.id === categoryId);
-  const heading = searchQuery
-    ? `Sökresultat för "${searchQuery}"`
-    : (activeCategory?.name ?? "Alla plagg");
+  const minPrice = Number(filters.minPrice) || 0;
+  const maxPrice = Number(filters.maxPrice) || Infinity;
+  const visibleProducts = sortProducts(
+    inCategory.filter(
+      (p) =>
+        (!filters.category || categoryName(p.category_id) === filters.category) &&
+        (!filters.condition || p.condition === filters.condition) &&
+        p.price >= minPrice &&
+        p.price <= maxPrice,
+    ),
+    filters.sort,
+  );
+
+  const facets = {
+    category: countBy(inCategory, (p) => categoryName(p.category_id)),
+    condition: countBy(inCategory, (p) => p.condition),
+  };
+
+  const heading = categoryName(categoryId) || "Alla plagg";
 
   return (
     <main>
@@ -94,33 +108,22 @@ function Products() {
             <h1>{heading}</h1>
           </div>
 
-          <div className="products-toolbar">
-            {/* Kvitto på sorteringen. key gör att texten tonas in vid varje byte. */}
-            <p className="sort-feedback" role="status" key={sortBy}>
-              {sortChanged &&
-                `Sorterat på ${SORT_LABELS[sortBy].toLowerCase()}`}
-            </p>
-            <label className="sr-only" htmlFor="products-sort">
-              Sortera
-            </label>
-            <select
-              id="products-sort"
-              value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value as SortBy)}
-            >
-              {Object.entries(SORT_LABELS).map(([value, label]) => (
-                <option value={value} key={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SearchFilterBar
+            filters={filters}
+            facets={facets}
+            onChange={updateParams}
+            onClear={() =>
+              updateParams({ category: "", condition: "", minPrice: "", maxPrice: "", sort: "" })
+            }
+            sortOptions={SORTS}
+            defaultSort={DEFAULT_SORT}
+          />
 
           {loading ? (
             <ProductGridSkeleton />
           ) : visibleProducts.length === 0 ? (
             <EmptyState title="Inget här just nu">
-              Nya plagg kommer in hela tiden. Titta in igen snart.
+              Inga plagg matchar filtren. Prova att ta bort något filter.
             </EmptyState>
           ) : (
             <div className="product-grid">
