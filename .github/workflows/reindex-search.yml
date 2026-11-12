@@ -11,6 +11,6 @@ jobs:
     steps:
       - name: Väck servern och bygg om sökindexet
         run: |
-            curl --fail-with-body --retry 3 --retry-delay 30 --max-time 180 \
+            curl --silent --show-error --fail-with-body --retry 3 --retry-delay 30 --max-time 180 \
             -X POST https://reloved.onrender.com/api/cron/reindex \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
