@@ -13,8 +13,8 @@ type SortBy = "newest" | "price-asc" | "price-desc";
 
 const SORT_LABELS: Record<SortBy, string> = {
   newest: "Nyast",
-  "price-asc": "Lägst pris",
-  "price-desc": "Högst pris",
+  "price-asc": "Lägsta pris",
+  "price-desc": "Högsta pris",
 };
 
 function withViewTransition(update: () => void) {

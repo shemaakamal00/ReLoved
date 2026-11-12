@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { fetchAdminStats } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useApi } from "../../hooks/useApi";
@@ -12,10 +11,10 @@ import PendingListings from "./PendingListings";
 import ProductForm from "./ProductForm";
 import SearchIndexPanel from "./SearchIndexPanel";
 import SupplierImport from "./SupplierImport";
+import IssuesPanel from "./IssuesPanel";
 
 function AdminDashboard() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: stats } = useApi((signal) => fetchAdminStats(signal), [user], {
     enabled: Boolean(user),
   });
@@ -29,12 +28,6 @@ function AdminDashboard() {
     refreshProducts();
   }, [refreshProducts]);
 
-  // Servern tar bort cookien, sedan går admin till startsidan
-  async function handleLogout() {
-    await logout();
-    navigate("/");
-  }
-
   return (
     <main>
       <section className="admin-page">
@@ -45,13 +38,6 @@ function AdminDashboard() {
             Inloggad som {user?.first_name}. Hantera produkter, annonser, ordrar
             och användare på ReLoved.
           </p>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={handleLogout}
-          >
-            Logga ut
-          </button>
         </div>
 
         <StatCards
@@ -66,6 +52,7 @@ function AdminDashboard() {
 
         <SupplierImport onImported={refreshProducts} />
         <SearchIndexPanel />
+        <IssuesPanel />
         <PendingListings />
         <ProductForm editingProduct={editingProduct} onSaved={handleSaved} />
         <AdminProductsList onEdit={setEditingProduct} refreshKey={refreshKey} />

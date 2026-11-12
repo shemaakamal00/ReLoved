@@ -40,10 +40,6 @@ api.use("/auth/github", githubAuthRouter);
 api.use("/auth", authRouter);
 api.use("/users", usersRouter);
 
-// Paneler
-api.use("/seller", sellerRouter);
-api.use("/admin", adminRouter);
-
 // Hälsokontroll och schemalagda jobb
 api.get("/health", (req, res) => res.json({ ok: true }));
 api.use("/cron", cronRouter);

@@ -32,7 +32,7 @@ export function optionalAuth(req, res, next) {
 // Används efter requireAuth
 export function requireAdmin(req, res, next) {
   if (req.user?.role !== "admin") {
-    return res.status(403).json({ error: "Kräver admin behörighet" });
+    return res.status(403).json({ error: "Du har inte behörighet till det här" });
   }
   next();
 }

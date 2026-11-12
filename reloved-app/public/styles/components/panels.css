@@ -111,6 +111,20 @@ details[open] > summary.seller-section__header::after {
   transform: rotate(45deg);
 }
 
+/* Fokusramen följer kortets rundade hörn och ligger innanför kanten */
+summary.admin-section__header:focus-visible,
+summary.seller-section__header:focus-visible {
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 0 0 2px var(--color-ink);
+}
+
+/* När sektionen är öppen är bara de övre hörnen rundade */
+details[open] > summary.admin-section__header:focus-visible,
+details[open] > summary.seller-section__header:focus-visible {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 /* Innehållet i en sektion */
 .admin-section > :not(summary):not(.admin-section__header),
 .seller-section > :not(summary):not(.seller-section__header) {
@@ -120,6 +134,17 @@ details[open] > summary.seller-section__header::after {
 .admin-section > p,
 .seller-section > p {
   max-width: 64ch;
+}
+
+/* Luft i botten av öppna kort. Padding stoppar att marginalen läcker ut under kortet. */
+.admin-section[open],
+.seller-section[open] {
+  padding-bottom: 1.5rem;
+}
+
+.admin-section > :last-child,
+.seller-section > :last-child {
+  margin-bottom: 0;
 }
 
 /* Formulär i panelerna */
@@ -438,4 +463,32 @@ details[open] > summary.seller-section__header::after {
 
 .admin-actions button:disabled {
   cursor: progress;
+}
+
+/* Issues från GitHub */
+.issue-list__title {
+  margin-top: 2.5rem;
+  font-size: 1.25rem;
+}
+
+.issue-list {
+  display: grid;
+  border-top: 1px solid var(--color-line);
+}
+
+.issue-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.issue-list a:hover {
+  text-decoration: underline;
+}
+
+.issue-list span {
+  flex-shrink: 0;
+  opacity: 0.6;
 }

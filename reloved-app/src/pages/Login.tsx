@@ -12,6 +12,7 @@ import PasswordInput from "../components/ui/PasswordInput";
 import Spinner from "../components/ui/Spinner";
 import GoogleLoginButton from "../components/auth/GoogleLoginButton";
 import { loginErrorMessage } from "../utils/loginErrors";
+import { githubLoginUrl } from "../api";
 
 function Login() {
   const { login } = useAuth();
@@ -21,8 +22,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const returnTo =
-    (location.state as { from?: string } | null)?.from ?? "/";
+  const returnTo = (location.state as { from?: string } | null)?.from ?? "/";
   const googleError = loginErrorMessage(searchParams.get("error"));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,13 +49,11 @@ function Login() {
         <div className="login-card">
           <p className="eyebrow">Välkommen tillbaka</p>
           <h1>Logga in</h1>
-
           <FormMessage message={googleError} />
           <GoogleLoginButton returnTo={returnTo} />
           <p className="login-divider">
             <span>eller med e-post</span>
           </p>
-
           <form className="login-form" onSubmit={handleSubmit}>
             <label>
               E-post
@@ -93,13 +91,15 @@ function Login() {
               </button>
             </div>
           </form>
-
           <div className="login-register">
             <p>Har du inget konto?</p>
             <Link to="/register" className="button button-secondary">
               Skapa konto
             </Link>
           </div>
+          <a href={githubLoginUrl()} className="login-admin-link">
+            Logga in som administratör
+          </a>
         </div>
       </section>
     </main>
