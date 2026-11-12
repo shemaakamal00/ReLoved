@@ -17,6 +17,7 @@ import sellerRouter from "./seller.js";
 import shippingRouter from "./shipping.js";
 import usersRouter from "./users.js";
 import cronRouter from "./cron.js";
+import issuesRouter from "./issues.js";
 
 const api = Router();
 
@@ -46,5 +47,10 @@ api.use("/admin", adminRouter);
 // Hälsokontroll och schemalagda jobb
 api.get("/health", (req, res) => res.json({ ok: true }));
 api.use("/cron", cronRouter);
+
+// Paneler
+api.use("/seller", sellerRouter);
+api.use("/admin/issues", issuesRouter);
+api.use("/admin", adminRouter);
 
 export default api;
