@@ -157,3 +157,130 @@ export async function finishGitHubLogin(
   const accessToken = await exchangeCode(code, codeVerifier);
   return fetchGitHubUser(accessToken);
 }
+
+// Issues i ReLoveds repo med shoppens egna token
+const SHOP_TOKEN = process.env.GITHUB_ISSUES_TOKEN ?? "";
+const SHOP_REPO = process.env.GITHUB_REPO ?? "";
+
+if (!SHOP_TOKEN || !SHOP_REPO) {
+  console.warn(
+    "[github] GITHUB_ISSUES_TOKEN eller GITHUB_REPO saknas: issues fungerar inte.",
+  );
+}
+
+// Begripliga felmeddelanden för admin, inga råa svar
+function issueError(status: number): GitHubError {
+  switch (status) {
+    case 401:
+      return new GitHubError(
+        "Shoppens GitHub-token är ogiltig eller har gått ut.",
+      );
+    case 403:
+      return new GitHubError(
+        "Shoppens GitHub-token saknar behörighet till issues i repot.",
+      );
+    case 404:
+      return new GitHubError(
+        "Repot kunde inte hittas. Kontrollera GITHUB_REPO och att token har åtkomst till repot.",
+      );
+    case 410:
+      return new GitHubError("Issues är avstängt i repot.");
+    case 422:
+      return new GitHubError(
+        "GitHub godkände inte issues. Kontrollera rubriken och beskrivningen.",
+      );
+    default:
+      return new GitHubError(
+        `GitHub svarade med status ${status}. Försök igen om en stund.`,
+      );
+  }
+}
+
+// Anropen mot shoppens repo går hit
+async function callShopRepo(
+  path: string,
+  init: RequestInit = {},
+): Promise<unknown> {
+  if (!SHOP_TOKEN || !SHOP_REPO) {
+    throw new GitHubError(
+      "Issues är inte inställt på servern (GITHUB_ISSUES_TOKEN eller GITHUB_REPO saknas).",
+    );
+  }
+
+  const response = await callGitHub(`${API_URL}/repos/${SHOP_REPO}${path}`, {
+    ...init,
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${SHOP_TOKEN}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "ReLoved",
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    console.warn(
+      `[github] ${init.method ?? "GET"} ${path} svarade ${response.status}`,
+    );
+    throw issueError(response.status);
+  }
+  return response.json().catch(() => null);
+}
+
+const GitHubIssue = z.object({
+  number: z.number().int(),
+  title: z.string(),
+  html_url: z.url(),
+  created_at: z.string(),
+  pull_request: z.unknown().optional(),
+});
+
+// Min modell av en issue
+export type Issue = {
+  number: number;
+  title: string;
+  url: string;
+  createdAt: string;
+};
+
+function toIssue(raw: z.infer<typeof GitHubIssue>): Issue {
+  return {
+    number: raw.number,
+    title: raw.title,
+    url: raw.html_url,
+    createdAt: raw.created_at,
+  };
+}
+
+// Skapar en issue
+export async function createIssue(title: string, body: string): Promise<Issue> {
+  const data = await callShopRepo("/issues", {
+    method: "POST",
+    body: JSON.stringify({ title, body }),
+  });
+
+  const parsed = GitHubIssue.safeParse(data);
+  if (!parsed.success) {
+    throw new GitHubError(
+      "GitHub skickade ett oväntat svar när issuen skapades.",
+    );
+  }
+  return toIssue(parsed.data);
+}
+
+// Listar repots öppna issues
+export async function listOpenIssues(): Promise<Issue[]> {
+  const data = await callShopRepo(
+    "/issues?state=open&sort=created&direction=desc&per_page=50",
+  );
+
+  const parsed = z.array(GitHubIssue).safeParse(data);
+  if (!parsed.success) {
+    throw new GitHubError(
+      "GitHub skickade ett oväntat svar när issues hämtades.",
+    );
+  }
+
+  // PR säknas också som issues
+  return parsed.data.filter((item) => !item.pull_request).map(toIssue);
+}
