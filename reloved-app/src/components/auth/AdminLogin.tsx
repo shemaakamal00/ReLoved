@@ -20,8 +20,7 @@ function AdminLogin() {
           <FormMessage message={error} />
           {user && !error && (
             <p>
-              Du är inloggad som kund. Administratörspanelen kräver ett GitHub
-              konto med adminbehörighet.
+              Du är inloggad som kund och har inte tillgång till administratörspanelen.
             </p>
           )}
 

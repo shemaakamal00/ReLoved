@@ -28,3 +28,10 @@ export interface ImportReport {
   skipped: { sku: string | null; name: string; reason: string }[];
   searchIndexed: boolean;
 }
+
+export interface GitHubIssue {
+  number: number;
+  title: string;
+  url: string;
+  createdAt: string;
+}

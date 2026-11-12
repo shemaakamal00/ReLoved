@@ -129,11 +129,11 @@ export type GoogleProfile = {
 
 function decodePayload(idToken: string): unknown {
   const parts = idToken.split(".");
-  if (parts.length !== 3) throw new GoogleLoginError("Id tokenet är ingen JWT");
+  if (parts.length !== 3) throw new GoogleLoginError("ID-tokenet är ingen JWT");
   try {
     return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
   } catch {
-    throw new GoogleLoginError("ID tokenet gick inte att läsa");
+    throw new GoogleLoginError("ID-tokenet gick inte att läsa");
   }
 }
 
@@ -147,10 +147,10 @@ function verifyIdToken(idToken: string, expectedNonce: string): GoogleProfile {
   const claims = parsed.data;
 
   if (claims.exp * 1000 < Date.now() - 60_000) {
-    throw new GoogleLoginError("ID tokenet har gått ut");
+    throw new GoogleLoginError("ID-tokenet har gått ut");
   }
   if (claims.nonce !== expectedNonce) {
-    throw new GoogleLoginError("ID tokenet hör inte till den här inloggningen (nonce)");
+    throw new GoogleLoginError("ID-tokenet hör inte till den här inloggningen (nonce)");
   }
   if (claims.email_verified === false) {
     throw new GoogleLoginError("E-postadressen är inte verifierad hos Google");

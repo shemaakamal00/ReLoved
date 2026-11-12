@@ -9,7 +9,7 @@ function PrivacyPolicy() {
 
       <section className="policy-page">
         <article className="policy-card">
-          <h2> Utbildningsprojekt </h2>
+          <h2>Utbildningsprojekt</h2>
           <p>
             Kontona är riktiga och sparas i en databas, men alla köp görs i
             Stripes testläge. Använd därför inte ett lösenord som du har på

@@ -177,17 +177,17 @@ function issueError(status: number): GitHubError {
       );
     case 403:
       return new GitHubError(
-        "Shoppens GitHub-token saknar behörighet till issues i repot.",
+        "Shoppens GitHub-token saknar behörighet till ärenden i repot.",
       );
     case 404:
       return new GitHubError(
         "Repot kunde inte hittas. Kontrollera GITHUB_REPO och att token har åtkomst till repot.",
       );
     case 410:
-      return new GitHubError("Issues är avstängt i repot.");
+      return new GitHubError("Ärenden är avstängda i GitHub repot. Slå på Issues under Settings.");
     case 422:
       return new GitHubError(
-        "GitHub godkände inte issues. Kontrollera rubriken och beskrivningen.",
+        "GitHub godkände inte felrapporten. Kontrollera rubriken och beskrivningen.",
       );
     default:
       return new GitHubError(
@@ -203,7 +203,7 @@ async function callShopRepo(
 ): Promise<unknown> {
   if (!SHOP_TOKEN || !SHOP_REPO) {
     throw new GitHubError(
-      "Issues är inte inställt på servern (GITHUB_ISSUES_TOKEN eller GITHUB_REPO saknas).",
+      "Felrapporter är inte inställda på servern (GITHUB_ISSUES_TOKEN eller GITHUB_REPO saknas).",
     );
   }
 
@@ -262,7 +262,7 @@ export async function createIssue(title: string, body: string): Promise<Issue> {
   const parsed = GitHubIssue.safeParse(data);
   if (!parsed.success) {
     throw new GitHubError(
-      "GitHub skickade ett oväntat svar när issuen skapades.",
+      "GitHub skickade ett oväntat svar när felrapporten skapades.",
     );
   }
   return toIssue(parsed.data);
@@ -277,7 +277,7 @@ export async function listOpenIssues(): Promise<Issue[]> {
   const parsed = z.array(GitHubIssue).safeParse(data);
   if (!parsed.success) {
     throw new GitHubError(
-      "GitHub skickade ett oväntat svar när issues hämtades.",
+      "GitHub skickade ett oväntat svar när ärendena hämtades.",
     );
   }
 

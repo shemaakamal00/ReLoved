@@ -43,7 +43,7 @@ function Profile() {
               <Link to="/orders">Mina ordrar</Link>
               <Link to="/seller">Säljarpanel</Link>
               {authUser?.role === "admin" && (
-                <Link to="/admin">Adminpanel</Link>
+                <Link to="/admin">Administratörspanel</Link>
               )}
               <button type="button" onClick={logout}>
                 Logga ut
