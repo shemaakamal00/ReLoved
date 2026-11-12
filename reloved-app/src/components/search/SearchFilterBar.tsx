@@ -6,6 +6,8 @@ interface SearchFilterBarProps {
   facets: { category: FacetValue[]; condition: FacetValue[] } | null;
   onChange: (changes: Record<string, string>) => void;
   onClear: () => void;
+  sortOptions?: SearchFilters["sort"][];
+  defaultSort?: SearchFilters["sort"];
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -28,6 +30,8 @@ function SearchFilterBar({
   facets,
   onChange,
   onClear,
+  sortOptions = ["relevance", "price_asc", "price_desc", "newest"],
+  defaultSort = "relevance",
 }: SearchFilterBarProps) {
   function handlePriceSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,7 +47,7 @@ function SearchFilterBar({
     filters.condition ||
     filters.minPrice ||
     filters.maxPrice ||
-    filters.sort !== "relevance";
+    filters.sort !== defaultSort;
 
   return (
     <>
@@ -54,9 +58,9 @@ function SearchFilterBar({
             value={filters.sort}
             onChange={(e) => onChange({ sort: e.target.value })}
           >
-            {Object.entries(SORT_LABELS).map(([value, label]) => (
+            {sortOptions.map((value) => (
               <option value={value} key={value}>
-                {label}
+                {SORT_LABELS[value]}
               </option>
             ))}
           </select>
