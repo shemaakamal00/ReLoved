@@ -1,5 +1,4 @@
 // Enda stället som vet hur GitHubs inloggning och API:et fungerar
-import { log } from "node:console";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 
@@ -12,7 +11,7 @@ const AUTHORIZE_URL = "https://github.com/login/oauth/authorize";
 const TOKEN_URL = "https://github.com/login/oauth/access_token";
 const API_URL = "https://api.github.com";
 
-const SCOPES = "read: user";
+const SCOPES = "read:user";
 
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
   console.warn(
@@ -49,6 +48,7 @@ export type GitHubLoginAttempt = {
   codeVerifier: string;
 };
 
+// https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#1-request-a-users-github-identity
 export function startGitHubLogin(): GitHubLoginAttempt {
   const state = randomValue();
   const codeVerifier = randomValue();
@@ -78,6 +78,7 @@ const TokenFailure = z.object({
   error_description: z.string().optional(),
 });
 
+// https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#2-users-are-redirected-back-to-your-site-by-github
 async function exchangeCode(
   code: string,
   codeVerifier: string,
@@ -128,6 +129,7 @@ export type GitHubProfile = {
   name: string;
 };
 
+// https://docs.github.com/en/rest/users/users#get-the-authenticated-user
 async function fetchGitHubUser(accessToken: string): Promise<GitHubProfile> {
   const response = await callGitHub(`${API_URL}/user`, {
     headers: {
@@ -150,6 +152,7 @@ async function fetchGitHubUser(accessToken: string): Promise<GitHubProfile> {
 }
 
 // Här används admins token som i sin tur inte sparas
+// https://docs.github.com/en/rest/users/users#get-the-authenticated-user
 export async function finishGitHubLogin(
   code: string,
   codeVerifier: string,
@@ -253,6 +256,7 @@ function toIssue(raw: z.infer<typeof GitHubIssue>): Issue {
 }
 
 // Skapar en issue
+// https://docs.github.com/en/rest/issues/issues#create-an-issue
 export async function createIssue(title: string, body: string): Promise<Issue> {
   const data = await callShopRepo("/issues", {
     method: "POST",
@@ -269,6 +273,7 @@ export async function createIssue(title: string, body: string): Promise<Issue> {
 }
 
 // Listar repots öppna issues
+// https://docs.github.com/en/rest/issues/issues#list-repository-issues
 export async function listOpenIssues(): Promise<Issue[]> {
   const data = await callShopRepo(
     "/issues?state=open&sort=created&direction=desc&per_page=50",
@@ -281,6 +286,6 @@ export async function listOpenIssues(): Promise<Issue[]> {
     );
   }
 
-  // PR säknas också som issues
+  // PR räknas också som issues
   return parsed.data.filter((item) => !item.pull_request).map(toIssue);
 }

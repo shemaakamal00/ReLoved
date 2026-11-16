@@ -68,6 +68,30 @@ React pratar bara med vårt eget API. Varje extern tjänst har en egen **adapter
 
 Hur varje integration fungerar, vad som händer när tjänsten är nere och varför den är byggd så beskrivs i [**docs/integrationer.md**](docs/integrationer.md).
 
+## Inloggning
+
+Kunder loggar in med e-post och lösenord eller med Google. Admin loggar in med GitHub.
+
+### Google (kunder)
+Inloggningen följer OAuth 2.0 och OpenID Connect med authorization code flow. Servern skickar kunden till Google med `state`, PKCE (S256) och `nonce`, och sparar värdena i en signerad cookie som gäller i tio minuter. I callbacken kontrolleras `state`, och koden byts mot tokens på servern med client secret och code verifier. ID-tokenet valideras med Zod: utfärdare (`iss`), mottagare (`aud`), giltighetstid (`exp`), `nonce` och att e-postadressen är verifierad. Appen ber bara om `openid email profile`.
+
+Kunden känns igen på Googles `sub`, som aldrig ändras. Första gången skapas en ny kund med `sub`, e-post och namn. Finns e-postadressen redan hos ett konto med lösenord slås kontona inte ihop. Kunden får i stället ett meddelande om att logga in med lösenordet. En automatisk sammanslagning skulle låta den som har ett Google-konto med samma adress ta över ett befintligt konto.
+
+### GitHub (admin)
+Admin loggar in med GitHub på samma sätt, med `state` och PKCE och bara scopet `read:user`. Servern hämtar användaren från GitHubs API och validerar svaret med Zod. Bara användarnamn som står i `ADMIN_GITHUB_LOGINS` blir admin, och alla andra får ett felmeddelande. Admin sparas i databasen med GitHubs `id`, eftersom användarnamnet kan ändras. I databasen kan bara konton med ett GitHub-id ha rollen admin.
+
+### Varför JWT i en httpOnly-cookie
+Efter inloggningen sätter shoppen en egen JWT i en cookie med `httpOnly`, `secure` och `SameSite=Lax`, som gäller i sju dagar.
+
+- JavaScript kan inte läsa cookien, så en XSS-attack kan inte komma åt inloggningen.
+- Servern behöver ingen sessionstabell. Den kontrollerar bara signaturen, vilket passar en server på Render som kan starta om när som helst.
+- En JWT kan inte återkallas innan den går ut. Därför gäller den bara sju dagar, och utloggning tar bort cookien.
+- Frontend och API nås på samma adress, eftersom Vercel skickar `/api` vidare till Render. Cookien är därför en förstapartscookie och blockeras inte av webbläsaren.
+- Googles och GitHubs tokens används bara på servern under inloggningen och sparas aldrig.
+
+### Felrapporter
+Admin kan rapportera fel från administratörspanelen. Servern skapar en issue i repot med en egen fine-grained token som bara har behörigheten Issues: Read and write för det här repot. GitHub visar tokenens ägare som författare, så servern skriver in vilken admin som rapporterade felet i texten. Tokenen finns bara i serverns miljövariabler.
+
 ## Kom igång
 
 Projektet består av två delar som körs samtidigt: API:et (`server/`) och frontend (`reloved-app/`). Kräver Node 22.6 eller senare, eftersom adaptrarna är skrivna i TypeScript och körs direkt av Node.
