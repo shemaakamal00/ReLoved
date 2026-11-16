@@ -9,6 +9,8 @@ import { errorHandler } from "./lib/http.js";
 const ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "https://re-loved.vercel.app",
+  "https://re-loved.se",
+  "https://www.re-loved.se",
 ];
 const VERCEL_PREVIEW = /^https:\/\/re-loved-.*\.vercel\.app$/;
 
