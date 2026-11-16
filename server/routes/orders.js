@@ -58,7 +58,7 @@ router.get("/:id", requireAuth, async (req, res) => {
   res.json({ ...order, items });
 });
 
-// Kunden ser sina egna ordrar, admin ser alla.
+// Kunden ser sina egna ordrar
 router.get("/", requireAuth, async (req, res) => {
   res.json(
     await unwrap(
