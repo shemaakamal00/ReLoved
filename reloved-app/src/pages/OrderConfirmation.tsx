@@ -16,7 +16,7 @@ const MAX_POLLS = 30;
 
 const STATUS_MESSAGES: Partial<Record<Confirmation["status"], string>> = {
   pending: "Väntar på Stripe. Det brukar ta några sekunder.",
-  paid: "Betalningen är klar. Du hittar ordern under Mina ordrar.",
+  paid: "Betalningen är klar. Vi har skickat en orderbekräftelse till din mejladress.",
   cancelled:
     "Betalningen slutfördes aldrig, så ordern är avbruten. Ingenting har dragits.",
 };
