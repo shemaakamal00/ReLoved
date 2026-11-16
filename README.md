@@ -1,226 +1,206 @@
 # ReLoved
 
-<div align="center">
-**Älskat tidigare. Älskat igen.**
+ReLoved är en webbshop för second hand kläder där privatpersoner säljer till varandra. Varje annons granskas innan den publiceras, och köparen betalar med kort.
 
-En marknadsplats för second hand-kläder och accessoarer där vem som helst kan köpa och sälja – med riktig betalning, sökning, frakt och bildlagring kopplade till externa tjänster.
-
-[**Öppna butiken →**](https://re-loved.vercel.app) · [API](https://reloved.onrender.com/api) · [Integrationer](docs/integrationer.md) · [Reflektion](docs/reflektion.md)
-
-</div>
+Butiken finns på [re-loved.se](https://re-loved.se). Betalningen körs i Stripes testläge, så inga riktiga pengar dras. Testa med kortnumret `4242 4242 4242 4242`, ett datum i framtiden och valfri CVC.
 
 ---
 
 ## Funktioner
 
-**För köpare**
-- Söka med stavfelstolerans, filter (kategori, skick, pris), sortering och sidor
-- Favoriter, varukorg som följer med mellan inloggningar, och priser i SEK, EUR, USD eller GBP
-- Kassa med PostNord: välj ombud nära ditt postnummer eller hemleverans, se beräknad leverans, fri frakt från 500 kr
-- Säker kortbetalning via Stripe Checkout, och orderstatus som uppdateras när betalningen är bekräftad
+**Köpare** söker bland plaggen med stavfeltolerans, filtrerar på kategori, skick och pris. Sparar favoriter och ser priser i SEK, EUR, USD eller GBP. I kassan väljer kunden ett PostNord-ombud nära sitt postnummer eller hemleverans, betalar via Stripe och får en orderbekräftelse via e-post. Inloggade kunder ser sina ordrar under Mina ordrar.
 
-**För säljare**
-- Lägg upp annonser med bild, redigera dem och följ försäljningen
-- Annonser granskas av admin innan de publiceras
+**Säljare** lägger upp annonser med bild, redigerar dem och följer sina försäljningar.
 
-**För admin**
-- Skapa och redigera produkter med bilder i molnlagring
-- Godkänn eller neka annonser, hantera ordrar och orderstatus
-- Importera leverantörens produktkatalog (CSV, XML eller API) och bygga om sökindexet
+**Administratörer** godkänner eller nekar annonser, hanterar produkter, kategorier och orderstatus, importerar leverantörens katalog och rapporterar fel direkt till projektets ärenden på GitHub.
 
 ## Tech stack
 
-| Lager | Teknik |
-|---|---|
-| Frontend | React 19, TypeScript, Vite, React Router |
-| Backend | Node.js, Express 5, Zod |
-| Databas | PostgreSQL (Supabase) |
-| Autentisering | JWT och bcrypt, roller (kund, säljare, admin) |
-| Integrationer | Stripe, Algolia, Supabase Storage, PostNord, Frankfurter |
-| Drift | Vercel (frontend) och Render (API) |
+| Del                | Teknik                                          |
+| ------------------ | ----------------------------------------------- |
+| Frontend           | React 19, TypeScript, Vite, React Router        |
+| Backend            | Node.js 22, Express 5, Zod                      |
+| Databas och bilder | PostgreSQL och Storage i Supabase               |
+| Drift              | Vercel (frontend), Render (API), Loopia (domän) |
 
 ## Arkitektur
 
 ```mermaid
 flowchart LR
-  A[React<br/>Vercel] -->|/api| B[Express<br/>Render]
-  B --> DB[(PostgreSQL<br/>Supabase)]
+  A[React på Vercel] -->|/api| B[Express på Render]
+  B --> DB[(Supabase)]
   B --> I[integrations/]
-  I --> S[Stripe]
-  I --> AL[Algolia]
-  I --> ST[Supabase Storage]
-  I --> P[PostNord]
-  I --> F[Frankfurter]
-  I --> L[Leverantörens API och filer]
-  S -. webhook .-> B
+  I --> Stripe & Algolia & PostNord & Resend & Google & GitHub
+  Stripe -. webhook .-> B
 ```
 
-React pratar bara med vårt eget API. Varje extern tjänst har en egen **adapter** i `server/integrations/` – det enda stället som känner till tjänstens adress, nycklar och format. Adaptern validerar svaren med Zod, har timeout och returnerar ReLoveds egen modell, så att resten av koden inte påverkas om en tjänst byts ut eller ändras.
+React pratar bara med det egna API:et. Vercel skickar alla anrop till `/api` vidare till Render, så att frontend och API nås på samma adress.
 
-| Tjänst | Används till | Modell | Adapter |
-|---|---|---|---|
-| Stripe | Betalning | SDK, redirect och webhook | `paymentAdapter.ts` |
-| Algolia | Sökning | SDK | `searchAdapter.ts` |
-| Supabase Storage | Produktbilder | SDK | `storageAdapter.ts` |
-| PostNord | Ombud och leveranstid | REST | `shippingAdapter.ts` |
-| Frankfurter | Valutakurser | REST | `currencyAdapter.ts` |
-| Leverantören | Produktkatalog | Fil (CSV/XML) och REST | `supplierAdapter.ts` |
+Varje extern tjänst har en egen adapter i `server/integrations/`. Adaptern är det enda stället som känner till tjänstens adress, nycklar och svarsformat. Den har en timeout, validerar svaren med Zod och returnerar shoppens egen modell. Byts en tjänst ut påverkas bara en fil.
 
-Hur varje integration fungerar, vad som händer när tjänsten är nere och varför den är byggd så beskrivs i [**docs/integrationer.md**](docs/integrationer.md).
+| Tjänst            | Används till                                    | Adapter                |
+| ----------------- | ----------------------------------------------- | ---------------------- |
+| Stripe            | Betalning via Checkout och webhook              | `paymentAdapter.ts`    |
+| Algolia           | Sökning, filter och sortering                   | `searchAdapter.ts`     |
+| Supabase Storage  | Produktbilder                                   | `storageAdapter.ts`    |
+| PostNord          | Ombud och leveranstid                           | `shippingAdapter.ts`   |
+| Frankfurter       | Valutakurser                                    | `currencyAdapter.ts`   |
+| Leverantörens API | Produktkatalog i CSV, XML och JSON              | `supplierAdapter.ts`   |
+| Google            | Inloggning för kunder                           | `googleAuthAdapter.ts` |
+| GitHub            | Inloggning för administratörer och felrapporter | `githubAdapter.ts`     |
+| Resend            | Orderbekräftelser via e-post                    | `emailAdapter.ts`      |
+
+Hur varje integration fungerar och vad som händer när den inte svarar beskrivs i [docs/06-integrationer.md](docs/06-integrationer.md).
 
 ## Inloggning
 
-Kunder loggar in med e-post och lösenord eller med Google. Admin loggar in med GitHub.
+Kunder loggar in med e-post och lösenord eller med Google. Administratörer loggar in med GitHub. All inloggning går via servern, och nycklarna finns bara i serverns miljövariabler.
 
-### Google (kunder)
-Inloggningen följer OAuth 2.0 och OpenID Connect med authorization code flow. Servern skickar kunden till Google med `state`, PKCE (S256) och `nonce`, och sparar värdena i en signerad cookie som gäller i tio minuter. I callbacken kontrolleras `state`, och koden byts mot tokens på servern med client secret och code verifier. ID-tokenet valideras med Zod: utfärdare (`iss`), mottagare (`aud`), giltighetstid (`exp`), `nonce` och att e-postadressen är verifierad. Appen ber bara om `openid email profile`.
+### Session med JWT i en httpOnly-cookie
 
-Kunden känns igen på Googles `sub`, som aldrig ändras. Första gången skapas en ny kund med `sub`, e-post och namn. Finns e-postadressen redan hos ett konto med lösenord slås kontona inte ihop. Kunden får i stället ett meddelande om att logga in med lösenordet. En automatisk sammanslagning skulle låta den som har ett Google-konto med samma adress ta över ett befintligt konto.
+Efter inloggningen sätter servern en egen JWT i cookien `reloved_session`, med `httpOnly`, `secure` och `SameSite=Lax`. Den gäller i sju dagar.
 
-### GitHub (admin)
-Admin loggar in med GitHub på samma sätt, med `state` och PKCE och bara scopet `read:user`. Servern hämtar användaren från GitHubs API och validerar svaret med Zod. Bara användarnamn som står i `ADMIN_GITHUB_LOGINS` blir admin, och alla andra får ett felmeddelande. Admin sparas i databasen med GitHubs `id`, eftersom användarnamnet kan ändras. I databasen kan bara konton med ett GitHub-id ha rollen admin.
+Jag valde en JWT i stället för en session i databasen:
 
-### Varför JWT i en httpOnly-cookie
-Efter inloggningen sätter shoppen en egen JWT i en cookie med `httpOnly`, `secure` och `SameSite=Lax`, som gäller i sju dagar.
+- JavaScript kan inte läsa en httpOnly-cookie, så en XSS-attack kan inte komma åt inloggningen. Tidigare låg token i localStorage, där all kod på sidan kunde läsa den.
+- Servern behöver ingen sessionstabell, bara kontrollera signaturen. Det passar en server som kan starta om när som helst.
+- Nackdelen är att en JWT inte kan återkallas innan den går ut. Därför är giltighetstiden begränsad, och utloggning tar bort cookien.
+- Eftersom Vercel skickar `/api` vidare till Render ser webbläsaren bara en adress. Cookien blir en förstapartscookie och blockeras inte.
 
-- JavaScript kan inte läsa cookien, så en XSS-attack kan inte komma åt inloggningen.
-- Servern behöver ingen sessionstabell. Den kontrollerar bara signaturen, vilket passar en server på Render som kan starta om när som helst.
-- En JWT kan inte återkallas innan den går ut. Därför gäller den bara sju dagar, och utloggning tar bort cookien.
-- Frontend och API nås på samma adress, eftersom Vercel skickar `/api` vidare till Render. Cookien är därför en förstapartscookie och blockeras inte av webbläsaren.
-- Googles och GitHubs tokens används bara på servern under inloggningen och sparas aldrig.
+Googles och GitHubs tokens används bara på servern under inloggningen och sparas aldrig.
 
-### Felrapporter
-Admin kan rapportera fel från administratörspanelen. Servern skapar en issue i repot med en egen fine-grained token som bara har behörigheten Issues: Read and write för det här repot. GitHub visar tokenens ägare som författare, så servern skriver in vilken admin som rapporterade felet i texten. Tokenen finns bara i serverns miljövariabler.
+### Google
+
+Inloggningen följer OAuth 2.0 och OpenID Connect med authorization code flow. Varje försök skyddas med `state`, PKCE (S256) och `nonce`, som sparas i en signerad cookie i tio minuter. Koden byts mot tokens på servern med client secret och code verifier. ID-tokenet valideras med Zod: utfärdare, mottagare, giltighetstid, nonce och verifierad e-post. Appen ber bara om `openid email profile`.
+
+Kunden känns igen på Googles `sub`, som aldrig ändras. Första gången skapas en kund med `sub`, e-post och namn. Finns e-postadressen redan hos ett konto med lösenord slås kontona inte ihop. Kunden får i stället ett meddelande om att logga in med sitt lösenord. En automatisk sammanslagning skulle ge den som kontrollerar ett Google-konto med samma adress tillgång till någon annans ordrar och adress.
+
+### GitHub
+
+Administratörer loggar in med GitHub med `state` och PKCE, och appen ber bara om `read:user`. Bara användarnamn i `ADMIN_GITHUB_LOGINS` blir administratörer. Övriga får ett felmeddelande. Administratören sparas med GitHubs `id`, eftersom användarnamnet kan ändras. En regel i databasen gör att bara konton med ett GitHub-id kan ha rollen admin.
+
+## Betalning och orderbekräftelse
+
+Kassan sparar en obetald order och skickar kunden till Stripe Checkout. Ordern blir betald först när Stripes signerade webhook kommer fram. Databasfunktionen `mark_order_paid` gör det exakt en gång och minskar lagret i samma transaktion. Kommer kunden tillbaka innan webhooken har kommit frågar servern Stripe direkt.
+
+När ordern är betald skickar servern en orderbekräftelse med Resend från `order@re-loved.se`. Mejlet innehåller ordernummer, kundens namn, produkterna med antal och pris samt totalsumman, både som HTML och som text. Allt som kunder och säljare har skrivit escapas innan det hamnar i HTML:en.
+
+- Varje utskick har nyckeln `order-confirmation/{orderns id}`. Om Stripe skickar webhooken igen får kunden ändå bara ett mejl.
+- Mejlet skickas efter att Stripe har fått sitt svar. Svarar Resend inte, eller svarar med ett fel, loggas felet. Ordern är ändå betald.
+- Mallarna ligger i `server/emails/`. Utseendet är samlat i `styles.js` och sätts in inline när mejlet byggs, eftersom e-postprogram inte läser CSS-filer.
+
+Domänen är verifierad i Resend med DKIM, SPF och DMARC.
+
+## Felrapporter
+
+Administratörer kan rapportera fel från administratörspanelen. Servern skapar ett ärende i repot med en egen fine-grained token som bara har behörigheten Issues: Read and write för det här repot. GitHub visar tokenens ägare som författare, så servern skriver in vilken administratör som rapporterade felet. Panelen listar också öppna ärenden med länkar till GitHub.
+
+## Sökindex
+
+Produkterna söks i Algolia, som håller en kopia av databasen. Indexet uppdateras när en produkt sparas, säljs eller tas bort. Varje natt bygger ett GitHub Actions-jobb om hela indexet via `POST /api/cron/reindex`, som skyddas av `CRON_SECRET`. Omindexeringen tar några minuter, så servern svarar direkt och bygger klart i bakgrunden.
 
 ## Kom igång
 
-Projektet består av två delar som körs samtidigt: API:et (`server/`) och frontend (`reloved-app/`). Kräver Node 22.6 eller senare, eftersom adaptrarna är skrivna i TypeScript och körs direkt av Node.
+Projektet består av API:et i `server/` och frontend i `reloved-app/`. Du behöver Node.js 22.6 eller senare, eftersom servern kör TypeScript-adaptrarna direkt.
 
-### Förutsättningar
+### Databas
 
-- Node.js 22.6 eller senare (servern kör TypeScript-adaptrarna direkt med Node)
-- Gratiskonton i testläge hos tjänsterna nedan. Inga riktiga pengar eller avtal behövs.
+Skapa ett projekt i Supabase och kör filerna i SQL Editor i den här ordningen:
 
-| Tjänst | Används till | Konto |
-|---|---|---|
-| [Supabase](https://supabase.com) | Databas och produktbilder | Gratis projekt |
-| [Algolia](https://www.algolia.com) | Sökning | Gratis (Build) |
-| [Stripe](https://stripe.com) | Betalning | Testläge (`sk_test_`) och [Stripe CLI](https://docs.stripe.com/stripe-cli) |
-| [PostNord](https://atdeveloper.postnord.com) | Ombud och leveranstid | Sandlåda, Customer plan |
-| Frankfurter | Valutakurser | Ingen nyckel |
+1. `database/schema.sql`
+2. `database/migrations/payments.sql`
+3. `database/migrations/shipping.sql`
+4. `database/migrations/sizes.sql`
+5. `database/migrations/google_login.sql`
+6. `database/migrations/github_admin.sql`
 
-Alla nycklar hamnar i `server/.env`, som aldrig committas. [`server/.env.example`](server/.env.example) visar alla variabler som behövs.
+Skapa sedan en publik Storage-bucket som heter `products`.
 
-### 1. Databas
-
-Skapa ett gratis Supabase-projekt och kör följande i SQL Editor:
-
-1. [`database/schema.sql`](database/schema.sql) – tabeller, exempeldata och kolumnerna för leverantörsimporten (`sku`, `ean`, `stock`, `variants`).
-2. [`database/migrations/002_payments.sql`](database/migrations/002_payments.sql) – orderstatus `pending`/`paid`, koppling till Stripe och funktionen `mark_order_paid`.
-3. [`database/migrations/003_product_images.sql`](database/migrations/003_product_images.sql) – kolumnen `image_path` för produktbilder.
-4. [`database/migrations/004_shipping.sql`](database/migrations/004_shipping.sql) – frakten på ordern (fraktalternativ, ombud, beräknad leverans).
-5. Skapa en **publik** Storage-bucket som heter `products` för produktbilder.
-
-### 2. Backend (API)
+### Server
 
 ```bash
 cd server
 npm install
 cp .env.example .env
-```
-
-Fyll i `server/.env`. Alla variabler finns i [`server/.env.example`](server/.env.example):
-
-| Variabel | Behövs för | Var får jag värdet? |
-|---|---|---|
-| `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Databas och produktbilder | Supabase → Project Settings → API |
-| `JWT_SECRET` | Inloggning | Valfri lång slumpmässig sträng |
-| `CURRENCY_API_URL`, `CURRENCY_API_TIMEOUT_MS`, `CURRENCY_CACHE_SECONDS` | Valutaomvandling | Färdiga värden i `.env.example`, ingen nyckel behövs |
-| `SUPPLIER_API_KEY` | Produktimport | Kursens testnyckel för leverantörs-API:et |
-| `SUPPLIER_API_URL`, `SUPPLIER_API_TIMEOUT_MS`, `SUPPLIER_BRANSCH` | Produktimport | Färdiga värden i `.env.example` |
-| `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_INDEX` | Sökning | Algolia → Settings → API Keys (gratiskonto). Utan `ALGOLIA_APP_ID` startar inte servern. |
-| `STRIPE_SECRET_KEY` | Betalning | Stripe (testläge) → Developers → API keys, börjar med `sk_test_` |
-| `STRIPE_WEBHOOK_SECRET` | Betalning | Lokalt: `whsec_...` från `stripe listen`. Deployat: från webhook-endpointen i Stripe Dashboard |
-| `CLIENT_URL`, `CHECKOUT_EXPIRES_MINUTES` | Betalning | Dit Stripe skickar kunden tillbaka, och hur länge en betalning får pågå (30 min) |
-| `POSTNORD_API_KEY` | Frakt | PostNords sandlådeportal (atdeveloper.postnord.com) → Customer plan → application |
-| `POSTNORD_API_URL`, `POSTNORD_TIMEOUT_MS`, `POSTNORD_CUSTOMER_KEY` | Frakt | Färdiga värden i `.env.example` (sandlådan `https://atapi2.postnord.com`) |
-| `SHOP_POSTAL_CODE`, `SHOP_STREET`, `SHOP_CITY`, `SHOP_ORDER_CUTOFF`, `FREE_SHIPPING_FROM` | Frakt | Lagrets adress, sista ordertid och gränsen för fri frakt |
-
-Starta:
-
-```bash
 npm run dev
 ```
 
-API:et körs på `http://localhost:3001`.
+API:et körs på `http://localhost:3001`. Alla variabler finns i [`server/.env.example`](server/.env.example).
 
-**Testa betalningar lokalt:** installera [Stripe CLI](https://docs.stripe.com/stripe-cli), kör `stripe login` och låt den här stå igång i en egen terminal:
+| Variabler                                                                                                    | Används till                                          |
+| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`                                                                       | Databas och bilder                                    |
+| `JWT_SECRET`, `NODE_ENV`                                                                                     | Inloggningscookien. `production` gör cookien `secure` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`                                            | Inloggning med Google                                 |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_REDIRECT_URI`, `ADMIN_GITHUB_LOGINS`                     | Inloggning för administratörer                        |
+| `GITHUB_ISSUES_TOKEN`, `GITHUB_REPO`                                                                         | Felrapporter                                          |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `CLIENT_URL`, `CHECKOUT_EXPIRES_MINUTES`                       | Betalning                                             |
+| `RESEND_API_KEY`, `EMAIL_FROM`                                                                               | Orderbekräftelser                                     |
+| `ALGOLIA_APP_ID`, `ALGOLIA_ADMIN_KEY`, `ALGOLIA_SEARCH_KEY`, `ALGOLIA_INDEX`                                 | Sökning                                               |
+| `POSTNORD_API_KEY`, `POSTNORD_API_URL`, `SHOP_POSTAL_CODE`, `SHOP_STREET`, `SHOP_CITY`, `FREE_SHIPPING_FROM` | Frakt                                                 |
+| `CURRENCY_API_URL`, `SUPPLIER_API_URL`, `SUPPLIER_API_KEY`                                                   | Valutakurser och leverantör                           |
+| `CRON_SECRET`                                                                                                | Nattlig omindexering                                  |
+
+Variabler som slutar på `_TIMEOUT_MS` har rimliga standardvärden och behöver inte sättas.
+
+För att testa betalningar lokalt behövs [Stripe CLI](https://docs.stripe.com/stripe-cli). Kör det här i en egen terminal och lägg in `whsec_…` som den skriver ut som `STRIPE_WEBHOOK_SECRET`:
 
 ```bash
 stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.expired --forward-to localhost:3001/api/stripe/webhook
 ```
 
-Betala med testkortet `4242 4242 4242 4242`, ett datum i framtiden och valfri CVC.
+Lokalt kan Resend bara skicka till e-postadressen på ditt eget Resend-konto, om du inte har verifierat en egen domän.
 
-### 3. Frontend
+### Frontend
 
 ```bash
 cd reloved-app
 npm install
-```
-
-Skapa en `.env` i `reloved-app/` (valfritt lokalt, standard pekar på localhost):
-
-```
-VITE_API_URL=http://localhost:3001/api
-```
-
-Starta:
-
-```bash
 npm run dev
 ```
 
-Appen körs på `http://localhost:5173`.
+Appen körs på `http://localhost:5173`. Vite skickar `/api` vidare till servern, så ingen `.env` behövs.
 
 ## Deploy
 
-- **Frontend:** Vercel, med `VITE_API_URL` satt till API:ets adress.
-- **Backend:** Render, startkommando `node server.js`. Samma variabler som i `server/.env` ligger under Environment i Render, med `CLIENT_URL=https://re-loved.vercel.app`.
-- **Stripe:** en webhook-endpoint i Stripe Dashboard pekar på `https://reloved.onrender.com/api/stripe/webhook` med händelserna `checkout.session.completed`, `checkout.session.async_payment_succeeded` och `checkout.session.expired`.
+- **Vercel** bygger `reloved-app/`. `vercel.json` skickar `/api` vidare till Render, skickar `re-loved.vercel.app` vidare till `re-loved.se` och sätter säkerhetsheaders. `VITE_API_URL` ska inte sättas.
+- **Render** kör `server/` med samma variabler som i `.env`, med `NODE_ENV=production` och adresser som pekar på `https://re-loved.se`.
+- **Stripe** har en webhook till `https://reloved.onrender.com/api/stripe/webhook`.
+- **Google och GitHub** har callback-adresserna `https://re-loved.se/api/auth/google/callback` och `https://re-loved.se/api/auth/github/callback`.
+- **GitHub Actions** behöver `CRON_SECRET` under Settings → Secrets.
+- **Loopia** pekar `re-loved.se` och `www` på Vercel och har Resends DNS-poster.
 
 ## Projektstruktur
 
 ```
-ReLoved/
-├── docs/                     # ER-diagram, sitemap, användarflöde, tidsplan, API-plan
-├── database/
-│   ├── schema.sql            # Tabeller och seed-data
-│   └── migrations/           # Ändringar för labbarna (002–004)
-├── server/                   # Express-API
-│   ├── integrations/         # En adapter per extern tjänst (valuta, leverantör, sök, betalning, bildlagring, frakt)
-│   ├── lib/                  # Supabase-klient, bilduppladdning, fetchJson, searchSync, fraktpriser, cartPricing
-│   ├── middleware/           # requireAuth / requireAdmin
-│   ├── routes/               # products, orders, cart, favorites, auth, users, categories, admin, seller,
-│   │                         # currency, search, checkout, webhook, shipping
-│   └── server.js
-└── reloved-app/              # React + TypeScript-frontend
-    ├── src/
-    │   ├── api/              # API-klient (fetch)
-    │   ├── components/       # Header, Footer, RequireAuth, RequireAdmin ...
-    │   ├── context/          # Auth, Cart, Favorites, Toast, Currency
-    │   ├── pages/            # Publika sidor + admin/ + seller/
-    │   └── types/            # TypeScript-typer
-    └── ...
+├── database/          Schema och migrationer
+├── docs/              Sitemap, användarflöde, databas, API-plan, integrationer och reflektion
+├── server/
+│   ├── emails/        Mejlmallar och deras utseende
+│   ├── integrations/  En adapter per extern tjänst
+│   ├── lib/           Cookies, databas, felhantering, uppladdning och bilder
+│   ├── middleware/    Inloggning och roller
+│   ├── routes/        API:ets routes
+│   ├── scripts/       Engångsskript, t.ex. optimering av befintliga bilder
+│   └── services/      Affärslogik: kassa, betalning, produkter och sökindex
+└── reloved-app/
+    ├── public/        Stilar, bilder och robots.txt
+    └── src/
+        ├── api/       Anrop till API:et
+        ├── components/
+        ├── context/   Inloggning, varukorg, favoriter, valuta och notiser
+        ├── hooks/
+        ├── pages/     Sidor, inklusive admin/ och seller/
+        ├── types/
+        └── utils/
 ```
 
 ## Dokumentation
 
-- [Integrationer](docs/integrationer.md) – varje extern tjänst i detalj, inklusive hur AI användes för frakten
-- [Reflektion](docs/reflektion.md) – integrationsmodeller, val och risker
-- [`docs/`](docs/) – ER-diagram, sitemap, användarflöde och API-plan
+- [Integrationer](docs/06-integrationer.md)
+- [Reflektion](docs/07-reflektion.md)
+- [Databasdesign](docs/03-database-design.md), [API-plan](docs/05-api-plan.md), [Sitemap](docs/01-sitemap.md) och [Användarflöde](docs/02-user-flow.md)
 
 ## Licens
 
-Utbildningsprojekt – inte för kommersiellt bruk.
 Utbildningsprojekt — ej för kommersiellt bruk.
