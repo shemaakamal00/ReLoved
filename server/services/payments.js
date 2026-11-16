@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase.js";
 import { fetchCheckoutPayment } from "../integrations/paymentAdapter.ts";
 import { productIdsInOrder } from "./orders.js";
 import { syncProductsToSearch } from "./searchSync.js";
+import { sendEmail } from "../integrations/emailAdapter.ts";
+import { orderConfirmation } from "../emails/orderConfirmation.js";
 
 //Stämmer betalningen med ordern vi sparade i kassan?
 function matchesOrder(order, payment) {
@@ -42,6 +44,32 @@ async function removePurchasedFromCart(userId, productIds) {
     console.error(`[webhook] Kunde inte tömma varukorgen: ${error.message}`);
 }
 
+// Orderbekräftelse när ordern redan är betald, så ett fel här loggas bara
+async function sendOrderConfirmation(orderId) {
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select(
+      "id, email, full_name, shipping, total, order_items(product_name, product_brand, size, quantity, line_total)",
+    )
+    .eq("id", orderId)
+    .order("id", { referencedTable: "order_items" })
+    .single();
+  if (error)
+    throw new Error(`Kunde inte läsa order ${orderId}: ${error.message}`);
+
+  const { subject, html, text } = orderConfirmation(order);
+  const emailId = await sendEmail({
+    to: order.email,
+    subject,
+    html,
+    text,
+    idemptencyKey: `order-confirmation/${order.id}`,
+  });
+  console.log(
+    `[e-post] Orderbekräftelse för order ${order.id} skickad (Resend ${emailId})`,
+  );
+}
+
 // När betalningen är klar så markeras ordern som betald och lagret minskas
 export async function handlePaid(payment) {
   const { data: order, error } = await supabase
@@ -77,9 +105,16 @@ export async function handlePaid(payment) {
     return;
   }
   console.log(`[webhook] Order ${order.id} är betald, lagret är uppdaterat`);
-  updateAfterPayment(order).catch((err) =>
-    console.error(
-      `[webhook] Efterarbete för order ${order.id} misslyckades: ${err.message}`,
+  updateAfterPayment(order).catch(
+    (err) =>
+      console.error(
+        `[webhook] Efterarbete för order ${order.id} misslyckades: ${err.message}`,
+      ),
+    // Mejlet körs för sig, så att ett fel hos Resend inte stoppar
+    sendOrderConfirmation(order.id).catch((err) =>
+      console.error(
+        `[e-post] Orderbekräftelse för order ${order.id} misslyckades: ${err.message}`,
+      ),
     ),
   );
 }
