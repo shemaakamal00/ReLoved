@@ -16,5 +16,13 @@
       "destination": "https://reloved.onrender.com/api/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "re-loved.vercel.app" }],
+      "destination": "https://re-loved.se/:path*",
+      "permanent": true
+    }
   ]
 }
