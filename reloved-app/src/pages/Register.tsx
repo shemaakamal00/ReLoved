@@ -97,7 +97,9 @@ function Register() {
               <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="********"
+                placeholder="Minst 8 tecken"
+                minLength={8}
+                autoComplete="new-password"
                 required
               />
             </label>
@@ -107,7 +109,9 @@ function Register() {
               <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="********"
+                placeholder="Minst 8 tecken"
+                minLength={8}
+                autoComplete="new-password"
                 required
               />
             </label>

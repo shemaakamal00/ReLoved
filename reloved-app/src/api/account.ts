@@ -54,3 +54,19 @@ export function fetchMyProfile(signal?: AbortSignal) {
 export function updateMyProfile(updates: ProfileUpdate) {
   return request<User>("/users/me", { method: "PATCH", body: updates });
 }
+
+// Ber servern skicka en återsällningslänk, samma svar oavsett om kontot finns eller inte
+export function requestPasswordReset(email: string) {
+  return request<{ message: string }>("/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+// Byter lösenord med koden från länken i mejlet
+export function resetPassword(token: string, password: string) {
+  return request<{ message: string }>("/auth/reset-password", {
+    method: "POST",
+    body: { token, password },
+  });
+}

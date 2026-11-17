@@ -63,7 +63,7 @@ async function sendOrderConfirmation(orderId) {
     subject,
     html,
     text,
-    idemptencyKey: `order-confirmation/${order.id}`,
+    idempotencyKey: `order-confirmation/${order.id}`,
   });
   console.log(
     `[e-post] Orderbekräftelse för order ${order.id} skickad (Resend ${emailId})`,
