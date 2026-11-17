@@ -19,14 +19,15 @@ export type Email = {
   subject: string;
   html: string;
   text: string;
-  idemptencyKey: string;
+  idempotencyKey: string;
 };
 
 // Resends felkoder för att loggen ska berätta vad som ska åtgärdas
 const REASONS: Record<number, string> = {
-  401: "fel eller saknad RESEND_API_kEY",
-  403: "avsändaren får inte skicka till adressen. onboarding@resend.dev skickar bara till Resend kontots egen e-postadress.",
-  409: "ett fält saknas eller är fel",
+  401: "fel eller saknad RESEND_API_KEY",
+  403: "avsändaren får inte skicka. Kontrollera att EMAIL_FROM använder en verifierad domän. onboarding@resend.dev skickar bara till Resend-kontots egen adress",
+  409: "samma Idempotency-Key användes med ett annat innehåll",
+  422: "ett fält saknas eller är fel",
   429: "för många mejl, eller så är dagens gräns nådd",
 };
 
@@ -45,7 +46,7 @@ export async function sendEmail(email: Email): Promise<string> {
       headers: {
         Authorization: `Bearer ${API_KEY}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": email.idemptencyKey,
+        "Idempotency-Key": email.idempotencyKey,
       },
       body: JSON.stringify({
         from: FROM,

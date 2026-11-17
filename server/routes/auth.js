@@ -3,9 +3,14 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import { supabase } from "../lib/supabase.js";
 import { unwrap } from "../lib/db.js";
-import { HttpError } from "../lib/http.js";
+import { HttpError, parseOr400 } from "../lib/http.js";
 import { optionalAuth } from "../middleware/auth.js";
 import { setSessionCookie, clearSessionCookie } from "../lib/cookies.js";
+import { z } from "zod";
+import {
+  requestPasswordReset,
+  resetPassword,
+} from "../services/passwordReset.js";
 
 const router = Router();
 
@@ -24,6 +29,10 @@ router.post("/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   if (!firstName || !lastName || !email || !password) {
     throw new HttpError(400, "Fyll i förnamn, efternamn, e-post och lösenord");
+  }
+
+  if (password.length < 8) {
+    throw new HttpError(400, "Lösenordet behöver minst 8 tecken");
   }
 
   const { data: user, error } = await supabase
@@ -89,6 +98,41 @@ router.get("/me", optionalAuth, async (req, res) => {
 router.post("/logout", (req, res) => {
   clearSessionCookie(res);
   res.status(204).end();
+});
+
+// Glömt lösenord
+const ForgotPassword = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email("Ange en giltig e-postadress")),
+});
+
+const ResetPassword = z.object({
+  token: z.string().min(20, "Länken är ogiltig").max(200),
+  password: z
+    .string()
+    .min(8, "Lösenordet behöver minst 8 tecken")
+    .max(200, "Lösenordet är för långt"),
+});
+
+// Samma svar oavsett om kontot finns, och mejlet skickas i bakgrunden
+router.post("/forgot-password", (req, res) => {
+  const { email } = parseOr400(ForgotPassword, req.body);
+  requestPasswordReset(email).catch((err) =>
+    console.error(`[lösenord] Återställning misslyckades: ${err.message}`),
+  );
+  res.json({
+    message:
+      "Om adressen har ett konto hos oss har vi skickat en länk. Kolla din inkorg.",
+  });
+});
+
+router.post("/reset-password", async (req, res) => {
+  const { token, password } = parseOr400(ResetPassword, req.body);
+  await resetPassword(token, password);
+  res.json({ message: "Lösenordet är bytt. Logga in med ditt nya lösenord." });
 });
 
 export default router;
