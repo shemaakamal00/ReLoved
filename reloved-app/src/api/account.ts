@@ -70,3 +70,19 @@ export function resetPassword(token: string, password: string) {
     body: { token, password },
   });
 }
+
+export interface ContactForm {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  website: string;
+}
+
+// Skickar kontaktformuläret till shoppens inkorg
+export function sendContactMessage(form: ContactForm) {
+  return request<{ message: string }>("/contact", {
+    method: "POST",
+    body: form,
+  });
+}

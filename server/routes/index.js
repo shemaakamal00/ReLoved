@@ -18,6 +18,7 @@ import shippingRouter from "./shipping.js";
 import usersRouter from "./users.js";
 import cronRouter from "./cron.js";
 import issuesRouter from "./issues.js";
+import contactRouter from "./contact.js";
 
 const api = Router();
 
@@ -48,5 +49,8 @@ api.use("/cron", cronRouter);
 api.use("/seller", sellerRouter);
 api.use("/admin/issues", issuesRouter);
 api.use("/admin", adminRouter);
+
+// Information
+api.use("/contact", contactRouter);
 
 export default api;
