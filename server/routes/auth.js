@@ -65,7 +65,7 @@ router.post("/login", async (req, res) => {
   const { data: user } = await supabase
     .from("users")
     .select("*")
-    .ilike("email", email.trim())
+    .eq("email", email.trim().toLowerCase())
     .maybeSingle();
 
   // Ett Google-konto har inget lösenord.

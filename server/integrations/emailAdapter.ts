@@ -20,6 +20,7 @@ export type Email = {
   html: string;
   text: string;
   idempotencyKey: string;
+  replyTo?: string;
 };
 
 // Resends felkoder för att loggen ska berätta vad som ska åtgärdas
@@ -54,6 +55,7 @@ export async function sendEmail(email: Email): Promise<string> {
         subject: email.subject,
         html: email.html,
         text: email.text,
+        ...(email.replyTo ? { reply_to: email.replyTo } : {}),
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

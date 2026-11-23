@@ -105,16 +105,17 @@ export async function handlePaid(payment) {
     return;
   }
   console.log(`[webhook] Order ${order.id} är betald, lagret är uppdaterat`);
-  updateAfterPayment(order).catch(
-    (err) =>
-      console.error(
-        `[webhook] Efterarbete för order ${order.id} misslyckades: ${err.message}`,
-      ),
-    // Mejlet körs för sig, så att ett fel hos Resend inte stoppar
-    sendOrderConfirmation(order.id).catch((err) =>
-      console.error(
-        `[e-post] Orderbekräftelse för order ${order.id} misslyckades: ${err.message}`,
-      ),
+
+  // Mejlet körs för sig, så att ett fel hos Resend inte stoppar varukorgen och sökindex
+  sendOrderConfirmation(order.id).catch((err) =>
+    console.error(
+      `[e-post] Orderbekräftelse för order ${order.id} misslyckades: ${err.message}`,
+    ),
+  );
+
+  updateAfterPayment(order).catch((err) =>
+    console.error(
+      `[webhook] Efterarbete för order ${order.id} misslyckades: ${err.message}`,
     ),
   );
 }
